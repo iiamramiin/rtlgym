@@ -71,3 +71,30 @@ def test_rejected_hack_feedback():
     obs, r, *_ = env.step("module popcount16(input logic [15:0] x, output logic [4:0] count);"
                           " initial $finish; endmodule")
     assert r == 0.0 and "Rejected" in obs["feedback"]
+
+
+def test_test_escape_keeps_episode_open_with_counterexample():
+    env = RTLEnv(max_turns=2)
+    env.reset(task_id="popcount16")
+    code = (env.tasks_root / "popcount16" / "candidates" / "escape_rare_input.sv").read_text()
+    obs, r, term, trunc, info = env.step(code)
+    assert not term and not trunc and not info["solved"]
+    assert "every hidden test passes, but the formal check" in obs["feedback"]
+    assert "x=0xbeef" in obs["feedback"]
+
+
+def test_summary_feedback_hides_counterexample():
+    env = RTLEnv(max_turns=1, feedback="summary")
+    env.reset(task_id="popcount16")
+    code = (env.tasks_root / "popcount16" / "candidates" / "escape_rare_input.sv").read_text()
+    obs, *_ = env.step(code)
+    assert "Formal:" in obs["feedback"] and "0xbeef" not in obs["feedback"]
+
+
+def test_formal_can_be_disabled_for_ablations():
+    env = RTLEnv(max_turns=2, use_formal=False)
+    env.reset(task_id="popcount16")
+    code = (env.tasks_root / "popcount16" / "candidates" / "escape_rare_input.sv").read_text()
+    obs, r, term, trunc, info = env.step(code)
+    assert info["eval"].formal_status == "disabled"
+    assert term and info["solved"]          # without formal, the escape looks solved

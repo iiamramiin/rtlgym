@@ -4,13 +4,18 @@
 """LLM agent backed by the Claude API (optional; needs ANTHROPIC_API_KEY).
 
 The conversation is kept across turns, so the model sees its own previous
-attempt and the tool feedback, the same way an RL rollout would.
+attempt and the tool feedback, the same way an RL rollout would. Assistant turns
+are stored exactly as returned (including any thinking blocks) and the
+conversation is append-only, as the API expects for multi-turn use.
+
+Current Claude models choose their own sampling settings: the request sends no
+temperature. Thinking counts toward max_tokens, so the default limit is high and
+responses are streamed.
 """
 
 from __future__ import annotations
 
 import os
-import time
 
 from .base import Agent
 
@@ -23,10 +28,12 @@ Rules:
 - Prefer clean, lint-free code and small area once the design is correct.
 When you get tool feedback, fix the reported problems and return the complete corrected module."""
 
+DEFAULT_MODEL = "claude-sonnet-5-5"
+
 
 class ClaudeAgent(Agent):
-    def __init__(self, model: str | None = None, max_tokens: int = 4096,
-                 temperature: float = 0.2, client=None, max_retries: int = 3):
+    def __init__(self, model: str | None = None, max_tokens: int = 32000,
+                 effort: str | None = None, client=None, max_retries: int = 5):
         if client is None:
             try:
                 import anthropic
@@ -34,49 +41,52 @@ class ClaudeAgent(Agent):
                 raise RuntimeError("pip install anthropic to use the Claude agent") from exc
             if not os.environ.get("ANTHROPIC_API_KEY"):
                 raise RuntimeError("set ANTHROPIC_API_KEY to use the Claude agent")
-            client = anthropic.Anthropic()
+            # The SDK retries rate limits, overloads, and connection errors itself.
+            client = anthropic.Anthropic(max_retries=max_retries)
         self.client = client
-        self.model = model or os.environ.get("RTLGYM_MODEL", "claude-sonnet-5-5")
+        self.model = model or os.environ.get("RTLGYM_MODEL", DEFAULT_MODEL)
         self.max_tokens = max_tokens
-        self.temperature = temperature
-        self.max_retries = max_retries
+        self.effort = effort
         self.messages: list[dict] = []
-        self.usage = {"input_tokens": 0, "output_tokens": 0}
+        self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0,
+                      "refusals": 0, "truncated": 0}
 
     def begin_episode(self, obs: dict) -> None:
         self.messages = []
 
     def act(self, obs: dict) -> str:
         if not self.messages:
-            content = (f"Implement module `{obs['top']}`.\n\n## Specification\n\n{obs['spec']}")
+            content = f"Implement module `{obs['top']}`.\n\n## Specification\n\n{obs['spec']}"
         else:
             content = ("Tool feedback on your last submission:\n\n```\n" + obs["feedback"]
                        + f"\n```\n\nYou have {obs['turns_left']} attempt(s) left. "
                        "Return the full corrected module.")
         self.messages.append({"role": "user", "content": content})
-        text = self._call()
-        self.messages.append({"role": "assistant", "content": text})
-        return text
+        msg = self._call()
+        # Keep the full assistant turn (thinking blocks included) for the next request.
+        self.messages.append({"role": "assistant", "content": msg.content})
+        return "".join(getattr(b, "text", "") for b in msg.content
+                       if getattr(b, "type", "") == "text")
 
-    def _call(self) -> str:
-        delay = 2.0
-        for attempt in range(self.max_retries):
-            try:
-                resp = self.client.messages.create(
-                    model=self.model,
-                    max_tokens=self.max_tokens,
-                    temperature=self.temperature,
-                    system=SYSTEM_PROMPT,
-                    messages=list(self.messages),
-                )
-                u = getattr(resp, "usage", None)
-                if u is not None:
-                    self.usage["input_tokens"] += getattr(u, "input_tokens", 0) or 0
-                    self.usage["output_tokens"] += getattr(u, "output_tokens", 0) or 0
-                return "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
-            except Exception:  # noqa: BLE001 - retry transient API errors
-                if attempt == self.max_retries - 1:
-                    raise
-                time.sleep(delay)
-                delay *= 2
-        return ""  # pragma: no cover
+    def _call(self):
+        kwargs = {
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "system": SYSTEM_PROMPT,
+            "messages": list(self.messages),
+        }
+        if self.effort:
+            kwargs["output_config"] = {"effort": self.effort}
+        with self.client.messages.stream(**kwargs) as stream:
+            msg = stream.get_final_message()
+        self.usage["calls"] += 1
+        u = getattr(msg, "usage", None)
+        if u is not None:
+            self.usage["input_tokens"] += getattr(u, "input_tokens", 0) or 0
+            self.usage["output_tokens"] += getattr(u, "output_tokens", 0) or 0
+        stop = getattr(msg, "stop_reason", None)
+        if stop == "refusal":
+            self.usage["refusals"] += 1
+        elif stop == "max_tokens":
+            self.usage["truncated"] += 1
+        return msg

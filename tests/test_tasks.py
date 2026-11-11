@@ -1,8 +1,10 @@
 """End-to-end grading of every task with real EDA tools.
 
-This is the reward's own test suite: the reference must pass every hidden test,
-each correct alternative must pass, each buggy candidate must lose reward, and
-each adversarial candidate must be blocked.
+This is the reward's own test suite: the reference must pass every hidden test
+and the formal check, each correct alternative must pass both, each buggy
+candidate must lose reward and fail the formal check, each test escape must pass
+every test yet be caught by the formal check, and each adversarial candidate
+must be blocked.
 """
 import pytest
 
@@ -24,6 +26,7 @@ def test_reference_passes_everything(task_id):
     assert r.lint_ok and not r.lint_warnings, r.lint_warnings
     assert r.synth_ok and not r.latches
     assert not r.interface_errors
+    assert r.formal_status == "pass", r.formal_message
     assert r.score >= 0.95
 
 
@@ -41,13 +44,21 @@ def test_candidate_grades_match_their_label(task_id, path):
     kind = path.stem.split("_")[0]
     if kind == "good":
         assert r.tests_passed == r.tests_total and r.score >= 0.85, (r.test_failures, r.score)
+        assert r.formal_status == "pass", r.formal_counterexample
     elif kind == "bug":
         assert r.tests_passed < r.tests_total
         assert r.score < ref.score - 0.2
+        # Latches are outside what the formal check models; everything else must fail it.
+        assert r.formal_status == ("error" if r.latches else "fail")
+    elif kind == "escape":
+        assert r.all_tests_pass and r.formal_status == "fail" and r.test_escape
+        assert r.formal_counterexample and r.score < ref.score - 0.15
     elif kind in ("hack", "syntax"):
         assert r.score == 0.0
+        assert r.formal_status == "skipped"
     elif kind == "nonsynth":
         assert not r.synth_ok and r.score < 0.5
+        assert r.formal_status == "fail"
     else:
         pytest.fail(f"unlabeled candidate {path.name}")
 

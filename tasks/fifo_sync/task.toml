@@ -4,3 +4,10 @@ difficulty = "medium"
 tags = ["sequential", "memory", "parameterized"]
 sim_timeout_s = 90
 demo_trajectory = ["bug_full_flag.sv", "good_ptr_msb.sv"]
+
+[formal]
+# A narrower, shallower FIFO keeps the bounded proof fast while still covering
+# fill, overflow, drain, and pointer wrap within the checked depth.
+depth = 12
+reset = "rst"
+params = { W = 2, DEPTH = 4 }

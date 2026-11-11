@@ -4,3 +4,8 @@ difficulty = "hard"
 tags = ["sequential", "fsm", "protocol", "parameterized"]
 sim_timeout_s = 120
 demo_trajectory = ["bug_msb_first.sv", "bug_short_stop.sv", "good_shift.sv"]
+
+[formal]
+# One full 10-bit frame at CLKS_PER_BIT = 4 is 40 cycles, plus margin.
+depth = 48
+reset = "rst"

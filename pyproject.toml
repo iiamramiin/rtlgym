@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rtlgym"
-version = "0.1.0"
+version = "0.2.0"
 description = "RL environment and eval harness for LLM-generated RTL: compile, lint, hidden cocotb tests, and Yosys PPA as a shaped reward."
 readme = "README.md"
 requires-python = ">=3.11"

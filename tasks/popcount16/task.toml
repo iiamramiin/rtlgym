@@ -4,3 +4,6 @@ difficulty = "easy"
 tags = ["combinational", "arithmetic", "ppa"]
 sim_timeout_s = 60
 demo_trajectory = ["bug_width.sv", "good_loop.sv"]
+
+[formal]
+depth = 1   # combinational: exhaustive proof

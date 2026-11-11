@@ -4,9 +4,10 @@
 """Multi-turn, Gym-style environment.
 
 Episode = one task. The observation is the spec plus feedback from the last
-attempt (compiler errors, lint warnings, names of failing hidden tests, PPA
-numbers). The action is a string containing SystemVerilog, optionally wrapped
-in a markdown code fence.
+attempt (compiler errors, lint warnings, names of failing hidden tests, a formal
+counterexample when the design differs from the reference, and synthesis
+numbers). The action is a string containing SystemVerilog, optionally wrapped in
+a markdown code fence.
 
 step() returns the Gymnasium 5-tuple (obs, reward, terminated, truncated, info).
 """
@@ -14,6 +15,7 @@ step() returns the Gymnasium 5-tuple (obs, reward, terminated, truncated, info).
 from __future__ import annotations
 
 import random
+import time
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -43,13 +45,15 @@ class RTLEnv:
             score of the current attempt).
         feedback: "none" (single-shot eval), "summary" (pass/fail counts only),
             or "full" (tool logs and failing test names).
-        stop_on_pass: end the episode once every hidden test passes.
+        stop_on_pass: end the episode once the attempt is solved: every hidden test
+            passes and the formal check did not find a difference.
+        use_formal: run the formal equivalence check (when the task defines one).
     """
 
     def __init__(self, tasks_root: Path | str = DEFAULT_TASKS_ROOT, max_turns: int = 3,
                  reward_mode: str = "improvement", feedback: str = "full",
                  stop_on_pass: bool = True, weights: RewardWeights | None = None,
-                 use_cache: bool = True):
+                 use_cache: bool = True, use_formal: bool = True):
         if reward_mode not in ("improvement", "score"):
             raise ValueError("reward_mode must be 'improvement' or 'score'")
         if feedback not in FEEDBACK_LEVELS:
@@ -62,6 +66,7 @@ class RTLEnv:
         self.stop_on_pass = stop_on_pass
         self.weights = weights or RewardWeights()
         self.use_cache = use_cache
+        self.use_formal = use_formal
         self.state: EpisodeState | None = None
         self._rng = random.Random()
 
@@ -78,7 +83,10 @@ class RTLEnv:
             raise RuntimeError("call reset() before step()")
         st = self.state
         code = extract_code(action)
-        res = evaluate(st.task, code, self.weights, use_cache=self.use_cache)
+        t0 = time.monotonic()
+        res = evaluate(st.task, code, self.weights, use_cache=self.use_cache,
+                       use_formal=self.use_formal)
+        grade_s = time.monotonic() - t0
         st.turn += 1
         st.history.append(res)
 
@@ -89,10 +97,11 @@ class RTLEnv:
         reward = round(reward, 4)
         st.best_score = max(st.best_score, res.score)
 
-        full_pass = res.tests_total > 0 and res.tests_passed == res.tests_total
-        terminated = self.stop_on_pass and full_pass
+        solved = is_solved(res)
+        terminated = self.stop_on_pass and solved
         truncated = not terminated and st.turn >= self.max_turns
-        info = {"eval": res, "score": res.score, "best_score": st.best_score, "turn": st.turn}
+        info = {"eval": res, "score": res.score, "best_score": st.best_score, "turn": st.turn,
+                "solved": solved, "grade_s": round(grade_s, 3)}
         return self._obs(feedback=format_feedback(res, self.feedback)), reward, terminated, \
             truncated, info
 
@@ -108,6 +117,35 @@ class RTLEnv:
             "turns_left": self.max_turns - st.turn,
             "feedback": feedback,
         }
+
+
+def is_solved(r: EvalResult) -> bool:
+    """Every hidden test passes and the formal check (if any) found no difference."""
+    return r.all_tests_pass and r.formal_status != "fail"
+
+
+def _formal_lines(r: EvalResult, level: str) -> list[str]:
+    params = ", ".join(f"{k}={v}" for k, v in r.formal_params.items())
+    note = f" (checked with {params})" if params else ""
+    if r.formal_status == "pass":
+        scope = ("for every input" if r.formal_complete
+                 else f"for every input sequence up to {r.formal_depth} cycles after reset")
+        return [f"Formal: equivalent to the reference {scope}{note}."]
+    if r.formal_status == "fail":
+        head = ("Formal: every hidden test passes, but the formal check found inputs where "
+                "your design differs from the reference."
+                if r.all_tests_pass else "Formal: not equivalent to the reference.")
+        lines = [head]
+        if level == "full" and r.formal_counterexample:
+            lines.append(f"Counterexample{note}; reset is applied in cycle 1 and outputs are "
+                         "compared from cycle 2:" if r.formal_depth > 1 else f"Counterexample{note}:")
+            lines.append(r.formal_counterexample)
+        return lines
+    if r.formal_status == "error":
+        return [f"Formal: could not run ({r.formal_message})."]
+    if r.formal_status == "timeout":
+        return ["Formal: no result within the time limit."]
+    return []
 
 
 def format_feedback(r: EvalResult, level: str = "full") -> str:
@@ -145,6 +183,7 @@ def format_feedback(r: EvalResult, level: str = "full") -> str:
             lines.append("Lint: clean")
         else:
             lines.append("Lint failed:\n" + r.lint_log[-1000:])
+    lines += _formal_lines(r, level)
     if r.synth_ok:
         lines.append(f"Synthesis: {r.cells} generic cells ({r.flops} flops, "
                      f"{r.latches} latches), logic depth {r.depth}; "

@@ -1,0 +1,73 @@
+name: eval
+
+# Runs the Claude agent on every task and publishes the results. Manual only:
+# it calls the Claude API, which costs money. Needs the repository secret
+# ANTHROPIC_API_KEY (Settings > Secrets and variables > Actions).
+on:
+  workflow_dispatch:
+    inputs:
+      models:
+        description: "Comma-separated Claude model IDs"
+        default: "claude-sonnet-5-5"
+        required: true
+      samples:
+        description: "Episodes per task"
+        default: "5"
+        required: true
+      max_turns:
+        description: "Attempts per episode"
+        default: "3"
+        required: true
+      effort:
+        description: "Effort level: low, medium, high (blank = model default)"
+        default: ""
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  eval:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install EDA tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends iverilog verilator yosys
+      - name: Install package
+        run: pip install -e ".[claude]"
+      - name: Check the API key is set
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          if [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::error::Add the ANTHROPIC_API_KEY repository secret first."
+            exit 1
+          fi
+      - name: Run the evaluation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          MODELS: ${{ inputs.models }}
+          SAMPLES: ${{ inputs.samples }}
+          MAX_TURNS: ${{ inputs.max_turns }}
+          EFFORT: ${{ inputs.effort }}
+        run: |
+          mkdir -p results
+          for m in $(echo "$MODELS" | tr ',' ' '); do
+            args=(--agent claude --model "$m" --samples "$SAMPLES" --max-turns "$MAX_TURNS"
+                  --workers 4 --out "results/$m.json")
+            if [ -n "$EFFORT" ]; then args+=(--effort "$EFFORT"); fi
+            python -m rtlgym run "${args[@]}"
+          done
+          python -m rtlgym report results/*.json | tee results/summary.md
+          cat results/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: eval-results
+          path: results/

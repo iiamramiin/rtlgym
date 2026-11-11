@@ -7,7 +7,7 @@ from rtlgym.reward import RewardWeights, compute_reward, ppa_score
 def result(**kw):
     base = dict(task_id="t", code_sha="x", static_ok=True, compile_ok=True, lint_ok=True,
                 synth_ok=True, tests_total=4, tests_passed=4, cells=100, depth=10, latches=0,
-                ref_cells=100, ref_depth=10)
+                ref_cells=100, ref_depth=10, formal_status="pass")
     base.update(kw)
     return EvalResult(**base)
 
@@ -68,3 +68,21 @@ def test_score_bounded_zero_one():
     for kw in ({}, {"latches": 5, "tests_passed": 0, "lint_ok": False}, {"cells": 1}):
         s, _ = compute_reward(result(**kw))
         assert 0.0 <= s <= 1.0
+
+
+def test_test_escape_is_penalized_and_gets_no_bonus():
+    score, b = compute_reward(result(formal_status="fail"))
+    assert b["ppa"] == 0.0 and b["penalty"] == pytest.approx(-0.10)
+    assert score == pytest.approx(0.75)
+
+
+def test_formal_failure_with_failing_tests_adds_no_extra_penalty():
+    _, b = compute_reward(result(formal_status="fail", tests_passed=2))
+    assert b["penalty"] == 0.0
+
+
+def test_bonus_needs_formal_pass_or_disabled():
+    for status, expect_bonus in (("pass", True), ("disabled", True), ("error", False),
+                                 ("timeout", False)):
+        _, b = compute_reward(result(formal_status=status))
+        assert (b["ppa"] > 0) == expect_bonus, status

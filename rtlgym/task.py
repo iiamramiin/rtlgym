@@ -6,7 +6,8 @@
 Each task lives in its own folder under ``tasks/``:
 
     tasks/<task_id>/
-        task.toml          metadata (top module, difficulty, timeouts, demo trajectory)
+        task.toml          metadata (top module, difficulty, timeouts, demo trajectory,
+                           and the [formal] equivalence-check settings)
         spec.md            the only thing the agent sees
         ref.sv             reference RTL (hidden; used for interface and PPA baselines)
         test_<task_id>.py  hidden cocotb testbench with a Python reference model
@@ -34,6 +35,11 @@ class Task:
     sim_timeout_s: float = 60.0
     tags: tuple[str, ...] = ()
     demo_trajectory: tuple[str, ...] = field(default_factory=tuple)
+    formal: dict = field(default_factory=dict)
+
+    @property
+    def has_formal(self) -> bool:
+        return bool(self.formal) and self.formal.get("enabled", True)
 
     @property
     def ref_path(self) -> Path:
@@ -77,6 +83,7 @@ def load_task(task_id: str, tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> Task
         sim_timeout_s=float(meta.get("sim_timeout_s", 60)),
         tags=tuple(meta.get("tags", [])),
         demo_trajectory=tuple(meta.get("demo_trajectory", [])),
+        formal=dict(meta.get("formal", {})),
     )
 
 

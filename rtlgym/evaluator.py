@@ -6,10 +6,11 @@
 Pipeline (cheap stages gate expensive ones, so a broken candidate costs
 milliseconds instead of a full simulation):
 
-    static checks -> compile (iverilog) -> [lint | synth | hidden tests] in parallel
+    static checks -> compile (iverilog) -> [lint | synth | hidden tests | formal] in parallel
 
-Results are cached by (task fingerprint, candidate hash, tool versions) so that
-re-submitting the same code during RL rollouts never pays tool latency twice.
+Results are cached by (task fingerprint, candidate hash, tool versions, reward
+settings) so that re-submitting the same code during RL rollouts never pays tool
+latency twice.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import tools
+from . import formal, tools
 from .checks import static_check
 from .reward import RewardWeights, compute_reward
 from .task import Task
@@ -59,6 +60,13 @@ class EvalResult:
     sim_log: str = ""
     ref_cells: int | None = None
     ref_depth: int | None = None
+    formal_status: str = "skipped"          # pass | fail | error | timeout | disabled | skipped
+    formal_depth: int = 0
+    formal_complete: bool = False
+    formal_params: dict = field(default_factory=dict)
+    formal_first_mismatch: int | None = None
+    formal_counterexample: str = ""
+    formal_message: str = ""
     timings_s: dict[str, float] = field(default_factory=dict)
     score: float = 0.0
     breakdown: dict[str, float] = field(default_factory=dict)
@@ -67,6 +75,15 @@ class EvalResult:
     @property
     def pass_rate(self) -> float:
         return self.tests_passed / self.tests_total if self.tests_total else 0.0
+
+    @property
+    def all_tests_pass(self) -> bool:
+        return self.tests_total > 0 and self.tests_passed == self.tests_total
+
+    @property
+    def test_escape(self) -> bool:
+        """Every hidden test passes, yet the formal check found a real difference."""
+        return self.all_tests_pass and self.formal_status == "fail"
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -94,20 +111,22 @@ def reference_ppa(task: Task) -> dict:
         return _REF_PPA[task.id]
 
 
-def _cache_key(task: Task, code: str, weights: RewardWeights) -> str:
+def _cache_key(task: Task, code: str, weights: RewardWeights, use_formal: bool) -> str:
     h = hashlib.sha256()
     h.update(task.fingerprint().encode())
     h.update(code.encode())
     h.update(json.dumps(_versions(), sort_keys=True).encode())
     h.update(json.dumps(asdict(weights), sort_keys=True).encode())
+    h.update(b"formal" if use_formal else b"no-formal")
     return h.hexdigest()
 
 
 def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
-             use_cache: bool = True, keep_dir: Path | None = None) -> EvalResult:
+             use_cache: bool = True, keep_dir: Path | None = None,
+             use_formal: bool = True) -> EvalResult:
     weights = weights or RewardWeights()
     sha = hashlib.sha256(code.encode()).hexdigest()[:12]
-    key = _cache_key(task, code, weights)
+    key = _cache_key(task, code, weights, use_formal)
     cache_file = CACHE_DIR / f"{key}.json"
     if use_cache and cache_file.is_file():
         data = json.loads(cache_file.read_text())
@@ -128,7 +147,7 @@ def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
         workdir = Path(ctx.name) if ctx else keep_dir
         workdir.mkdir(parents=True, exist_ok=True)
         try:
-            _run_tools(task, code, workdir, res, ref)
+            _run_tools(task, code, workdir, res, ref, use_formal)
         finally:
             if ctx:
                 ctx.cleanup()
@@ -140,7 +159,8 @@ def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
     return res
 
 
-def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict) -> None:
+def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
+               use_formal: bool = True) -> None:
     src = workdir / "candidate.sv"
     src.write_text(code)
 
@@ -150,16 +170,29 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict)
     if not res.compile_ok:
         return
 
-    # Lint, synthesis and simulation are independent; run them concurrently so
-    # wall-clock latency per step is max(), not sum(), of the three tools.
+    # Lint, synthesis, simulation and the formal check are independent; run them
+    # concurrently so wall-clock latency per step is max(), not sum(), of the tools.
     (workdir / "lint").mkdir()
     (workdir / "synth").mkdir()
-    with ThreadPoolExecutor(max_workers=3) as pool:
+    run_formal = use_formal and task.has_formal
+    with ThreadPoolExecutor(max_workers=4) as pool:
         f_lint = pool.submit(tools.lint_verilator, src, task.top, workdir / "lint")
         f_syn = pool.submit(tools.synth_yosys, src, task.top, workdir / "synth")
         f_sim = pool.submit(tools.simulate_cocotb, src, task.top, task.test_path, workdir,
                             task.sim_timeout_s)
+        f_fv = (pool.submit(formal.check_equivalence, task, src, workdir / "formal")
+                if run_formal else None)
         lint, syn, sim = f_lint.result(), f_syn.result(), f_sim.result()
+        fv = f_fv.result() if f_fv else None
+
+    if fv is None:
+        res.formal_status = "disabled"
+    else:
+        res.formal_status, res.formal_depth = fv.status, fv.depth
+        res.formal_complete, res.formal_params = fv.complete, fv.params
+        res.formal_first_mismatch, res.formal_message = fv.first_mismatch, fv.message
+        res.formal_counterexample = formal.format_counterexample(fv)
+        res.timings_s["formal"] = round(fv.elapsed_s, 3)
 
     res.lint_ok, res.lint_warnings, res.lint_log = lint.ok, lint.warnings, lint.log
     res.timings_s["lint"] = round(lint.elapsed_s, 3)

@@ -4,3 +4,7 @@ difficulty = "medium"
 tags = ["sequential", "fsm"]
 sim_timeout_s = 60
 demo_trajectory = ["bug_no_overlap.sv", "good_fsm.sv"]
+
+[formal]
+depth = 12
+reset = "rst"
