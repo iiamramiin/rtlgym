@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Offline agent that replays hand-written candidates.
 
 Each task's task.toml lists a ``demo_trajectory`` (for example a buggy first

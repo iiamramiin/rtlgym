@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Task definitions.
 
 Each task lives in its own folder under ``tasks/``:

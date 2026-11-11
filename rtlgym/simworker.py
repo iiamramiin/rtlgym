@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Child-process entry point that builds and runs one cocotb testbench.
 
 Kept separate so the parent can enforce a hard wall-clock timeout and never

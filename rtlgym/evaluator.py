@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Grade one RTL candidate against one task.
 
 Pipeline (cheap stages gate expensive ones, so a broken candidate costs

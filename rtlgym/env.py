@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Multi-turn, Gym-style environment.
 
 Episode = one task. The observation is the spec plus feedback from the last

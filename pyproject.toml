@@ -9,11 +9,15 @@ description = "RL environment and eval harness for LLM-generated RTL: compile, l
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
+authors = [{ name = "Ramin Rajaei", email = "iiamramiin@gmail.com" }]
 dependencies = ["cocotb>=2.0"]
 
 [project.optional-dependencies]
 claude = ["anthropic>=0.40"]
 dev = ["pytest>=8", "pytest-xdist>=3", "ruff>=0.5"]
+
+[project.urls]
+Homepage = "https://github.com/iiamramiin/rtlgym"
 
 [project.scripts]
 rtlgym = "rtlgym.cli:main"

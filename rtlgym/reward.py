@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Shaped reward for RTL generation.
 
 The reward is a ladder: each rung is only reachable once the previous one holds,

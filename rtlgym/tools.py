@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Thin, sandboxed wrappers around the EDA tools.
 
 Every tool runs in a subprocess with a wall-clock timeout and CPU/memory

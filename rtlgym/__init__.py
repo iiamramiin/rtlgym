@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """rtlgym: an RL environment and eval harness for LLM-generated RTL.
 
 An agent receives a natural-language hardware spec, writes SystemVerilog, and

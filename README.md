@@ -192,6 +192,11 @@ tests/            64 tests: reward unit tests, end-to-end grading, env, agent
   spec-to-assertion generation; debug tasks (given a failing design and a log, fix it);
   and larger designs that split into multiple modules.
 
+## Author
+
+**Ramin Rajaei**, Ph.D.
+[GitHub](https://github.com/iiamramiin) · [Google Scholar](https://scholar.google.com/citations?user=lL4svjsAAAAJ)
+
 ## License
 
-MIT
+MIT. See [LICENSE](LICENSE).

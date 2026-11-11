@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """LLM agent backed by the Claude API (optional; needs ANTHROPIC_API_KEY).
 
 The conversation is kept across turns, so the model sees its own previous

@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Static checks on candidate RTL that run before any tool.
 
 These close the cheapest reward-hacking routes: ending the simulation early,

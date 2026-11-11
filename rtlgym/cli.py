@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
 """Command-line entry point: python -m rtlgym <command>."""
 
 from __future__ import annotations
