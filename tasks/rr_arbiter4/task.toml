@@ -1,0 +1,6 @@
+id = "rr_arbiter4"
+top = "rr_arbiter4"
+difficulty = "medium"
+tags = ["sequential", "arbitration"]
+sim_timeout_s = 60
+demo_trajectory = ["bug_fixed_priority.sv", "good_double_vector.sv"]

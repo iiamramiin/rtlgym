@@ -1,0 +1,6 @@
+id = "uart_tx"
+top = "uart_tx"
+difficulty = "hard"
+tags = ["sequential", "fsm", "protocol", "parameterized"]
+sim_timeout_s = 120
+demo_trajectory = ["bug_msb_first.sv", "bug_short_stop.sv", "good_shift.sv"]

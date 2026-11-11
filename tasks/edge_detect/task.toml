@@ -1,0 +1,6 @@
+id = "edge_detect"
+top = "edge_detect"
+difficulty = "easy"
+tags = ["sequential"]
+sim_timeout_s = 60
+demo_trajectory = ["bug_comb_output.sv", "good_alt.sv"]

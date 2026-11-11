@@ -1,0 +1,6 @@
+id = "alu8"
+top = "alu8"
+difficulty = "easy"
+tags = ["combinational", "arithmetic"]
+sim_timeout_s = 60
+demo_trajectory = ["bug_slt_unsigned.sv", "good_case.sv"]

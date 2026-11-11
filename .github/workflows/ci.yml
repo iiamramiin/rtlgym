@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install EDA tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends iverilog verilator yosys
+          iverilog -V | head -1; verilator --version; yosys -V
+      - name: Install package
+        run: pip install -e ".[dev,claude]"
+      - name: Lint
+        run: ruff check .
+      - name: Unit and end-to-end tests
+        run: pytest -q -n auto
+      - name: Grade all hand-written candidates
+        run: python -m rtlgym baselines --out baselines.json
+      - name: Multi-turn demo episode (offline replay agent)
+        run: python -m rtlgym run --agent replay --out replay.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: results
+          path: |
+            baselines.json
+            replay.json

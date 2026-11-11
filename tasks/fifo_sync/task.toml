@@ -1,0 +1,6 @@
+id = "fifo_sync"
+top = "fifo_sync"
+difficulty = "medium"
+tags = ["sequential", "memory", "parameterized"]
+sim_timeout_s = 90
+demo_trajectory = ["bug_full_flag.sv", "good_ptr_msb.sv"]
