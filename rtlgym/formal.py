@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .task import Task
-from .tools import run, tail
+from .tools import _read_tail, run, tail
 
 _ROW_RE = re.compile(r"^\s+(init|\d+)\s+\\(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 _COMB_ROW_RE = re.compile(r"^\s+\\(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")  # no time column
@@ -118,7 +118,7 @@ def check_equivalence(task: Task, cand: Path, workdir: Path, timeout_s: float = 
     # split the counterexample table.
     r = run(["yosys", "-q", "-l", str(logfile), "-s", str(script)], cwd=workdir,
             timeout_s=timeout_s + 15)
-    log = logfile.read_text(errors="replace") if logfile.is_file() else r.log
+    log = _read_tail(logfile, 8 * 1024**2) if logfile.is_file() else r.log
     res = FormalResult(status="error", depth=depth, complete=depth <= 1,
                        params=dict(cfg.get("params", {})), log=tail(log, 6000),
                        elapsed_s=r.elapsed_s)

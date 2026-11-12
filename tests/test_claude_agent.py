@@ -88,3 +88,12 @@ def test_begin_episode_resets_history():
     agent.begin_episode(obs)
     agent.act(obs)
     assert len(fake.calls[1]["messages"]) == 1
+
+
+def test_retry_prompt_without_feedback_has_no_diagnostics():
+    agent, fake = make([([block("text", "a")], "end_turn"), ([block("text", "b")], "end_turn")])
+    obs = {"top": "a", "spec": "S", "feedback": "", "turns_left": 2}
+    agent.act(obs)
+    agent.act(dict(obs, turns_left=1))
+    retry = fake.calls[1]["messages"][-1]["content"]
+    assert "not accepted" in retry and "Tool feedback" not in retry

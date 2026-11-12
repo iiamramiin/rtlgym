@@ -8,9 +8,15 @@ milliseconds instead of a full simulation):
 
     static checks -> compile (iverilog) -> [lint | synth | hidden tests | formal] in parallel
 
-Results are cached by (task fingerprint, candidate hash, tool versions, reward
-settings) so that re-submitting the same code during RL rollouts never pays tool
-latency twice.
+Results are cached by (grader version, task fingerprint, candidate hash, tool
+versions, reward settings) so that re-submitting the same code during RL rollouts
+never pays tool latency twice. Inconclusive results (a timeout or an incomplete
+simulation) are never cached.
+
+A candidate is **accepted** only when every expected hidden test ran and passed,
+the design synthesizes without latches, its interface matches the reference, and
+the formal check passed (or is disabled). The same predicate ends episodes,
+defines solve rates, and gates the area/depth bonus.
 """
 
 from __future__ import annotations
@@ -24,12 +30,14 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from . import formal, tools
+from . import __version__, formal, tools
 from .checks import static_check
 from .reward import RewardWeights, compute_reward
 from .task import Task
 
 CACHE_DIR = Path(os.environ.get("RTLGYM_CACHE", Path.home() / ".cache" / "rtlgym"))
+# Bump when grading semantics change, so cached results from older graders are ignored.
+GRADER_VERSION = "3"
 _TOOL_VERSIONS: dict[str, str] | None = None
 _REF_LOCK = threading.Lock()
 _REF_PPA: dict[str, dict] = {}
@@ -57,6 +65,7 @@ class EvalResult:
     tests_passed: int = 0
     test_failures: dict[str, str] = field(default_factory=dict)
     sim_timed_out: bool = False
+    sim_complete: bool = False
     sim_log: str = ""
     ref_cells: int | None = None
     ref_depth: int | None = None
@@ -85,9 +94,27 @@ class EvalResult:
         """Every hidden test passes, yet the formal check found a real difference."""
         return self.all_tests_pass and self.formal_status == "fail"
 
+    @property
+    def inconclusive(self) -> bool:
+        """The grader could not decide: a timeout, an incomplete simulation, or a
+        formal error or timeout on a design that otherwise looks correct."""
+        if not self.compile_ok:
+            return False
+        return (self.sim_timed_out or not self.sim_complete
+                or (self.all_tests_pass and self.formal_status in ("error", "timeout")))
+
+    @property
+    def accepted(self) -> bool:
+        """The single acceptance predicate: termination, solve rates, and the
+        area/depth bonus all use it."""
+        return (self.all_tests_pass and self.sim_complete and self.synth_ok
+                and not self.latches and not self.interface_errors
+                and self.formal_status in ("pass", "disabled"))
+
     def to_dict(self) -> dict:
         d = asdict(self)
         d["pass_rate"] = self.pass_rate
+        d["accepted"] = self.accepted
         return d
 
 
@@ -99,20 +126,23 @@ def _versions() -> dict[str, str]:
 
 
 def reference_ppa(task: Task) -> dict:
-    """Synthesize the reference once per process; it anchors the PPA reward."""
+    """Synthesize the reference once per process (keyed by the task's content, not
+    its name); it anchors the area/depth bonus and the interface check."""
+    key = task.fingerprint()
     with _REF_LOCK:
-        if task.id in _REF_PPA:
-            return _REF_PPA[task.id]
+        if key in _REF_PPA:
+            return _REF_PPA[key]
         with tempfile.TemporaryDirectory(prefix="rtlgym_ref_") as d:
             s = tools.synth_yosys(task.ref_path, task.top, Path(d))
-        if not s.ok:
+        if not s.ok or s.cells is None:
             raise RuntimeError(f"reference for {task.id} does not synthesize:\n{s.log}")
-        _REF_PPA[task.id] = {"cells": s.cells, "depth": s.depth, "ports": s.ports}
-        return _REF_PPA[task.id]
+        _REF_PPA[key] = {"cells": s.cells, "depth": s.depth, "ports": s.ports}
+        return _REF_PPA[key]
 
 
 def _cache_key(task: Task, code: str, weights: RewardWeights, use_formal: bool) -> str:
     h = hashlib.sha256()
+    h.update(f"grader={GRADER_VERSION};rtlgym={__version__};".encode())
     h.update(task.fingerprint().encode())
     h.update(code.encode())
     h.update(json.dumps(_versions(), sort_keys=True).encode())
@@ -124,16 +154,15 @@ def _cache_key(task: Task, code: str, weights: RewardWeights, use_formal: bool) 
 def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
              use_cache: bool = True, keep_dir: Path | None = None,
              use_formal: bool = True) -> EvalResult:
+    tools.require_tools()
     weights = weights or RewardWeights()
     sha = hashlib.sha256(code.encode()).hexdigest()[:12]
     key = _cache_key(task, code, weights, use_formal)
     cache_file = CACHE_DIR / f"{key}.json"
-    if use_cache and cache_file.is_file():
-        data = json.loads(cache_file.read_text())
-        data.pop("pass_rate", None)
-        res = EvalResult(**data)
-        res.cached = True
-        return res
+    if use_cache and keep_dir is None:
+        cached = _load_cached(cache_file)
+        if cached is not None:
+            return cached
 
     res = EvalResult(task_id=task.id, code_sha=sha)
     ref = reference_ppa(task)
@@ -153,10 +182,34 @@ def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
                 ctx.cleanup()
 
     res.score, res.breakdown = compute_reward(res, weights)
-    if use_cache:
-        CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        cache_file.write_text(json.dumps(res.to_dict()))
+    if use_cache and not res.inconclusive:
+        _store_cached(cache_file, res)
     return res
+
+
+def _load_cached(path: Path) -> EvalResult | None:
+    try:
+        data = json.loads(path.read_text())
+        data.pop("pass_rate", None)
+        data.pop("accepted", None)
+        res = EvalResult(**data)
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError, TypeError):
+        return None                      # damaged or outdated entry: grade again
+    res.cached = True
+    return res
+
+
+def _store_cached(path: Path, res: EvalResult) -> None:
+    """Write atomically, so a concurrent reader never sees a half-written file."""
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = path.with_suffix(f".{os.getpid()}.{threading.get_ident()}.tmp")
+        tmp.write_text(json.dumps(res.to_dict()))
+        os.replace(tmp, path)
+    except OSError:
+        pass                             # the cache is an optimization, never required
 
 
 def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
@@ -172,8 +225,8 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
 
     # Lint, synthesis, simulation and the formal check are independent; run them
     # concurrently so wall-clock latency per step is max(), not sum(), of the tools.
-    (workdir / "lint").mkdir()
-    (workdir / "synth").mkdir()
+    (workdir / "lint").mkdir(exist_ok=True)
+    (workdir / "synth").mkdir(exist_ok=True)
     run_formal = use_formal and task.has_formal
     with ThreadPoolExecutor(max_workers=4) as pool:
         f_lint = pool.submit(tools.lint_verilator, src, task.top, workdir / "lint")
@@ -211,11 +264,9 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
 
     res.tests_total, res.tests_passed = sim.total, sim.passed
     res.test_failures, res.sim_timed_out = sim.failures, sim.timed_out
+    res.sim_complete = sim.complete and not sim.timed_out
     res.sim_log = sim.log if not sim.ok else ""
     res.timings_s["sim"] = round(sim.elapsed_s, 3)
-    if not sim.ok and sim.total == 0:
-        # Simulation crashed or timed out before any result: count all tests as failed.
-        res.tests_total = max(res.tests_total, 1)
 
 
 def interface_diff(expected: dict, got: dict) -> list[str]:

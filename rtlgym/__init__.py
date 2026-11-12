@@ -5,8 +5,11 @@
 
 An agent receives a natural-language hardware spec, writes SystemVerilog, and
 gets a shaped reward from real EDA tools: compile (Icarus Verilog), lint
-(Verilator), hidden functional tests (cocotb), and synthesis PPA proxies (Yosys).
+(Verilator), hidden functional tests (cocotb), formal equivalence with the
+reference (Yosys SAT), and generic-gate area and depth proxies (Yosys).
 """
+
+__version__ = "0.3.0"  # defined before the imports below, which read it
 
 from .env import RTLEnv
 from .evaluator import EvalResult, evaluate
@@ -24,4 +27,3 @@ __all__ = [
     "RTLEnv",
 ]
 
-__version__ = "0.2.0"

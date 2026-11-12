@@ -28,15 +28,18 @@ spec.md ──► agent ──► RTL ──► static ─► compile ─┬─�
 
 ## Quick start
 
+rtlgym runs on Linux (on Windows, use WSL). Install it from a clone: the tasks live
+next to the package, not inside it.
+
 ```bash
-sudo apt-get install -y iverilog verilator yosys        # Ubuntu 24.04 (on Windows, use WSL)
+sudo apt-get install -y iverilog verilator yosys        # Ubuntu 24.04
 pip install -e ".[dev]"
 
 python -m rtlgym list                                   # 8 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 81 tests
+pytest -q                                               # 101 tests
 ```
 
 ## Using it as an RL environment
@@ -55,8 +58,13 @@ while True:
 
 - `step()` returns the Gymnasium 5-tuple. `info["eval"]` holds the full `EvalResult`
   (per-stage results, logs, gate counts, formal status and counterexample, timings).
-- An episode ends when the attempt is **solved**: every hidden test passes and the
-  formal check finds no difference from the reference.
+- An episode ends when an attempt is **accepted**: every expected hidden test ran and
+  passed, the design synthesizes without latches, its ports match the reference, and
+  the formal check passed. A formal error or timeout, or a simulation that ended before
+  every test reported, is **inconclusive**: not accepted, and never cached. The same
+  predicate ends episodes, defines solve rates, and gates the area/depth bonus.
+- `info` carries the full grading result for the trainer and for logging. A policy
+  under evaluation should only see `obs`.
 - `reward_mode="improvement"` pays only the gain over the best score so far, so the
   episode return equals the best score reached and re-submitting the same answer earns
   nothing. `reward_mode="score"` pays the raw score every turn.
@@ -102,7 +110,7 @@ The reward is a ladder in [0, 1]; each rung only counts once the earlier ones ho
 | compile | 0.10 | passes static checks and compiles |
 | lint | 0.05 | Verilator `-Wall` clean; decays to 0 at 5 warnings |
 | functional | 0.70 | × fraction of hidden tests passed; halved if the design does not synthesize |
-| area/depth bonus | 0.15 | only when every test passes, the formal check did not fail, synthesis succeeds, and no latches are inferred. Matching the reference earns 80%; beating it by 25% earns 100% (70% area, 30% depth) |
+| area/depth bonus | 0.15 | only for an accepted design. Matching the reference earns 80%; a reference-to-candidate ratio of 1.25 (20% fewer cells or logic levels) earns 100% (70% area, 30% depth). A missing metric earns nothing |
 | test-escape penalty | −0.10 | every test passes but the formal check finds a difference |
 | latch penalty | −0.05 | any inferred latch |
 
@@ -142,10 +150,14 @@ EDA tools are the slow part of an RL step. The harness keeps it low:
    versions, reward weights, formal on/off). Duplicate samples, common in RL batches,
    cost nothing.
 4. **Parallel episodes.** `--workers N` runs episodes concurrently.
-5. **Resource limits.** Every tool runs in its own process group with a wall-clock
-   timeout and CPU and memory limits, and a timeout kills the whole group, so an
-   infinite loop in generated RTL cannot stall a training run. This is not a hardened
-   sandbox: there is no container, syscall filter, or network isolation.
+5. **Resource limits.** Every tool runs in its own session with a wall-clock timeout
+   and CPU, memory, and file-size limits (set by `prlimit`, not `preexec_fn`, which is
+   unsafe with threads), and a timeout kills the whole process group. Tools get a
+   minimal environment, so API keys and tokens never reach a simulator running
+   generated code. Output goes to a capped file, so a design that prints without end
+   cannot exhaust memory. A missing tool stops the run with an error instead of being
+   scored as a candidate failure. This is not a hardened sandbox: there is no
+   container, syscall filter, or network isolation.
 
 Measured on a 2-core Linux machine with an empty cache, one grading step takes 0.8 to
 2.1 seconds depending on the task; simulator start-up dominates, except for
@@ -153,39 +165,50 @@ Measured on a 2-core Linux machine with an empty cache, one grading step takes 0
 
 ## Experiments: running Claude on the tasks
 
-`run` plays full episodes and reports, per model:
+`run` plays full episodes and reports, per arm:
 
-- **solved on the first attempt**: all hidden tests pass and the formal check passes;
-- **first attempt passes tests only**: the same without the formal check, so the gap
-  between the two shows how often tests alone would have been fooled;
-- **solved within N turns**, using the feedback loop;
+- **accepted on the first attempt** (the acceptance rule above);
+- **first attempt passes tests**: hidden tests only, so the gap between the two shows
+  how often tests alone would have been fooled;
+- **accepted within N turns**;
 - **test escapes**: attempts that pass every test but fail the formal check;
+- **inconclusive** attempts, reported separately rather than hidden in a rate;
+- episodes run and episodes that hit an API error (excluded from the rates, and shown);
 - mean turns, grading latency (median and 95th percentile), cache hit rate, and token
   usage.
+
+The default experiment compares two arms per model with the same turn budget:
+**full** feedback (compiler, test, and formal diagnostics between attempts) against
+**none** (the agent only learns the attempt was not accepted and tries again). The
+first attempts are identical by construction, so the difference in later turns
+measures what the tool feedback adds over plain retries.
 
 Every result file records the model, effort, sampling settings, git commit, Python and
 tool versions, and the full per-turn trajectory of every episode.
 
 **On GitHub (no local setup):** add the repository secret `ANTHROPIC_API_KEY`
 (Settings → Secrets and variables → Actions), then open Actions → eval → Run workflow.
-Choose the models (comma-separated), episodes per task, and turns. The run publishes a
-Markdown summary on the run page and uploads the raw JSON as the `eval-results`
-artifact.
+Choose the models and feedback arms (comma-separated), episodes per task, and turns.
+The run publishes a Markdown summary on the run page and uploads the raw JSON as the
+`eval-results` artifact. The API key stays in the agent process; the grading tools
+never see it.
 
 **Locally:**
 
 ```bash
 pip install -e ".[claude]"
 export ANTHROPIC_API_KEY=...
-python -m rtlgym run --agent claude --model claude-sonnet-5-5 --samples 5 --max-turns 3 \
-    --out results/claude-sonnet-5-5.json
+for fb in full none; do
+  python -m rtlgym run --agent claude --model claude-sonnet-5-5 --feedback $fb \
+      --samples 5 --max-turns 3 --out results/claude-sonnet-5-5__$fb.json
+done
 python -m rtlgym report results/*.json
 ```
 
 The agent sends no sampling parameters (Claude Sonnet 5.5 rejects them), streams
 responses, and leaves room for thinking in `max_tokens`. `--effort` sets the effort
-level; by default each model uses its own. With 8 tasks, 5 episodes per task, and at
-most 3 turns, a run makes at most 120 API calls.
+level; by default each model uses its own. With 8 tasks, 5 episodes per task, at most
+3 turns, and two arms, a run makes at most 240 API calls per model.
 
 ## Tasks
 
@@ -250,15 +273,19 @@ rtlgym/
   agents/         scripted replay agent (offline) and Claude agent (API)
   cli.py          list / score / baselines / run / report
 tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            81 tests: reward, formal, end-to-end grading, environment, agent, CLI
+tests/            101 tests: reward, formal, tools, end-to-end grading, environment, agent, CLI
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs)
 ```
 
 ## Limitations and next steps
 
-- **Small benchmark.** Eight textbook-size designs exercise the harness; they are not
-  enough to measure how a model generalizes to production RTL. Larger, multi-module
-  designs and a held-out task split are the next step.
+- **Small, public benchmark.** Eight textbook-size designs exercise the harness; they
+  are not enough to measure how a model generalizes to production RTL. Their tests,
+  seeds, and references are public, so treat them as development fixtures: a real
+  evaluation needs private, held-out task families and independently seeded checks.
+- **Equal-weight tests.** Each cocotb test counts once toward the functional score,
+  whatever it covers. Scoring explicit requirement groups would make partial credit
+  mean more.
 - **Bounded proofs.** Sequential checks cover a fixed number of cycles from reset, with
   reset held low afterwards. k-induction would turn some of them into full proofs.
 - **Proxies, not signoff.** Area and depth are generic-gate estimates. A Liberty-based

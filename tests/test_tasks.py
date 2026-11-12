@@ -97,3 +97,65 @@ endmodule
     assert r.sim_timed_out and r.tests_passed == 0 and r.score < 0.2
     leftover = subprocess.run(["pgrep", "-f", str(work)], capture_output=True, text=True).stdout
     assert leftover.strip() == "", "simulator process survived the timeout"
+
+
+def test_acceptance_predicate_matrix():
+    from rtlgym.evaluator import EvalResult
+    base = dict(task_id="t", code_sha="x", static_ok=True, compile_ok=True, synth_ok=True,
+                latches=0, tests_total=3, tests_passed=3, sim_complete=True, formal_status="pass")
+    assert EvalResult(**base).accepted
+    assert EvalResult(**{**base, "formal_status": "disabled"}).accepted
+    for change in ({"formal_status": "error"}, {"formal_status": "timeout"},
+                   {"formal_status": "fail"}, {"sim_complete": False}, {"synth_ok": False},
+                   {"latches": 2}, {"interface_errors": ["missing port"]},
+                   {"tests_passed": 2}):
+        r = EvalResult(**{**base, **change})
+        assert not r.accepted, change
+    assert EvalResult(**{**base, "formal_status": "timeout"}).inconclusive
+
+
+def test_corrupt_cache_entry_is_regraded(monkeypatch, tmp_path):
+    from rtlgym import evaluator
+    task = load_task("popcount16")
+    code = task.ref_path.read_text()
+    first = evaluate(task, code)
+    files = list(evaluator.CACHE_DIR.glob("*.json"))
+    assert len(files) == 1
+    files[0].write_text("{truncated")
+    again = evaluate(task, code)
+    assert not again.cached and again.score == first.score
+
+
+def test_grader_version_change_invalidates_cache(monkeypatch):
+    from rtlgym import evaluator
+    task = load_task("popcount16")
+    code = task.ref_path.read_text()
+    evaluate(task, code)
+    assert evaluate(task, code).cached
+    monkeypatch.setattr(evaluator, "GRADER_VERSION", "test-bump")
+    assert not evaluate(task, code).cached
+
+
+def test_inconclusive_results_are_not_cached(tmp_path):
+    import dataclasses
+
+    from rtlgym import evaluator
+    task = dataclasses.replace(load_task("popcount16"), sim_timeout_s=3)
+    code = """module popcount16 (input logic [15:0] x, output logic [4:0] count);
+    int k;
+    always @(x) while (x != 16'hDEAD) k = k + 1;
+    assign count = 5'd0;
+endmodule
+"""
+    r = evaluate(task, code)
+    assert r.inconclusive and not r.accepted
+    assert r.tests_total == 3 and r.tests_passed == 0          # every expected test counted
+    assert not list(evaluator.CACHE_DIR.glob("*.json"))
+
+
+def test_retained_work_directory_can_be_reused(tmp_path):
+    task = load_task("edge_detect")
+    code = task.ref_path.read_text()
+    for _ in range(2):
+        r = evaluate(task, code, use_cache=False, keep_dir=tmp_path / "work")
+        assert r.accepted

@@ -7,7 +7,7 @@ from rtlgym.reward import RewardWeights, compute_reward, ppa_score
 def result(**kw):
     base = dict(task_id="t", code_sha="x", static_ok=True, compile_ok=True, lint_ok=True,
                 synth_ok=True, tests_total=4, tests_passed=4, cells=100, depth=10, latches=0,
-                ref_cells=100, ref_depth=10, formal_status="pass")
+                ref_cells=100, ref_depth=10, formal_status="pass", sim_complete=True)
     base.update(kw)
     return EvalResult(**base)
 
@@ -86,3 +86,16 @@ def test_bonus_needs_formal_pass_or_disabled():
                                  ("timeout", False)):
         _, b = compute_reward(result(formal_status=status))
         assert (b["ppa"] > 0) == expect_bonus, status
+
+
+def test_missing_depth_metric_earns_no_depth_credit():
+    from rtlgym.reward import RewardWeights, ppa_score
+    w = RewardWeights()
+    assert ppa_score(100, None, 100, 10, w) == pytest.approx(w.area_vs_depth * 0.8)
+
+
+def test_bonus_withheld_when_simulation_incomplete_or_interface_wrong():
+    for kw in ({"sim_complete": False}, {"interface_errors": ["missing port 'x'"]},
+               {"synth_ok": False}, {"latches": 1}):
+        _, b = compute_reward(result(**kw))
+        assert b["ppa"] == 0.0, kw

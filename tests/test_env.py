@@ -98,3 +98,17 @@ def test_formal_can_be_disabled_for_ablations():
     obs, r, term, trunc, info = env.step(code)
     assert info["eval"].formal_status == "disabled"
     assert term and info["solved"]          # without formal, the escape looks solved
+
+
+def test_step_after_episode_end_raises():
+    env = RTLEnv(max_turns=1)
+    env.reset(task_id="edge_detect")
+    code = (env.tasks_root / "edge_detect" / "ref.sv").read_text()
+    env.step(code)
+    with pytest.raises(RuntimeError, match="episode is over"):
+        env.step(code)
+
+
+def test_invalid_turn_budget_is_rejected():
+    with pytest.raises(ValueError):
+        RTLEnv(max_turns=0)

@@ -32,6 +32,7 @@ class EpisodeState:
     task: Task
     turn: int = 0
     best_score: float = 0.0
+    done: bool = False
     history: list[EvalResult] = field(default_factory=list)
 
 
@@ -45,8 +46,9 @@ class RTLEnv:
             score of the current attempt).
         feedback: "none" (single-shot eval), "summary" (pass/fail counts only),
             or "full" (tool logs and failing test names).
-        stop_on_pass: end the episode once the attempt is solved: every hidden test
-            passes and the formal check did not find a difference.
+        stop_on_pass: end the episode once an attempt is accepted: every expected
+            hidden test ran and passed, the design synthesizes without latches, its
+            interface matches, and the formal check passed (or is disabled).
         use_formal: run the formal equivalence check (when the task defines one).
     """
 
@@ -54,6 +56,8 @@ class RTLEnv:
                  reward_mode: str = "improvement", feedback: str = "full",
                  stop_on_pass: bool = True, weights: RewardWeights | None = None,
                  use_cache: bool = True, use_formal: bool = True):
+        if max_turns < 1:
+            raise ValueError("max_turns must be at least 1")
         if reward_mode not in ("improvement", "score"):
             raise ValueError("reward_mode must be 'improvement' or 'score'")
         if feedback not in FEEDBACK_LEVELS:
@@ -82,6 +86,8 @@ class RTLEnv:
         if self.state is None:
             raise RuntimeError("call reset() before step()")
         st = self.state
+        if st.done:
+            raise RuntimeError("the episode is over; call reset() to start a new one")
         code = extract_code(action)
         t0 = time.monotonic()
         res = evaluate(st.task, code, self.weights, use_cache=self.use_cache,
@@ -100,6 +106,7 @@ class RTLEnv:
         solved = is_solved(res)
         terminated = self.stop_on_pass and solved
         truncated = not terminated and st.turn >= self.max_turns
+        st.done = terminated or truncated
         info = {"eval": res, "score": res.score, "best_score": st.best_score, "turn": st.turn,
                 "solved": solved, "grade_s": round(grade_s, 3)}
         return self._obs(feedback=format_feedback(res, self.feedback)), reward, terminated, \
@@ -120,8 +127,10 @@ class RTLEnv:
 
 
 def is_solved(r: EvalResult) -> bool:
-    """Every hidden test passes and the formal check (if any) found no difference."""
-    return r.all_tests_pass and r.formal_status != "fail"
+    """Accepted hardware: see EvalResult.accepted. Formal errors and timeouts,
+    incomplete simulations, synthesis failures, latches, and interface mismatches
+    all count as not solved."""
+    return r.accepted
 
 
 def _formal_lines(r: EvalResult, level: str) -> list[str]:
@@ -162,16 +171,17 @@ def format_feedback(r: EvalResult, level: str = "full") -> str:
             lines.append(r.compile_log.strip())
         return "\n".join(lines)
 
+    lines.append(f"Hidden tests: {r.tests_passed}/{r.tests_total} passed")
     if r.sim_timed_out:
-        lines.append("Hidden tests: simulation timed out (a loop that never ends or logic "
-                     "that never settles); counted as failed")
-    else:
-        lines.append(f"Hidden tests: {r.tests_passed}/{r.tests_total} passed")
+        lines.append("  The simulation timed out (a loop that never ends or logic that never "
+                     "settles); tests that did not finish count as failed.")
+    elif not r.sim_complete:
+        lines.append("  The simulation ended before every test reported; missing tests count "
+                     "as failed.")
     if level == "full":
         for name, msg in r.test_failures.items():
             lines.append(f"  FAIL {name}: {msg.splitlines()[0][:300] if msg else ''}")
-        if (r.tests_total and not r.test_failures and r.tests_passed < r.tests_total
-                and not r.sim_timed_out):
+        if not r.sim_complete and not r.sim_timed_out and r.sim_log:
             lines.append("  simulation log tail:\n" + r.sim_log[-1500:])
         if r.interface_errors:
             lines.append("Interface problems:")

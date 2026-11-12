@@ -21,4 +21,16 @@ def test_run_and_report_roundtrip(tmp_path, capsys):
     capsys.readouterr()
     assert main(["report", str(out)]) == 0
     md = capsys.readouterr().out
-    assert "| replay | 2 |" in md and "| popcount16 |" in md
+    assert "| replay (feedback full) | 2 / 2 |" in md and "| popcount16 |" in md
+
+
+def test_invalid_counts_are_rejected():
+    for argv in (["run", "--samples", "0"], ["run", "--max-turns", "0"],
+                 ["run", "--workers", "-1"]):
+        with pytest.raises(SystemExit):
+            main(argv)
+
+
+def test_empty_task_selection_is_rejected():
+    with pytest.raises(SystemExit):
+        main(["run", "--tasks", " , "])

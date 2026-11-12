@@ -11,10 +11,12 @@ reward for code that does not compile.
     +0.10 compiles
     +0.05 lint clean (decays with warning count)
     +0.70 x fraction of hidden functional tests passed
-    +0.15 area/depth bonus (Yosys proxies, not signoff PPA), only when every test
-          passes, the design synthesizes, no latches are inferred, and the formal
-          check against the reference did not fail. Matching the reference earns
-          80% of the bonus; beating it by 25% earns all of it.
+    +0.15 area/depth bonus (Yosys generic-gate proxies, not signoff PPA), only
+          when the design is accepted: every expected test ran and passed, it
+          synthesizes without latches, its interface matches, and the formal check
+          passed (or is disabled). Matching the reference earns 80% of the bonus;
+          a reference-to-candidate ratio of 1.25 (20% fewer cells or levels) earns
+          all of it. A missing metric earns nothing for its component.
 
 Penalties: inferred latches (-0.05); a test escape, where every hidden test
 passes but the formal check finds an input sequence on which the design differs
@@ -49,8 +51,8 @@ class RewardWeights:
 def ppa_score(cells: int, depth: int | None, ref_cells: int, ref_depth: int | None,
               w: RewardWeights) -> float:
     def ratio(ref: int | None, got: int | None) -> float:
-        if not ref or got is None:
-            return 1.0
+        if got is None:
+            return 0.0                    # unavailable metric: no credit, never full credit
         return min(w.ppa_headroom, ref / max(got, 1)) / w.ppa_headroom
     a = ratio(ref_cells, cells)
     d = ratio(ref_depth, depth) if ref_depth else a
@@ -81,11 +83,10 @@ def compute_reward(r: EvalResult, w: RewardWeights | None = None) -> tuple[float
     if full_pass and formal_status == "fail":
         b["penalty"] -= w.escape_penalty
 
-    # The bonus needs evidence of correctness: all tests pass and the formal check
-    # passed (or is disabled for this run). An error or timeout withholds it.
-    formal_ok = formal_status in ("pass", "disabled")
-    if (full_pass and formal_ok and r.synth_ok and not r.latches and r.cells is not None
-            and r.ref_cells):
+    # The bonus needs an accepted design (same predicate that ends an episode).
+    # A formal error or timeout, an incomplete simulation, or an interface mismatch
+    # withholds it.
+    if getattr(r, "accepted", False) and r.cells is not None and r.ref_cells:
         b["ppa"] = w.ppa * ppa_score(r.cells, r.depth, r.ref_cells, r.ref_depth, w)
 
     total = max(0.0, sum(b.values()))

@@ -57,10 +57,15 @@ class ClaudeAgent(Agent):
     def act(self, obs: dict) -> str:
         if not self.messages:
             content = f"Implement module `{obs['top']}`.\n\n## Specification\n\n{obs['spec']}"
-        else:
+        elif obs["feedback"]:
             content = ("Tool feedback on your last submission:\n\n```\n" + obs["feedback"]
                        + f"\n```\n\nYou have {obs['turns_left']} attempt(s) left. "
                        "Return the full corrected module.")
+        else:
+            # Retry without diagnostics (feedback="none"): the control arm for measuring
+            # what tool feedback adds over simply trying again.
+            content = (f"Your last submission was not accepted. You have {obs['turns_left']} "
+                       "attempt(s) left. Return the full module.")
         self.messages.append({"role": "user", "content": content})
         msg = self._call()
         # Keep the full assistant turn (thinking blocks included) for the next request.

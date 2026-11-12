@@ -3,6 +3,12 @@ name: eval
 # Runs the Claude agent on every task and publishes the results. Manual only:
 # it calls the Claude API, which costs money. Needs the repository secret
 # ANTHROPIC_API_KEY (Settings > Secrets and variables > Actions).
+#
+# Default experiment: for each model, a "full" arm (the agent sees compiler, test,
+# and formal diagnostics between attempts) and a "none" arm (it only learns that the
+# attempt was not accepted), with the same turn budget, so the difference measures
+# what tool feedback adds over simply retrying. The key never reaches the EDA tools:
+# they run with a minimal environment.
 on:
   workflow_dispatch:
     inputs:
@@ -17,6 +23,10 @@ on:
       max_turns:
         description: "Attempts per episode"
         default: "3"
+        required: true
+      feedback:
+        description: "Comma-separated feedback arms: full (tool diagnostics), none (retry only)"
+        default: "full,none"
         required: true
       effort:
         description: "Effort level: low, medium, high (blank = model default)"
@@ -55,14 +65,17 @@ jobs:
           MODELS: ${{ inputs.models }}
           SAMPLES: ${{ inputs.samples }}
           MAX_TURNS: ${{ inputs.max_turns }}
+          FEEDBACK: ${{ inputs.feedback }}
           EFFORT: ${{ inputs.effort }}
         run: |
           mkdir -p results
           for m in $(echo "$MODELS" | tr ',' ' '); do
-            args=(--agent claude --model "$m" --samples "$SAMPLES" --max-turns "$MAX_TURNS"
-                  --workers 4 --out "results/$m.json")
-            if [ -n "$EFFORT" ]; then args+=(--effort "$EFFORT"); fi
-            python -m rtlgym run "${args[@]}"
+            for fb in $(echo "$FEEDBACK" | tr ',' ' '); do
+              args=(--agent claude --model "$m" --feedback "$fb" --samples "$SAMPLES"
+                    --max-turns "$MAX_TURNS" --workers 4 --out "results/${m}__${fb}.json")
+              if [ -n "$EFFORT" ]; then args+=(--effort "$EFFORT"); fi
+              python -m rtlgym run "${args[@]}"
+            done
           done
           python -m rtlgym report results/*.json | tee results/summary.md
           cat results/summary.md >> "$GITHUB_STEP_SUMMARY"

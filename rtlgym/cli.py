@@ -35,7 +35,16 @@ def _tasks_arg(value: str, root: Path) -> list[str]:
     unknown = set(ids) - set(all_ids)
     if unknown:
         sys.exit(f"unknown task(s): {', '.join(sorted(unknown))}")
+    if not ids:
+        sys.exit("no tasks selected")
     return ids
+
+
+def _positive_int(value: str) -> int:
+    n = int(value)
+    if n < 1:
+        raise argparse.ArgumentTypeError("must be at least 1")
+    return n
 
 
 def _git_commit() -> str:
@@ -121,7 +130,8 @@ def run_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: 
             turns.append({"turn": info["turn"], "score": r.score, "reward": round(reward, 4),
                           "tests": f"{r.tests_passed}/{r.tests_total}",
                           "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
-                          "test_escape": r.test_escape, "solved": info["solved"],
+                          "test_escape": r.test_escape, "inconclusive": r.inconclusive,
+                          "solved": info["solved"],
                           "cells": r.cells, "breakdown": r.breakdown,
                           "timings_s": r.timings_s, "grade_s": info["grade_s"],
                           "cached": r.cached})
@@ -139,6 +149,7 @@ def run_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: 
         "pass@1_tests_only": bool(first and first.all_tests_pass),
         "solved": bool(last and is_solved(last)),
         "test_escapes": sum(t["test_escape"] for t in turns),
+        "inconclusive": sum(t["inconclusive"] for t in turns),
         "first_score": first.score if first else 0.0,
         "best_score": env.state.best_score if env.state else 0.0,
         "return": round(ret, 4),
@@ -179,6 +190,7 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "pass@1_tests_only": frac("pass@1_tests_only"),
         "solved_within_turns": frac("solved"),
         "test_escape_attempts": sum(r["test_escapes"] for r in ok),
+        "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in ok),
         "mean_first_score": mean("first_score"),
         "mean_best_score": mean("best_score"),
         "mean_turns": mean("turns"),
@@ -254,23 +266,32 @@ def _pct(v) -> str:
     return "n/a" if v is None else f"{100 * v:.0f}%"
 
 
+def _arm(s: dict) -> str:
+    name = s.get("model") or s.get("agent")
+    parts = [f"feedback {s.get('feedback', 'full')}"]
+    if s.get("effort"):
+        parts.append(f"effort {s['effort']}")
+    if not s.get("formal", True):
+        parts.append("no formal")
+    return f"{name} ({', '.join(parts)})"
+
+
 def cmd_report(args) -> int:
     """Turn one or more `run --out` files into Markdown tables."""
     runs = [json.loads(Path(f).read_text())["summary"] for f in args.files]
-    print("| Model | Episodes | Solved on 1st attempt | 1st attempt passes tests only "
-          "| Solved within N turns | Test escapes | Mean turns | Grading p50 / p95 |")
-    print("|---|---:|---:|---:|---:|---:|---:|---:|")
+    print("| Arm | Episodes ok / run | Accepted on 1st attempt | 1st attempt passes tests "
+          "| Accepted within N turns | Test escapes | Inconclusive | Mean turns "
+          "| Grading p50 / p95 |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
     for s in runs:
-        name = s.get("model") or s.get("agent")
-        if s.get("effort"):
-            name += f" (effort {s['effort']})"
-        print(f"| {name} | {s['episodes'] - s['errors']} | {_pct(s['pass@1'])} | "
-              f"{_pct(s['pass@1_tests_only'])} | {_pct(s['solved_within_turns'])} "
-              f"(N={s['max_turns']}) | {s['test_escape_attempts']} | {s['mean_turns']} | "
-              f"{s['grading_s_p50']} s / {s['grading_s_p95']} s |")
+        print(f"| {_arm(s)} | {s['episodes'] - s['errors']} / {s['episodes']} | "
+              f"{_pct(s['pass@1'])} | {_pct(s['pass@1_tests_only'])} | "
+              f"{_pct(s['solved_within_turns'])} (N={s['max_turns']}) | "
+              f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
+              f"{s['mean_turns']} | {s['grading_s_p50']} s / {s['grading_s_p95']} s |")
     tasks = sorted({t for s in runs for t in s["per_task"]})
     print()
-    print("| Task | " + " | ".join(s.get("model") or s.get("agent") for s in runs) + " |")
+    print("| Task | " + " | ".join(_arm(s) for s in runs) + " |")
     print("|---|" + "---:|" * len(runs))
     for t in tasks:
         cells = []
@@ -279,9 +300,14 @@ def cmd_report(args) -> int:
             cells.append("n/a" if not pt else f"{_pct(pt['pass@1'])} → {_pct(pt['solved'])}")
         print(f"| {t} | " + " | ".join(cells) + " |")
     print()
+    turns = sorted({s["max_turns"] for s in runs})
+    if len(turns) > 1:
+        print(f"Note: the runs use different turn budgets ({turns}); compare rates with care.")
     first = runs[0]
-    print(f"Per-task cells: solved on the first attempt → solved within {first['max_turns']} "
-          f"turns. Commit {first['git_commit'][:7]}; {first['tools'].get('yosys', '')}.")
+    print(f"Per-task cells: accepted on the first attempt → accepted within the turn budget. "
+          f"Accepted means every hidden test passed, the design synthesized without latches, "
+          f"and the formal check passed. Commit {first['git_commit'][:7]}; "
+          f"{first['tools'].get('yosys', '')}.")
     return 0
 
 
@@ -301,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("baselines", help="grade the reference and all hand-written candidates")
     p.add_argument("--tasks", default="all")
-    p.add_argument("--workers", type=int, default=4)
+    p.add_argument("--workers", type=_positive_int, default=4)
     p.add_argument("--out")
     p.add_argument("--no-cache", action="store_true")
     p.add_argument("--no-formal", action="store_true")
@@ -312,13 +338,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--model", help="Claude model ID (default: $RTLGYM_MODEL or claude-sonnet-5-5)")
     p.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"],
                    help="Claude effort level (default: the model's own default)")
-    p.add_argument("--max-tokens", type=int, help="output token limit per call, thinking included")
+    p.add_argument("--max-tokens", type=_positive_int,
+                   help="output token limit per call, thinking included")
     p.add_argument("--tasks", default="all")
-    p.add_argument("--samples", type=int, default=1, help="episodes per task")
-    p.add_argument("--max-turns", type=int, default=3)
+    p.add_argument("--samples", type=_positive_int, default=1, help="episodes per task")
+    p.add_argument("--max-turns", type=_positive_int, default=3)
     p.add_argument("--reward-mode", choices=["improvement", "score"], default="improvement")
     p.add_argument("--feedback", choices=["none", "summary", "full"], default="full")
-    p.add_argument("--workers", type=int, default=4)
+    p.add_argument("--workers", type=_positive_int, default=4)
     p.add_argument("--out")
     p.add_argument("--no-cache", action="store_true")
     p.add_argument("--no-formal", action="store_true")
