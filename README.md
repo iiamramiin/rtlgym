@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 8 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 101 tests
+pytest -q                                               # 132 tests
 ```
 
 ## Using it as an RL environment
@@ -210,6 +210,29 @@ responses, and leaves room for thinking in `max_tokens`. `--effort` sets the eff
 level; by default each model uses its own. With 8 tasks, 5 episodes per task, at most
 3 turns, and two arms, a run makes at most 240 API calls per model.
 
+### Local models (Ollama)
+
+The same experiment runs on free local models served by [Ollama](https://ollama.com),
+with no API key. The Ollama agent uses the same system prompt and per-turn messages as
+the Claude agent, so the arms are directly comparable.
+
+```bash
+ollama list                       # installed models, e.g. qwen3:14b
+for fb in full none; do
+  python -m rtlgym run --agent ollama --model qwen3:14b --feedback $fb \
+      --samples 1 --max-turns 3 --workers 1 --out results/qwen3-14b__$fb.json
+done
+python -m rtlgym report results/*.json
+```
+
+Reasoning that models such as Qwen3 emit (`<think>...</think>` or a separate field) is
+removed before grading and from the conversation history, and the module is extracted
+from fenced or bare replies. The agent sets a 16K-token context window (`--num-ctx`;
+Ollama's default would silently truncate multi-turn episodes) and waits up to 30
+minutes per reply (`--ollama-timeout`). `--think on|off` switches reasoning for models
+that support it. Use `--workers 1`: Ollama usually serves one request at a time.
+`OLLAMA_HOST` or `--ollama-host` points at a server on another machine.
+
 ## Tasks
 
 | Task | Difficulty | Exercises | Formal check |
@@ -270,10 +293,10 @@ rtlgym/
   tools.py        resource-limited wrappers for iverilog, verilator, yosys, cocotb
   checks.py       static checks and code extraction from LLM replies
   simworker.py    child process that runs one cocotb testbench
-  agents/         scripted replay agent (offline) and Claude agent (API)
+  agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            101 tests: reward, formal, tools, end-to-end grading, environment, agent, CLI
+tests/            132 tests: reward, formal, tools, end-to-end grading, environment, agents, CLI
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs)
 ```
 

@@ -210,6 +210,17 @@ def cmd_run(args) -> int:
     agent_kwargs: dict = {}
     if args.agent == "replay":
         agent_kwargs["tasks_root"] = args.tasks_root
+    elif args.agent == "ollama":
+        if not args.model:
+            sys.exit("--agent ollama needs --model (an installed model, e.g. qwen3:14b)")
+        if args.effort:
+            sys.exit("--effort applies to the Claude agent only")
+        agent_kwargs.update(model=args.model, host=args.ollama_host,
+                            timeout_s=args.ollama_timeout, num_ctx=args.num_ctx)
+        if args.max_tokens:
+            agent_kwargs["max_tokens"] = args.max_tokens
+        if args.think != "default":
+            agent_kwargs["think"] = args.think == "on"
     else:
         if args.model:
             agent_kwargs["model"] = args.model
@@ -250,6 +261,10 @@ def cmd_run(args) -> int:
         "python": platform.python_version(),
         "tools": tool_versions(),
     }
+    if args.agent == "ollama":
+        from .agents.ollama import normalize_host
+        meta["ollama"] = {"host": normalize_host(args.ollama_host), "num_ctx": args.num_ctx,
+                          "think": args.think, "timeout_s": args.ollama_timeout}
     summary = summarize(results, meta)
     summary["wall_s"] = round(time.monotonic() - t0, 2)
     print("\n" + json.dumps({k: v for k, v in summary.items() if k not in ("per_task", "tasks")},
@@ -334,8 +349,9 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_baselines)
 
     p = sub.add_parser("run", help="run multi-turn episodes with an agent")
-    p.add_argument("--agent", choices=["replay", "claude"], default="replay")
-    p.add_argument("--model", help="Claude model ID (default: $RTLGYM_MODEL or claude-sonnet-5-5)")
+    p.add_argument("--agent", choices=["replay", "claude", "ollama"], default="replay")
+    p.add_argument("--model", help="Claude model ID (default: $RTLGYM_MODEL or claude-sonnet-5-5); "
+                                    "with --agent ollama, a local model name such as qwen3:14b")
     p.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"],
                    help="Claude effort level (default: the model's own default)")
     p.add_argument("--max-tokens", type=_positive_int,
@@ -349,6 +365,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out")
     p.add_argument("--no-cache", action="store_true")
     p.add_argument("--no-formal", action="store_true")
+    g = p.add_argument_group("local models (--agent ollama)")
+    g.add_argument("--ollama-host", help="Ollama URL (default: $OLLAMA_HOST or "
+                                         "http://localhost:11434)")
+    g.add_argument("--ollama-timeout", type=float, default=1800.0,
+                   help="seconds to wait for one reply (default 1800; local models are slow)")
+    g.add_argument("--num-ctx", type=_positive_int, default=16384,
+                   help="context window in tokens (Ollama's default is too small for "
+                        "multi-turn episodes)")
+    g.add_argument("--think", choices=["default", "on", "off"], default="default",
+                   help="reasoning mode for models that support it, e.g. Qwen3 "
+                        "(default: the model's own setting)")
     p.set_defaults(fn=cmd_run)
 
     p = sub.add_parser("report", help="summarize `run --out` result files as Markdown")
