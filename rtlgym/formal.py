@@ -109,6 +109,9 @@ def first_mismatch(trace: list[dict]) -> int | None:
 
 def check_equivalence(task: Task, cand: Path, workdir: Path, timeout_s: float = 60) -> FormalResult:
     cfg = task.formal
+    # A task can allow more time: a correct design with a different structure from
+    # the reference can take much longer to prove (e.g., the 5-port router).
+    timeout_s = float(cfg.get("timeout_s", timeout_s))
     depth = int(cfg.get("depth", 1))
     workdir.mkdir(parents=True, exist_ok=True)
     script = workdir / "equiv.ys"

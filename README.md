@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 12 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 204 tests
+pytest -q                                               # 205 tests
 ```
 
 ## Using it as an RL environment
@@ -363,7 +363,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            12 tasks with specs, references, hidden tests, candidates
-tests/            204 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            205 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)

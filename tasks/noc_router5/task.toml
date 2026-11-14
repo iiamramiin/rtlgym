@@ -10,5 +10,8 @@ demo_trajectory = ["bug_fixed_priority.sv", "good_retained_slot.sv"]
 # direction and every output arbiter is checked; depth 8 lets each output's
 # round-robin cursor cycle through all five inputs within the bound.
 depth = 8
+# Correct routers built differently from the reference took 14-50 s to prove on the
+# CI runner, against the 60 s default; allow more so they are not marked inconclusive.
+timeout_s = 240
 reset = "rst"
 params = { PAYLOAD_W = 1, X = 1, Y = 1 }

@@ -73,3 +73,22 @@ def test_trace_parser_ignores_unrelated_lines():
 """
     trace = parse_trace(log)
     assert len(trace) == 1 and trace[0]["signals"]["trigger"]["dec"] == "1"
+
+
+def test_formal_timeout_can_be_set_per_task(monkeypatch, tmp_path):
+    from rtlgym import formal
+    from rtlgym.task import load_task
+    seen = {}
+
+    def fake_run(cmd, cwd, timeout_s, env=None):
+        seen["timeout_s"] = timeout_s
+        raise RuntimeError("stop here")
+
+    monkeypatch.setattr(formal, "run", fake_run)
+    task = load_task("noc_router5")
+    assert task.formal["timeout_s"] == 240
+    try:
+        formal.check_equivalence(task, task.ref_path, tmp_path)
+    except RuntimeError:
+        pass
+    assert seen["timeout_s"] == 240 + 15      # tool limit plus the subprocess margin
