@@ -108,7 +108,7 @@ class RTLEnv:
         truncated = not terminated and st.turn >= self.max_turns
         st.done = terminated or truncated
         info = {"eval": res, "score": res.score, "best_score": st.best_score, "turn": st.turn,
-                "solved": solved, "grade_s": round(grade_s, 3)}
+                "solved": solved, "grade_s": round(grade_s, 3), "code": code}
         return self._obs(feedback=format_feedback(res, self.feedback)), reward, terminated, \
             truncated, info
 

@@ -143,7 +143,13 @@ def _play(env: RTLEnv, agent, obs: dict, turns: list, ret: float,
             first_action = None
             obs, reward, terminated, truncated, info = env.step(action)
             ret += reward
-            turns.append(_turn_record(info["eval"], reward, info))
+            rec = _turn_record(info["eval"], reward, info)
+            # Kept for analysis: the graded design, what the agent was shown next, and
+            # the full tool report (compiler, test, formal, synthesis messages).
+            rec["code"] = info.get("code")
+            rec["feedback_shown"] = obs.get("feedback", "")
+            rec["tool_report"] = format_feedback(info["eval"], "full")
+            turns.append(rec)
             if terminated or truncated:
                 return ret, None
     except Exception as exc:  # noqa: BLE001 - one failed API call must not sink the run

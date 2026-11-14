@@ -72,3 +72,13 @@ def test_paired_rejects_feedback(tmp_path):
     with pytest.raises(SystemExit, match="leave out --feedback"):
         main(["run", "--agent", "replay", "--paired", "--feedback", "none",
               "--out", str(tmp_path / "p.json")])
+
+
+def test_results_keep_code_and_tool_report(tmp_path):
+    out = tmp_path / "r.json"
+    assert main(["run", "--agent", "replay", "--tasks", "popcount16", "--feedback", "none",
+                 "--out", str(out)]) == 0
+    traj = json.loads(out.read_text())["episodes"][0]["trajectory"]
+    assert "module popcount16" in traj[0]["code"]             # the design that was graded
+    assert traj[0]["feedback_shown"] == ""                    # the "none" arm shows nothing
+    assert "Hidden tests" in traj[0]["tool_report"]           # but the full report is kept
