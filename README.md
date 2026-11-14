@@ -296,6 +296,61 @@ test failure messages are complete (under 2.0.x they were not, a bug fixed since
 run predates the shared reply extraction, the error accounting, and the other fixes
 above; no episode errored.
 
+## Results: Claude Sonnet 5.5 and Haiku 5.5
+
+Paired runs on all 12 tasks, 5 episodes per task (60 per model), up to 3 attempts,
+default effort; each episode's first attempt is shared by the "full" feedback arm and
+the "none" (plain retry) arm. Run on 2026-11-14 (UTC) on GitHub Actions (ubuntu-24.04),
+commit e7fa5e6; Icarus Verilog 12.0, Verilator 5.020, Yosys 0.33, cocotb 2.1.0. Raw
+results, including every attempt's code and tool report:
+[`results/claude/2026-11-14/`](results/claude/2026-11-14/).
+
+| Model | Arm | Accepted on 1st attempt | 1st attempt passes all tests | Accepted within 3 | Test escapes | Inconclusive | Errors |
+|---|---|---|---|---|---|---|---|
+| claude-sonnet-5-5 | full | 50/60 | 57/60 | 60/60 | 0 | 1 | 0 |
+| claude-sonnet-5-5 | none | 50/60 | 57/60 | 57/60 | 0 | 0 | 0 |
+| claude-haiku-5-5 | full | 54/60 | 59/60 | 58/60 | 0 | 1 | 0 |
+| claude-haiku-5-5 | none | 54/60 | 59/60 | 54/60 | 0 | 1 | 0 |
+
+Nine tasks were accepted on the first attempt in all 5 episodes by both models. The
+rest (first attempt → within 3 attempts, full / none):
+
+| Task | Sonnet 5.5 | Haiku 5.5 |
+|---|---|---|
+| `noc_router5` | 0/5 → 5/5 / 2/5 | 0/5 → 3/5 / 0/5 |
+| `crc32_stream` | 2/5 → 5/5 / 5/5 | 4/5 → 5/5 / 4/5 |
+| `rr_arbiter4` | 3/5 → 5/5 / 5/5 | 5/5 → 5/5 / 5/5 |
+
+Paired outcomes, over the episodes whose first attempt was not accepted:
+
+| Model | Informative episodes | Fixed in both arms | Only with feedback | Only with retries | Neither | Exact McNemar p |
+|---|---|---|---|---|---|---|
+| claude-sonnet-5-5 | 10 | 7 | 3 | 0 | 0 | 0.25 |
+| claude-haiku-5-5 | 6 | 0 | 4 | 0 | 2 | 0.125 |
+
+What the numbers show:
+
+- **Every non-accepted first attempt was a toolchain problem, not a logic bug.** 14 of
+  the 16 were designs that Yosys 0.33 could not parse (for example, an `int` declared
+  inside a procedural block, or `?:` in a declaration's initializer) although Icarus and
+  Verilator accepted them; one had an inferred latch; one crashed the Icarus simulator
+  (an internal assertion), which counts as inconclusive. 12 of the 16 passed every
+  hidden test.
+- **Feedback was never worse than retrying.** All 7 discordant episodes favor
+  feedback. Per model the evidence is weak (p = 0.25 and 0.125); pooled across the two
+  models, 7 to 0 gives p = 0.016, a rough figure since the models differ. Without
+  feedback, the models often resubmitted the same rejected construct.
+- **No test escapes.** The hidden tests caught every functional error in these runs,
+  so the formal check confirmed designs rather than catching wrong ones. It did hit its
+  limits once: for a correct router 5 times the reference's size (4,451 cells), Yosys
+  failed to build the equivalence check, with an error after 123 s (inconclusive; the
+  next attempt was accepted).
+
+Sample size: 16 informative episodes in total. These results describe these 12 tasks
+and this toolchain; they are not a general measure of RTL ability. Tokens (all calls,
+including shared first attempts): Sonnet 87 calls, 156,029 input and 122,187 output;
+Haiku 80 calls, 204,278 input and 173,303 output.
+
 ## Tasks
 
 | Task | Difficulty | Exercises | Formal check |
