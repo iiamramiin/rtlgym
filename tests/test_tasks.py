@@ -159,3 +159,25 @@ def test_retained_work_directory_can_be_reused(tmp_path):
     for _ in range(2):
         r = evaluate(task, code, use_cache=False, keep_dir=tmp_path / "work")
         assert r.accepted
+
+
+# Valid SystemVerilog that Icarus and Verilator accept but Yosys 0.33's parser rejects
+# (a function with a local variable, a loop, and `return`). Every test passes, but the
+# design fails the synthesis requirement: that is a clear rejection, not inconclusive.
+YOSYS_UNREADABLE = """module popcount16 (input logic [15:0] x, output logic [4:0] count);
+    function automatic logic [4:0] pc(input logic [15:0] v);
+        logic [4:0] n;
+        n = '0;
+        for (int i = 0; i < 16; i++) n = n + v[i];
+        return n;
+    endfunction
+    assign count = pc(x);
+endmodule
+"""
+
+
+def test_yosys_unreadable_design_is_a_synthesis_failure_not_inconclusive():
+    r = evaluate(load_task("popcount16"), YOSYS_UNREADABLE, use_cache=False)
+    assert r.compile_ok and r.all_tests_pass, r.test_failures
+    assert not r.synth_ok and r.formal_status == "error"
+    assert not r.inconclusive and r.score < 0.6

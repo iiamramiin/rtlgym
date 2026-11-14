@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 12 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 202 tests
+pytest -q                                               # 204 tests
 ```
 
 ## Using it as an RL environment
@@ -60,8 +60,12 @@ while True:
   (per-stage results, logs, gate counts, formal status and counterexample, timings).
 - An episode ends when an attempt is **accepted**: every expected hidden test ran and
   passed, the design synthesizes without latches, its ports match the reference, and
-  the formal check passed. A formal error or timeout, or a simulation that ended before
-  every test reported, is **inconclusive**: not accepted, and never cached. The same
+  the formal check passed. A formal error or timeout on a design that otherwise passes
+  (tests and synthesis), or a simulation that ended before every test reported, is
+  **inconclusive**: not accepted, and never cached. A design that Yosys 0.33 cannot read
+  is a synthesis failure, not inconclusive: its SystemVerilog parser rejects some valid
+  constructs (for example, a function with a loop and `return`, or `foreach`), the tool
+  report shows the exact error, and the system prompt asks for Yosys-compatible code. The same
   predicate ends episodes, defines solve rates, and gates the area/depth bonus.
 - `info` carries the full grading result for the trainer and for logging. A policy
   under evaluation should only see `obs`.
@@ -359,7 +363,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            12 tasks with specs, references, hidden tests, candidates
-tests/            202 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            204 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)

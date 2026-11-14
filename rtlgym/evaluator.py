@@ -97,11 +97,14 @@ class EvalResult:
     @property
     def inconclusive(self) -> bool:
         """The grader could not decide: a timeout, an incomplete simulation, or a
-        formal error or timeout on a design that otherwise looks correct."""
+        formal error or timeout on a design that otherwise looks correct. A design
+        that Yosys cannot read or synthesize is not inconclusive: it fails the
+        synthesis requirement (the formal check then errors for the same reason)."""
         if not self.compile_ok:
             return False
         return (self.sim_timed_out or not self.sim_complete
-                or (self.all_tests_pass and self.formal_status in ("error", "timeout")))
+                or (self.all_tests_pass and self.synth_ok
+                    and self.formal_status in ("error", "timeout")))
 
     @property
     def accepted(self) -> bool:
