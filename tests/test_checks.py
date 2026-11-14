@@ -115,3 +115,27 @@ def test_extract_reply_with_no_module_is_returned_as_is():
 def test_extract_ignores_the_word_module_in_prose():
     reply = "The module a below is combinational.\n" + A
     assert extract_code(reply, "a").strip() == A
+
+
+def test_extract_helper_in_bare_text_outside_the_fences():
+    reply = "Helper:\n" + HELPER + "\nTop level:\n" + fence(A_USES_HELPER)
+    code = extract_code(reply, "a")
+    assert code.startswith(A_USES_HELPER) and HELPER in code and "Helper:" not in code
+
+
+def test_extract_one_line_module_keeps_what_it_instantiates():
+    one_line = "module a(input x, output y); inv u0(.i(x), .o(y)); endmodule"
+    reply = fence(HELPER) + "\n" + fence(one_line)
+    code = extract_code(reply, "a")
+    assert code.startswith(one_line) and HELPER in code
+
+
+def test_extract_non_code_fence_with_a_bare_module():
+    reply = "Compile it with:\n```bash\niverilog -g2012 a.sv\n```\nThe design:\n" + A + \
+        "\nThanks!"
+    assert extract_code(reply, "a").strip() == A          # no prose, no shell command
+
+
+def test_extract_top_in_bare_text_wins_over_an_unrelated_fenced_module():
+    reply = fence(TB) + "\nAnd the design:\n" + A
+    assert extract_code(reply, "a").strip() == A

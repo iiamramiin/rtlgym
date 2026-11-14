@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 8 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 159 tests
+pytest -q                                               # 167 tests
 ```
 
 ## Using it as an RL environment
@@ -183,11 +183,15 @@ The default experiment compares two arms per model with the same turn budget:
 **full** feedback (compiler, test, and formal diagnostics between attempts) against
 **none** (the agent only learns the attempt was not accepted and tries again). The
 first attempt sees the same prompt in both arms, so the difference in later turns
-measures what the tool feedback adds over plain retries. With `--paired`, each episode
-makes one first attempt and branches it into both arms, which removes first-attempt
-noise from the comparison: the run writes `OUT__full.json`, `OUT__none.json`, and
-`OUT__paired.json`, which counts the episodes solved in both arms, in only one, or in
-neither. Only the discordant episodes carry information about the difference.
+measures what the tool feedback adds over plain retries. With `--paired` (instead of
+`--feedback`), each episode makes one first attempt and branches it into both arms,
+which removes first-attempt noise from the comparison. The arms share only that first
+attempt: each branch is forked from the state right after it, so neither arm sees the
+other's feedback, and each arm's tokens and time cover only its own turns (the shared
+first call is reported once, under `shared_first`). The run writes `OUT__full.json`,
+`OUT__none.json`, and `OUT__paired.json`, which counts the episodes solved in both
+arms, in only one, or in neither. Only the discordant episodes carry information about
+the difference.
 
 Every result file records the model, effort, sampling settings, git commit (marked
 `-dirty` if the code had uncommitted changes), Python, tool, and cocotb versions, and
@@ -342,7 +346,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            159 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            167 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs)
 ```

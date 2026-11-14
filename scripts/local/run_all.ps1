@@ -8,7 +8,19 @@
 #   4. Installs the EDA tools (as root), then rtlgym and its tests as a normal user.
 #   5. Starts Ollama if needed and runs the experiment (see run_eval.sh).
 # Optional settings (environment variables, read by run_eval.sh): MODELS, THINK,
-# MAX_TOKENS, TIMEOUT, SAMPLES, TURNS, PAIRED, SEED.
+# MAX_TOKENS, TIMEOUT, SAMPLES, TURNS, PAIRED, SEED, and RTLGYM_WSL_DIR.
+param([string]$Settings = "")   # set by the admin relaunch below; not for direct use
+
+$SettingNames = "MODELS", "THINK", "MAX_TOKENS", "TIMEOUT", "SAMPLES", "TURNS", "PAIRED",
+                "SEED", "RTLGYM_WSL_DIR"
+# An elevated process started with -Verb RunAs does not inherit this console's
+# environment, so the settings travel as an argument (base64 JSON) instead.
+if ($Settings) {
+    $json = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($Settings))
+    ($json | ConvertFrom-Json).PSObject.Properties | ForEach-Object {
+        [Environment]::SetEnvironmentVariable($_.Name, [string]$_.Value)
+    }
+}
 
 $Here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $Repo = (Resolve-Path (Join-Path $Here "..\..")).Path
@@ -40,8 +52,15 @@ function Test-NeedsRestart([string]$text) {
 $principal = New-Object Security.Principal.WindowsPrincipal(
     [Security.Principal.WindowsIdentity]::GetCurrent())
 if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+    $carry = @{}
+    foreach ($v in $SettingNames) {
+        $val = [Environment]::GetEnvironmentVariable($v)
+        if ($val) { $carry[$v] = $val }
+    }
+    $b64 = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(
+        (ConvertTo-Json $carry -Compress)))
     Start-Process powershell -Verb RunAs -ArgumentList (
-        "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"")
+        "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`" -Settings $b64")
     exit 0
 }
 
@@ -50,6 +69,13 @@ if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administra
 Add-Type -Namespace RtlGym -Name Power -MemberDefinition `
     '[DllImport("kernel32.dll")] public static extern uint SetThreadExecutionState(uint f);'
 [RtlGym.Power]::SetThreadExecutionState([uint32]2147483649) | Out-Null  # continuous + system
+
+Write-Host "Settings for this run:"
+foreach ($v in $SettingNames) {
+    $val = [Environment]::GetEnvironmentVariable($v)
+    if (-not $val) { $val = "(default)" }
+    Write-Host ("  {0,-15} {1}" -f $v, $val)
+}
 
 $build = [Environment]::OSVersion.Version.Build
 $ramGB = [math]::Round((Get-CimInstance Win32_ComputerSystem).TotalPhysicalMemory / 1GB)
@@ -101,8 +127,15 @@ if ($build -lt 22621) {
         "it (set OLLAMA_HOST=0.0.0.0 for Ollama and allow it through the firewall)." `
         -ForegroundColor Yellow
 } else {
+    # Keep the file's own encoding (UTF-8 without a BOM if new or unmarked).
     $text = ""
-    if (Test-Path $cfg) { $text = Get-Content $cfg -Raw }
+    $enc = New-Object Text.UTF8Encoding($false)
+    if (Test-Path $cfg) {
+        $reader = New-Object IO.StreamReader($cfg, $enc, $true)
+        $text = $reader.ReadToEnd()
+        $enc = $reader.CurrentEncoding
+        $reader.Close()
+    }
     if ($text -match "(?im)^\s*networkingMode\s*=") {
         Write-Host "  .wslconfig already sets networkingMode; left unchanged"
     } else {
@@ -111,15 +144,28 @@ if ($build -lt 22621) {
             Copy-Item $cfg $bak
             Write-Host "  backup: $bak"
         }
-        if ($text -match "(?im)^\s*\[wsl2\]\s*$") {
-            $text = [regex]::Replace($text, "(?im)^\s*\[wsl2\]\s*$",
-                                     "[wsl2]`r`nnetworkingMode=mirrored", 1)
+        if ($text -match "(?im)^[ \t]*\[wsl2\][ \t]*\r?$") {
+            $text = [regex]::Replace($text, "(?im)^[ \t]*\[wsl2\][ \t]*(\r?)$",
+            ('[wsl2]$1' + "`n" + 'networkingMode=mirrored$1'), 1)
         } else {
             $text = ($text.TrimEnd() + "`r`n`r`n[wsl2]`r`nnetworkingMode=mirrored").Trim()
         }
-        Set-Content -Path $cfg -Value $text -Encoding ascii
-        wsl.exe --shutdown
+        [IO.File]::WriteAllText($cfg, $text, $enc)
         Write-Host "  added networkingMode=mirrored to $cfg"
+        # The change applies once WSL restarts. Restarting stops EVERY running distro
+        # (Docker Desktop included), so ask first if any are running.
+        $running = (wsl.exe --list --running --quiet 2>$null | Out-String).Trim()
+        if ($running) {
+            Write-Host "  WSL must restart for this to take effect. Running now:" `
+                ($running -replace "\s+", ", ") -ForegroundColor Yellow
+            Write-Host "  Restarting stops all of them, including Docker Desktop if it uses WSL."
+            $ans = Read-Host "  Restart WSL now? [y/N]"
+            if ($ans -notmatch "^[yY]") {
+                Stop-Here ("Not restarted. Run 'wsl --shutdown' when convenient, " +
+                           "then run RUN_ME.bat again.")
+            }
+            wsl.exe --shutdown
+        }
     }
 }
 

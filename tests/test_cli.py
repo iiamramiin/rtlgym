@@ -52,6 +52,10 @@ def test_paired_run_branches_one_first_attempt(tmp_path, capsys):
         assert ef["trajectory"][0]["score"] == en["trajectory"][0]["score"]
         assert ef["pass@1"] == en["pass@1"] and ef["first_score"] == en["first_score"]
     assert paired["episodes"] == 4 and sum(paired["outcomes"].values()) == 4
+    assert "act_s" in paired["shared_first"]
+    for arm in (full, none):
+        assert arm["summary"]["arm_s"] >= 0 and "shared_first_s" in arm["summary"]
+        assert all("shared_first" in e for e in arm["episodes"])
     assert "discordant pair" in capsys.readouterr().out
     # The report reads the per-arm files and skips the paired summary.
     assert main(["report", *map(str, sorted(tmp_path.glob("pair__*.json")))]) == 0
@@ -62,3 +66,9 @@ def test_paired_run_branches_one_first_attempt(tmp_path, capsys):
 def test_paired_needs_an_output_path():
     with pytest.raises(SystemExit, match="--paired needs --out"):
         main(["run", "--agent", "replay", "--paired"])
+
+
+def test_paired_rejects_feedback(tmp_path):
+    with pytest.raises(SystemExit, match="leave out --feedback"):
+        main(["run", "--agent", "replay", "--paired", "--feedback", "none",
+              "--out", str(tmp_path / "p.json")])

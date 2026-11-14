@@ -345,11 +345,15 @@ def _clean_sim_log(log: str) -> str:
 
 def _failure_message(el: ET.Element) -> str:
     """The failure text, across cocotb versions: 2.1 writes message="...";
-    2.0.x writes error_msg="..." (and msg="..." for start-up failures)."""
-    for attr in ("message", "error_msg", "msg"):
-        if el.get(attr):
-            return el.get(attr, "")
-    return (el.text or "").strip() or "failed"
+    2.0.x writes error_msg="..." (and msg="..." for start-up failures).
+    pytest's assertion introspection lines ("+  where 0 = <Model object at 0x7f...>.q")
+    are dropped: they hold memory addresses (so results would differ run to run) and
+    the testbench's internal names."""
+    text = next((el.get(a) for a in ("message", "error_msg", "msg") if el.get(a)), None)
+    if text is None:
+        text = (el.text or "").strip() or "failed"
+    lines = [ln for ln in text.splitlines() if not ln.lstrip().startswith("+")]
+    return "\n".join(lines).strip() or "failed"
 
 
 def parse_junit(path: Path) -> dict[str, str | None]:

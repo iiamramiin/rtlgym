@@ -59,7 +59,9 @@ async def cycle(dut, m, wr=0, din=0, rd=0, rst=0, tag=""):
 async def test_reset_state(dut):
     m = await setup(dut)
     await cycle(dut, m, tag="idle")
-    assert int(dut.empty.value) == 1 and int(dut.full.value) == 0
+    empty, full = int(dut.empty.value), int(dut.full.value)
+    assert (empty, full) == (1, 0), \
+        f"after reset, idle cycle: (empty,full)=({empty},{full}), expected (1,0)"
 
 
 @cocotb.test()

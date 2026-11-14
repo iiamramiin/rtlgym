@@ -40,7 +40,7 @@ async def send_and_check(dut, byte, scramble=None):
             dut.data.value = scramble.getrandbits(8)
             dut.start.value = scramble.getrandbits(1)
         exp = bits[k // CPB]
-        assert busy == 1, f"byte 0x{byte:02x} cycle {k}: busy=0 during frame"
+        assert busy == 1, f"byte 0x{byte:02x} cycle {k}: busy={busy}, expected 1 during the frame"
         assert tx == exp, f"byte 0x{byte:02x} cycle {k} (bit {k // CPB}): tx={tx}, expected {exp}"
     dut.start.value = 0
     tx, busy = await sample(dut)
@@ -50,8 +50,9 @@ async def send_and_check(dut, byte, scramble=None):
 @cocotb.test()
 async def test_idle(dut):
     await setup(dut)
-    for _ in range(10):
-        assert await sample(dut) == (1, 0), "line must idle high with busy=0"
+    for i in range(10):
+        got = await sample(dut)
+        assert got == (1, 0), f"idle cycle {i}, no start: (tx,busy)={got}, expected (1, 0)"
 
 
 @cocotb.test()
@@ -83,10 +84,13 @@ async def test_reset_mid_frame(dut):
     for _ in range(13):
         await sample(dut)
     dut.rst.value = 1
-    assert await sample(dut) == (1, 0), "reset must return to idle immediately"
+    got = await sample(dut)
+    assert got == (1, 0), f"rst=1 mid-frame: (tx,busy)={got}, expected (1, 0) in the same cycle"
     dut.rst.value = 0
-    for _ in range(3):
-        assert await sample(dut) == (1, 0)
+    for i in range(3):
+        got = await sample(dut)
+        assert got == (1, 0), f"cycle {i} after rst released, no start: (tx,busy)={got}, " \
+                              "expected (1, 0)"
     await send_and_check(dut, 0x96)
 
 

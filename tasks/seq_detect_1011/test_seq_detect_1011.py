@@ -44,22 +44,28 @@ async def drive(dut, m, bits, rsts=None):
     return matches
 
 
+async def check_count(dut, m, bits, expected):
+    got = await drive(dut, m, bits)
+    stream = "".join(map(str, bits))
+    assert got == expected, f"din={stream}: {got} matches, expected {expected}"
+
+
 @cocotb.test()
 async def test_single_match(dut):
     m = await setup(dut)
-    assert await drive(dut, m, [0, 1, 0, 1, 1, 0, 0]) == 1
+    await check_count(dut, m, [0, 1, 0, 1, 1, 0, 0], 1)
 
 
 @cocotb.test()
 async def test_overlap(dut):
     m = await setup(dut)
-    assert await drive(dut, m, [1, 0, 1, 1, 0, 1, 1, 0, 1, 1]) == 3
+    await check_count(dut, m, [1, 0, 1, 1, 0, 1, 1, 0, 1, 1], 3)
 
 
 @cocotb.test()
 async def test_near_misses(dut):
     m = await setup(dut)
-    assert await drive(dut, m, [1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0]) == 0
+    await check_count(dut, m, [1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 1, 0, 1, 0], 0)
 
 
 @cocotb.test()

@@ -37,7 +37,7 @@ from .task import Task
 
 CACHE_DIR = Path(os.environ.get("RTLGYM_CACHE", Path.home() / ".cache" / "rtlgym"))
 # Bump when grading semantics change, so cached results from older graders are ignored.
-GRADER_VERSION = "4"
+GRADER_VERSION = "5"
 _TOOL_VERSIONS: dict[str, str] | None = None
 _REF_LOCK = threading.Lock()
 _REF_PPA: dict[str, dict] = {}

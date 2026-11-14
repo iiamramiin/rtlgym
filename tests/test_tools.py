@@ -118,3 +118,30 @@ def test_real_simulation_reports_expected_vs_actual():
     r = evaluate(task, (task.root / "candidates" / "bug_width.sv").read_text(), use_cache=False)
     msgs = [m for m in r.test_failures.values() if m]
     assert msgs and any("expected" in m for m in msgs), r.test_failures
+
+
+def test_parse_junit_drops_pytest_introspection(tmp_path):
+    msg = ("rst=0 en=1: q=0, expected 1\nassert 0 == 1\n"
+           " +  where 0 = <test_up_down_counter.Model object at 0x7f3a2c1d9e50>.q\n"
+           " +    where 1 = int(<cocotb.handle.LogicObject at 0x7f3a>)")
+    p = tmp_path / "results.xml"
+    p.write_text('<testsuites><testsuite name="t"><testcase name="t1">'
+                 f'<failure message="{msg}"/></testcase></testsuite></testsuites>'
+                 .replace("<test_", "&lt;test_").replace("<cocotb", "&lt;cocotb")
+                 .replace("50>", "50&gt;").replace("3a>", "3a&gt;").replace("\n", "&#10;"))
+    got = tools.parse_junit(p)["t1"]
+    assert got == "rst=0 en=1: q=0, expected 1\nassert 0 == 1"
+    assert "0x" not in got.split("\n", 1)[1] and "Model" not in got
+
+
+def test_every_testbench_assert_has_a_message():
+    """Feedback quality: a bare `assert x == y` tells the agent nothing about inputs."""
+    import ast
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1] / "tasks"
+    bare = []
+    for f in sorted(root.glob("*/test_*.py")):
+        tree = ast.parse(f.read_text())
+        bare += [f"{f.parent.name}:{n.lineno}" for n in ast.walk(tree)
+                 if isinstance(n, ast.Assert) and n.msg is None]
+    assert not bare, bare

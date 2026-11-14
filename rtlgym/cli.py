@@ -185,9 +185,11 @@ def run_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: 
 def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: str,
                        arms: tuple[str, ...] = ("full", "none")) -> dict[str, dict]:
     """One first attempt, then one branch per feedback arm from that same attempt.
-    Turn 1 is identical across arms by construction, so the arms differ only in
-    what happens after feedback: a paired comparison without first-attempt noise.
-    The first call's usage is counted in the first arm only."""
+
+    The arms share the first attempt and nothing else: every branch is forked right
+    after the first act(), before any arm plays, so no arm sees another arm's
+    feedback. Each arm's usage and time cover only its own turns; the shared first
+    call is recorded once, under "shared_first" (identical in every arm's record)."""
     t0 = time.monotonic()
     agent = make_agent(agent_name, **agent_kwargs)
     envs = {arm: RTLEnv(**{**env_kwargs, "feedback": arm}) for arm in arms}
@@ -197,14 +199,20 @@ def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, ta
         first_action, error = agent.act(obs[arms[0]]), None
     except Exception as exc:  # noqa: BLE001
         first_action, error = None, f"{type(exc).__name__}: {exc}"[:500]
+    shared = {"usage": dict(getattr(agent, "usage", None) or {}),
+              "act_s": round(time.monotonic() - t0, 2)}
+    # Fork every arm now, from the state right after the first attempt.
+    branches = {arm: agent.fork() for arm in arms}
     out = {}
-    for i, arm in enumerate(arms):
-        branch = agent if i == 0 else agent.fork()
+    for arm in arms:
+        ta = time.monotonic()
         turns: list = []
         ret, err = (0.0, error) if first_action is None else \
-            _play(envs[arm], branch, obs[arm], turns, 0.0, first_action=first_action)
-        out[arm] = _episode_record(task_id, envs[arm], turns, ret, err, t0,
-                                   getattr(branch, "usage", None))
+            _play(envs[arm], branches[arm], obs[arm], turns, 0.0, first_action=first_action)
+        rec = _episode_record(task_id, envs[arm], turns, ret, err, ta,
+                              getattr(branches[arm], "usage", None))
+        rec["shared_first"] = shared
+        out[arm] = rec
     return out
 
 
@@ -275,11 +283,21 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
                      f"{a}_solved": ra["solved"], f"{b}_solved": rb["solved"],
                      f"{a}_best": ra["best_score"], f"{b}_best": rb["best_score"],
                      "outcome": key})
+    shared: dict[str, float] = {"act_s": 0.0}
+    for r in per_arm[a]:
+        first = r.get("shared_first") or {}
+        shared["act_s"] = round(shared["act_s"] + first.get("act_s", 0.0), 2)
+        for k, v in (first.get("usage") or {}).items():
+            shared[k] = round(shared.get(k, 0) + v, 2)
     return {"arms": list(arms), "episodes": len(rows), "outcomes": totals,
-            "discordant_pairs": totals[f"only_{a}"] + totals[f"only_{b}"], "rows": rows}
+            "discordant_pairs": totals[f"only_{a}"] + totals[f"only_{b}"],
+            "shared_first": shared, "rows": rows}
 
 
 def cmd_run(args) -> int:
+    if args.paired and args.feedback:
+        sys.exit("--paired runs both the 'full' and 'none' arms; leave out --feedback")
+    args.feedback = args.feedback or "full"
     env_kwargs = dict(tasks_root=args.tasks_root, max_turns=args.max_turns,
                       reward_mode=args.reward_mode, feedback=args.feedback,
                       use_cache=not args.no_cache, use_formal=not args.no_formal)
@@ -362,7 +380,12 @@ def cmd_run(args) -> int:
     for arm, results in per_arm.items():
         extra = {"feedback": arm, "paired": True, "pair_arms": list(arms)} if args.paired else {}
         summaries[arm] = summarize(results, {**meta, **extra})
-        summaries[arm]["wall_s"] = wall
+        summaries[arm]["wall_s"] = wall   # the whole run (arms of a pair run together)
+        if args.paired:
+            # This arm's own turns (after the shared first attempt), summed over episodes.
+            summaries[arm]["arm_s"] = round(sum(r["wall_s"] for r in results), 2)
+            summaries[arm]["shared_first_s"] = round(
+                sum((r.get("shared_first") or {}).get("act_s", 0.0) for r in results), 2)
         print("\n" + json.dumps({k: v for k, v in summaries[arm].items()
                                  if k not in ("per_task", "tasks")}, indent=2))
     if args.paired:
@@ -513,7 +536,9 @@ def main(argv: list[str] | None = None) -> int:
                         "OUT__full.json, OUT__none.json, and OUT__paired.json")
     p.add_argument("--max-turns", type=_positive_int, default=3)
     p.add_argument("--reward-mode", choices=["improvement", "score"], default="improvement")
-    p.add_argument("--feedback", choices=["none", "summary", "full"], default="full")
+    p.add_argument("--feedback", choices=["none", "summary", "full"],
+                   help="what the agent sees between attempts (default: full); "
+                        "not used with --paired, which runs 'full' and 'none'")
     p.add_argument("--workers", type=_positive_int, default=4)
     p.add_argument("--out")
     p.add_argument("--no-cache", action="store_true")
