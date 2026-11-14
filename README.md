@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 8 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 132 tests
+pytest -q                                               # 159 tests
 ```
 
 ## Using it as an RL environment
@@ -173,18 +173,30 @@ Measured on a 2-core Linux machine with an empty cache, one grading step takes 0
 - **accepted within N turns**;
 - **test escapes**: attempts that pass every test but fail the formal check;
 - **inconclusive** attempts, reported separately rather than hidden in a rate;
-- episodes run and episodes that hit an API error (excluded from the rates, and shown);
+- episodes run and episodes that hit an error (a timeout, an API failure): these count as
+  unsolved in every rate, with the scores they reached before the error, and are also
+  reported separately. Rates are shown with their denominators (e.g. "2/8");
 - mean turns, grading latency (median and 95th percentile), cache hit rate, and token
   usage.
 
 The default experiment compares two arms per model with the same turn budget:
 **full** feedback (compiler, test, and formal diagnostics between attempts) against
 **none** (the agent only learns the attempt was not accepted and tries again). The
-first attempts are identical by construction, so the difference in later turns
-measures what the tool feedback adds over plain retries.
+first attempt sees the same prompt in both arms, so the difference in later turns
+measures what the tool feedback adds over plain retries. With `--paired`, each episode
+makes one first attempt and branches it into both arms, which removes first-attempt
+noise from the comparison: the run writes `OUT__full.json`, `OUT__none.json`, and
+`OUT__paired.json`, which counts the episodes solved in both arms, in only one, or in
+neither. Only the discordant episodes carry information about the difference.
 
-Every result file records the model, effort, sampling settings, git commit, Python and
-tool versions, and the full per-turn trajectory of every episode.
+Every result file records the model, effort, sampling settings, git commit (marked
+`-dirty` if the code had uncommitted changes), Python, tool, and cocotb versions, and
+the full per-turn trajectory of every episode.
+
+All agents return the model's reply text, and the environment extracts the design with
+one shared function: the last code block (or bare `module ... endmodule` text) that
+defines the task's top module, plus any helper modules it instantiates that are defined
+elsewhere in the reply. Testbenches and prose are left out.
 
 **On GitHub (no local setup):** add the repository secret `ANTHROPIC_API_KEY`
 (Settings → Secrets and variables → Actions), then open Actions → eval → Run workflow.
@@ -218,20 +230,54 @@ the Claude agent, so the arms are directly comparable.
 
 ```bash
 ollama list                       # installed models, e.g. qwen3:14b
-for fb in full none; do
-  python -m rtlgym run --agent ollama --model qwen3:14b --feedback $fb \
-      --samples 1 --max-turns 3 --workers 1 --out results/qwen3-14b__$fb.json
-done
-python -m rtlgym report results/*.json
+python -m rtlgym run --agent ollama --model qwen3:14b --paired \
+    --samples 1 --max-turns 3 --workers 1 --out results/qwen3-14b.json
+python -m rtlgym report results/qwen3-14b__*.json
 ```
 
 Reasoning that models such as Qwen3 emit (`<think>...</think>` or a separate field) is
-removed before grading and from the conversation history, and the module is extracted
-from fenced or bare replies. The agent sets a 16K-token context window (`--num-ctx`;
-Ollama's default would silently truncate multi-turn episodes) and waits up to 30
-minutes per reply (`--ollama-timeout`). `--think on|off` switches reasoning for models
-that support it. Use `--workers 1`: Ollama usually serves one request at a time.
-`OLLAMA_HOST` or `--ollama-host` points at a server on another machine.
+removed from the reply and from the conversation history, as the Claude agent returns
+only text blocks. The agent sets a 16K-token context window (`--num-ctx`; Ollama's
+default would silently truncate multi-turn episodes, and a prompt that fills it is
+counted and warned about), caps each reply at 8192 tokens (`--max-tokens`) so a looping
+model stops, and waits up to 30 minutes per reply (`--ollama-timeout`). A reply that
+times out is not retried, since a retry would regenerate the whole answer; connection
+errors and server errors are. `--think on|off` switches reasoning for models that have
+it (for other models it is not sent, and the result file says so), and `--seed` sets
+the sampling seed (offset per episode, so samples differ). Result files record the
+model's digest and quantization, the Ollama version, and the options sent. Use
+`--workers 1`: Ollama usually serves one request at a time. `OLLAMA_HOST` or
+`--ollama-host` points at a server on another machine.
+[`scripts/local/`](scripts/local/) sets this up on a Windows laptop (WSL, the EDA tools,
+Ollama) and runs the experiment with one double-click.
+
+### Local model smoke test (preliminary)
+
+A first end-to-end run on a laptop (CPU only, no GPU, 15 GB RAM), to check that the
+environment works with real models. **One episode per task, 8 episodes per arm: far
+too few for differences between arms or between models to mean anything.** The arms
+were run independently (before `--paired` existed), so their first attempts differ.
+
+| Model | Feedback | Solved on 1st try | Solved within 3 turns | Mean best score | Test escapes | Time per reply |
+|---|---|---|---|---|---|---|
+| llama3.1:8b | full | 1/8 | 2/8 | 0.344 | 0 | 81 s |
+| llama3.1:8b | none | 1/8 | 1/8 | 0.241 | 0 | 67 s |
+| qwen3:14b, reasoning off | full | 2/8 | 2/8 | 0.484 | 0 | 419 s |
+| qwen3:14b, reasoning off | none | 2/8 | 4/8 | 0.567 | 0 | 239 s |
+
+One supportable observation: Llama 3.1 8B's designs failed to compile in most attempts
+(14 of 22 attempts in the "none" arm).
+
+Setup: Ollama models `llama3.1:8b` (digest `46e0c10c039e`) and `qwen3:14b` (digest
+`bdbd181c33f2`), both Q4_K_M; `num_ctx` 16384, `num_predict` 8192, Ollama's default
+sampling; Llama 3.1 has no reasoning mode, and Qwen3 was run with `--think off`
+(with reasoning on, one arm did not finish in over 3 hours). Icarus Verilog 12.0,
+Verilator 5.020, Yosys 0.33. The code was that of commit 8d2e6ad; the result files
+record f30b246 because the Ollama agent was not yet committed when they were made. The
+cocotb version was not recorded; the setup installed the newest release (2.1.0), whose
+test failure messages are complete (under 2.0.x they were not, a bug fixed since). The
+run predates the shared reply extraction, the error accounting, and the other fixes
+above; no episode errored.
 
 ## Tasks
 
@@ -296,7 +342,8 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            132 tests: reward, formal, tools, end-to-end grading, environment, agents, CLI
+tests/            159 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs)
 ```
 

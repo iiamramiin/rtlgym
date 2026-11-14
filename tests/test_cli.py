@@ -21,7 +21,8 @@ def test_run_and_report_roundtrip(tmp_path, capsys):
     capsys.readouterr()
     assert main(["report", str(out)]) == 0
     md = capsys.readouterr().out
-    assert "| replay (feedback full) | 2 / 2 |" in md and "| popcount16 |" in md
+    assert "| replay (feedback full) | 2 (0) | 0/2 (0%) |" in md and "| popcount16 |" in md
+    assert s["pass@1_count"] == "0/2" and s["solved_count"] == "2/2"
 
 
 def test_invalid_counts_are_rejected():
@@ -34,3 +35,30 @@ def test_invalid_counts_are_rejected():
 def test_empty_task_selection_is_rejected():
     with pytest.raises(SystemExit):
         main(["run", "--tasks", " , "])
+
+
+def test_paired_run_branches_one_first_attempt(tmp_path, capsys):
+    out = tmp_path / "pair.json"
+    assert main(["run", "--agent", "replay", "--tasks", "popcount16,edge_detect",
+                 "--samples", "2", "--paired", "--out", str(out)]) == 0
+    full = json.loads((tmp_path / "pair__full.json").read_text())
+    none = json.loads((tmp_path / "pair__none.json").read_text())
+    paired = json.loads((tmp_path / "pair__paired.json").read_text())["paired"]
+    assert full["summary"]["feedback"] == "full" and none["summary"]["feedback"] == "none"
+    assert full["summary"]["paired"] and full["summary"]["episodes"] == 4
+    for ef, en in zip(full["episodes"], none["episodes"], strict=True):
+        assert ef["task"] == en["task"]
+        # Turn 1 is the same attempt in both arms.
+        assert ef["trajectory"][0]["score"] == en["trajectory"][0]["score"]
+        assert ef["pass@1"] == en["pass@1"] and ef["first_score"] == en["first_score"]
+    assert paired["episodes"] == 4 and sum(paired["outcomes"].values()) == 4
+    assert "discordant pair" in capsys.readouterr().out
+    # The report reads the per-arm files and skips the paired summary.
+    assert main(["report", *map(str, sorted(tmp_path.glob("pair__*.json")))]) == 0
+    md = capsys.readouterr().out
+    assert "feedback full, paired" in md and "feedback none, paired" in md
+
+
+def test_paired_needs_an_output_path():
+    with pytest.raises(SystemExit, match="--paired needs --out"):
+        main(["run", "--agent", "replay", "--paired"])

@@ -47,12 +47,20 @@ def _positive_int(value: str) -> int:
     return n
 
 
-def _git_commit() -> str:
+def _git_commit(cwd: Path = REPO_ROOT) -> str:
+    """The commit the code came from, with "-dirty" if tracked files were changed
+    since (results from uncommitted code must not claim a clean commit)."""
     if os.environ.get("GITHUB_SHA"):
         return os.environ["GITHUB_SHA"]
+
+    def git(*argv: str) -> str:
+        return subprocess.run(["git", "-c", "core.fileMode=false", *argv], cwd=cwd,
+                              capture_output=True, text=True, timeout=10).stdout.strip()
     try:
-        return subprocess.run(["git", "rev-parse", "HEAD"], cwd=REPO_ROOT, capture_output=True,
-                              text=True, timeout=10).stdout.strip() or "unknown"
+        head = git("rev-parse", "HEAD")
+        if not head:
+            return "unknown"
+        return head + ("-dirty" if git("status", "--porcelain", "--untracked-files=no") else "")
     except Exception:  # noqa: BLE001
         return "unknown"
 
@@ -114,31 +122,35 @@ def cmd_baselines(args) -> int:
     return 0
 
 
-def run_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: str) -> dict:
-    env = RTLEnv(**env_kwargs)
-    agent = make_agent(agent_name, **agent_kwargs)
-    obs, _ = env.reset(task_id=task_id)
-    agent.begin_episode(obs)
-    turns, ret, t0 = [], 0.0, time.monotonic()
-    error = None
+def _turn_record(r, reward: float, info: dict) -> dict:
+    return {"turn": info["turn"], "score": r.score, "reward": round(reward, 4),
+            "tests": f"{r.tests_passed}/{r.tests_total}",
+            "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
+            "test_escape": r.test_escape, "inconclusive": r.inconclusive,
+            "solved": info["solved"],
+            "cells": r.cells, "breakdown": r.breakdown,
+            "timings_s": r.timings_s, "grade_s": info["grade_s"],
+            "cached": r.cached}
+
+
+def _play(env: RTLEnv, agent, obs: dict, turns: list, ret: float,
+          first_action: str | None = None) -> tuple[float, str | None]:
+    """Run turns until the episode ends. Returns (return, error)."""
     try:
         while True:
-            action = agent.act(obs)
+            action = first_action if first_action is not None else agent.act(obs)
+            first_action = None
             obs, reward, terminated, truncated, info = env.step(action)
-            r = info["eval"]
             ret += reward
-            turns.append({"turn": info["turn"], "score": r.score, "reward": round(reward, 4),
-                          "tests": f"{r.tests_passed}/{r.tests_total}",
-                          "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
-                          "test_escape": r.test_escape, "inconclusive": r.inconclusive,
-                          "solved": info["solved"],
-                          "cells": r.cells, "breakdown": r.breakdown,
-                          "timings_s": r.timings_s, "grade_s": info["grade_s"],
-                          "cached": r.cached})
+            turns.append(_turn_record(info["eval"], reward, info))
             if terminated or truncated:
-                break
+                return ret, None
     except Exception as exc:  # noqa: BLE001 - one failed API call must not sink the run
-        error = f"{type(exc).__name__}: {exc}"[:500]
+        return ret, f"{type(exc).__name__}: {exc}"[:500]
+
+
+def _episode_record(task_id: str, env: RTLEnv, turns: list, ret: float, error: str | None,
+                    t0: float, usage) -> dict:
     hist = env.state.history if env.state else []
     first, last = (hist[0], hist[-1]) if hist else (None, None)
     return {
@@ -155,42 +167,90 @@ def run_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: 
         "return": round(ret, 4),
         "wall_s": round(time.monotonic() - t0, 2),
         "trajectory": turns,
-        "usage": getattr(agent, "usage", None),
+        "usage": usage,
     }
 
 
+def run_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: str) -> dict:
+    env = RTLEnv(**env_kwargs)
+    agent = make_agent(agent_name, **agent_kwargs)
+    obs, _ = env.reset(task_id=task_id)
+    agent.begin_episode(obs)
+    turns: list = []
+    t0 = time.monotonic()
+    ret, error = _play(env, agent, obs, turns, 0.0)
+    return _episode_record(task_id, env, turns, ret, error, t0, getattr(agent, "usage", None))
+
+
+def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, task_id: str,
+                       arms: tuple[str, ...] = ("full", "none")) -> dict[str, dict]:
+    """One first attempt, then one branch per feedback arm from that same attempt.
+    Turn 1 is identical across arms by construction, so the arms differ only in
+    what happens after feedback: a paired comparison without first-attempt noise.
+    The first call's usage is counted in the first arm only."""
+    t0 = time.monotonic()
+    agent = make_agent(agent_name, **agent_kwargs)
+    envs = {arm: RTLEnv(**{**env_kwargs, "feedback": arm}) for arm in arms}
+    obs = {arm: env.reset(task_id=task_id)[0] for arm, env in envs.items()}
+    agent.begin_episode(obs[arms[0]])
+    try:
+        first_action, error = agent.act(obs[arms[0]]), None
+    except Exception as exc:  # noqa: BLE001
+        first_action, error = None, f"{type(exc).__name__}: {exc}"[:500]
+    out = {}
+    for i, arm in enumerate(arms):
+        branch = agent if i == 0 else agent.fork()
+        turns: list = []
+        ret, err = (0.0, error) if first_action is None else \
+            _play(envs[arm], branch, obs[arm], turns, 0.0, first_action=first_action)
+        out[arm] = _episode_record(task_id, envs[arm], turns, ret, err, t0,
+                                   getattr(branch, "usage", None))
+    return out
+
+
 def summarize(results: list[dict], meta: dict) -> dict:
+    """Rates over ALL episodes: an episode that errored (e.g., a timeout) counts as
+    unsolved, with the scores it reached before the error (0 if it never got a
+    first attempt graded), instead of silently dropping out of the denominator."""
+    n = len(results)
     ok = [r for r in results if not r["error"]]
-    n = len(ok)
 
     def frac(key):
-        return round(sum(bool(r[key]) for r in ok) / n, 3) if n else None
+        return round(sum(bool(r[key]) for r in results) / n, 3) if n else None
+
+    def count(key):
+        return f"{sum(bool(r[key]) for r in results)}/{n}"
 
     def mean(key):
-        return round(sum(r[key] for r in ok) / n, 3) if n else None
+        return round(sum(r[key] for r in results) / n, 3) if n else None
 
-    grade = [t["grade_s"] for r in ok for t in r["trajectory"] if not t["cached"]]
-    steps = [t for r in ok for t in r["trajectory"]]
-    usage: dict[str, int] = {}
-    for r in ok:
+    grade = [t["grade_s"] for r in results for t in r["trajectory"] if not t["cached"]]
+    steps = [t for r in results for t in r["trajectory"]]
+    usage: dict[str, float] = {}
+    for r in results:
         for k, v in (r.get("usage") or {}).items():
-            usage[k] = usage.get(k, 0) + v
+            usage[k] = round(usage.get(k, 0) + v, 2)
     per_task = {}
-    for tid in sorted({r["task"] for r in ok}):
-        rs = [r for r in ok if r["task"] == tid]
+    for tid in sorted({r["task"] for r in results}):
+        rs = [r for r in results if r["task"] == tid]
         per_task[tid] = {"episodes": len(rs),
+                         "errors": sum(bool(r["error"]) for r in rs),
                          "pass@1": round(sum(r["pass@1"] for r in rs) / len(rs), 3),
                          "solved": round(sum(r["solved"] for r in rs) / len(rs), 3),
+                         "pass@1_count": f"{sum(r['pass@1'] for r in rs)}/{len(rs)}",
+                         "solved_count": f"{sum(r['solved'] for r in rs)}/{len(rs)}",
                          "mean_turns": round(sum(r["turns"] for r in rs) / len(rs), 2)}
     return {
         **meta,
-        "episodes": len(results),
-        "errors": len(results) - n,
+        "episodes": n,
+        "errors": n - len(ok),
         "pass@1": frac("pass@1"),
+        "pass@1_count": count("pass@1"),
         "pass@1_tests_only": frac("pass@1_tests_only"),
         "solved_within_turns": frac("solved"),
-        "test_escape_attempts": sum(r["test_escapes"] for r in ok),
-        "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in ok),
+        "solved_count": count("solved"),
+        "test_escape_attempts": sum(r["test_escapes"] for r in results),
+        "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in results),
         "mean_first_score": mean("first_score"),
         "mean_best_score": mean("best_score"),
         "mean_turns": mean("turns"),
@@ -201,6 +261,22 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "usage": usage,
         "per_task": per_task,
     }
+
+
+def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
+    """Per-task outcomes of paired episodes (same first attempt in both arms)."""
+    a, b = arms
+    rows, totals = [], {"both": 0, f"only_{a}": 0, f"only_{b}": 0, "neither": 0}
+    for ra, rb in zip(per_arm[a], per_arm[b], strict=True):
+        key = ("both" if ra["solved"] and rb["solved"] else f"only_{a}" if ra["solved"]
+               else f"only_{b}" if rb["solved"] else "neither")
+        totals[key] += 1
+        rows.append({"task": ra["task"], "first_attempt_solved": ra["pass@1"],
+                     f"{a}_solved": ra["solved"], f"{b}_solved": rb["solved"],
+                     f"{a}_best": ra["best_score"], f"{b}_best": rb["best_score"],
+                     "outcome": key})
+    return {"arms": list(arms), "episodes": len(rows), "outcomes": totals,
+            "discordant_pairs": totals[f"only_{a}"] + totals[f"only_{b}"], "rows": rows}
 
 
 def cmd_run(args) -> int:
@@ -221,6 +297,8 @@ def cmd_run(args) -> int:
             agent_kwargs["max_tokens"] = args.max_tokens
         if args.think != "default":
             agent_kwargs["think"] = args.think == "on"
+        if args.seed is not None:
+            agent_kwargs["seed"] = args.seed
     else:
         if args.model:
             agent_kwargs["model"] = args.model
@@ -228,22 +306,34 @@ def cmd_run(args) -> int:
             agent_kwargs["effort"] = args.effort
         if args.max_tokens:
             agent_kwargs["max_tokens"] = args.max_tokens
+    if args.seed is not None and args.agent != "ollama":
+        sys.exit("--seed applies to --agent ollama only")
     ids = _tasks_arg(args.tasks, args.tasks_root)
     episodes = [tid for tid in ids for _ in range(args.samples)]
+
+    def kwargs_for(i: int) -> dict:
+        # A fixed seed would make every sample of a task identical: offset it per episode.
+        if "seed" in agent_kwargs:
+            return {**agent_kwargs, "seed": agent_kwargs["seed"] + i}
+        return agent_kwargs
+
+    arms = ("full", "none")
+    if args.paired and not args.out:
+        sys.exit("--paired needs --out (one file per arm plus a paired summary)")
     started = dt.datetime.now(dt.UTC).isoformat(timespec="seconds")
     t0 = time.monotonic()
     with ThreadPoolExecutor(max_workers=args.workers) as pool:
-        results = list(pool.map(lambda tid: run_episode(env_kwargs, args.agent, agent_kwargs,
-                                                        tid), episodes))
-    print(f"{'task':18s} {'turns':>5s} {'pass@1':>6s} {'solved':>6s} {'first':>6s} {'best':>6s}"
-          f"  per-turn scores")
-    for r in results:
-        if r["error"]:
-            print(f"{r['task']:18s} ERROR {r['error'][:90]}")
-            continue
-        scores = " -> ".join(f"{t['score']:.2f}" for t in r["trajectory"])
-        print(f"{r['task']:18s} {r['turns']:5d} {str(r['pass@1']):>6s} {str(r['solved']):>6s} "
-              f"{r['first_score']:6.3f} {r['best_score']:6.3f}  {scores}")
+        if args.paired:
+            pairs = list(pool.map(lambda j: run_paired_episode(
+                env_kwargs, args.agent, kwargs_for(j[0]), j[1], arms), enumerate(episodes)))
+            per_arm = {arm: [p[arm] for p in pairs] for arm in arms}
+        else:
+            per_arm = {args.feedback: list(pool.map(lambda j: run_episode(
+                env_kwargs, args.agent, kwargs_for(j[0]), j[1]), enumerate(episodes)))}
+    for arm, results in per_arm.items():
+        if args.paired:
+            print(f"\n--- feedback arm: {arm}")
+        _print_episodes(results)
     meta = {
         "agent": args.agent,
         "model": (args.model or os.environ.get("RTLGYM_MODEL", DEFAULT_MODEL))
@@ -261,24 +351,76 @@ def cmd_run(args) -> int:
         "python": platform.python_version(),
         "tools": tool_versions(),
     }
+    if args.seed is not None:
+        meta["seed"] = {"base": args.seed, "per_episode": "base + episode index"}
     if args.agent == "ollama":
-        from .agents.ollama import normalize_host
-        meta["ollama"] = {"host": normalize_host(args.ollama_host), "num_ctx": args.num_ctx,
-                          "think": args.think, "timeout_s": args.ollama_timeout}
-    summary = summarize(results, meta)
-    summary["wall_s"] = round(time.monotonic() - t0, 2)
-    print("\n" + json.dumps({k: v for k, v in summary.items() if k not in ("per_task", "tasks")},
-                            indent=2))
+        from .agents.ollama import OllamaAgent, model_info
+        probe = OllamaAgent(**agent_kwargs)   # what each episode's agent actually sends
+        meta["ollama"] = {**probe.settings(), "build": model_info(probe.model, probe.host)}
+    wall = round(time.monotonic() - t0, 2)
+    summaries = {}
+    for arm, results in per_arm.items():
+        extra = {"feedback": arm, "paired": True, "pair_arms": list(arms)} if args.paired else {}
+        summaries[arm] = summarize(results, {**meta, **extra})
+        summaries[arm]["wall_s"] = wall
+        print("\n" + json.dumps({k: v for k, v in summaries[arm].items()
+                                 if k not in ("per_task", "tasks")}, indent=2))
+    if args.paired:
+        paired = paired_table(per_arm, arms)
+        _print_paired(paired)
     if args.out:
         out = Path(args.out)
         out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(json.dumps({"summary": summary, "episodes": results}, indent=2,
-                                  default=str))
-    return 1 if summary["errors"] == len(results) else 0
+        if args.paired:
+            for arm in arms:
+                _write_json(out.with_name(f"{out.stem}__{arm}.json"),
+                            {"summary": summaries[arm], "episodes": per_arm[arm]})
+            _write_json(out.with_name(f"{out.stem}__paired.json"),
+                        {"paired": paired, "meta": {**meta, "wall_s": wall}})
+        else:
+            _write_json(out, {"summary": summaries[args.feedback],
+                              "episodes": per_arm[args.feedback]})
+    total = sum(len(r) for r in per_arm.values())
+    errors = sum(s["errors"] for s in summaries.values())
+    return 1 if errors == total else 0
+
+
+def _write_json(path: Path, data: dict) -> None:
+    path.write_text(json.dumps(data, indent=2, default=str))
+
+
+def _print_episodes(results: list[dict]) -> None:
+    print(f"{'task':18s} {'turns':>5s} {'pass@1':>6s} {'solved':>6s} {'first':>6s} {'best':>6s}"
+          f"  per-turn scores")
+    for r in results:
+        scores = " -> ".join(f"{t['score']:.2f}" for t in r["trajectory"])
+        if r["error"]:
+            print(f"{r['task']:18s} ERROR {r['error'][:90]}" + (f"  (after {scores})"
+                                                                 if scores else ""))
+            continue
+        print(f"{r['task']:18s} {r['turns']:5d} {str(r['pass@1']):>6s} {str(r['solved']):>6s} "
+              f"{r['first_score']:6.3f} {r['best_score']:6.3f}  {scores}")
+
+
+def _print_paired(p: dict) -> None:
+    a, b = p["arms"]
+    o = p["outcomes"]
+    print(f"\nPaired outcomes over {p['episodes']} episodes (same first attempt in both arms):")
+    print(f"  solved in both: {o['both']}   only with {a}: {o[f'only_{a}']}   "
+          f"only with {b}: {o[f'only_{b}']}   in neither: {o['neither']}")
+    print(f"  {p['discordant_pairs']} discordant pair(s); only these carry information "
+          f"about the difference between the arms.")
 
 
 def _pct(v) -> str:
     return "n/a" if v is None else f"{100 * v:.0f}%"
+
+
+def _count(rate, n: int) -> str:
+    """'2/8 (25%)': raw counts with the denominator, not just a percentage."""
+    if rate is None:
+        return "n/a"
+    return f"{round(rate * n)}/{n} ({_pct(rate)})"
 
 
 def _arm(s: dict) -> str:
@@ -288,20 +430,24 @@ def _arm(s: dict) -> str:
         parts.append(f"effort {s['effort']}")
     if not s.get("formal", True):
         parts.append("no formal")
+    if s.get("paired"):
+        parts.append("paired")
     return f"{name} ({', '.join(parts)})"
 
 
 def cmd_report(args) -> int:
     """Turn one or more `run --out` files into Markdown tables."""
-    runs = [json.loads(Path(f).read_text())["summary"] for f in args.files]
-    print("| Arm | Episodes ok / run | Accepted on 1st attempt | 1st attempt passes tests "
+    data = [json.loads(Path(f).read_text()) for f in args.files]
+    runs = [d["summary"] for d in data if "summary" in d]      # skip paired summaries
+    print("| Arm | Episodes (errors) | Accepted on 1st attempt | 1st attempt passes tests "
           "| Accepted within N turns | Test escapes | Inconclusive | Mean turns "
           "| Grading p50 / p95 |")
     print("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
     for s in runs:
-        print(f"| {_arm(s)} | {s['episodes'] - s['errors']} / {s['episodes']} | "
-              f"{_pct(s['pass@1'])} | {_pct(s['pass@1_tests_only'])} | "
-              f"{_pct(s['solved_within_turns'])} (N={s['max_turns']}) | "
+        n = s["episodes"]
+        print(f"| {_arm(s)} | {n} ({s['errors']}) | "
+              f"{_count(s['pass@1'], n)} | {_count(s['pass@1_tests_only'], n)} | "
+              f"{_count(s['solved_within_turns'], n)} (N={s['max_turns']}) | "
               f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
               f"{s['mean_turns']} | {s['grading_s_p50']} s / {s['grading_s_p95']} s |")
     tasks = sorted({t for s in runs for t in s["per_task"]})
@@ -312,7 +458,9 @@ def cmd_report(args) -> int:
         cells = []
         for s in runs:
             pt = s["per_task"].get(t)
-            cells.append("n/a" if not pt else f"{_pct(pt['pass@1'])} → {_pct(pt['solved'])}")
+            cells.append("n/a" if not pt else
+                         f"{_count(pt['pass@1'], pt['episodes'])} → "
+                         f"{_count(pt['solved'], pt['episodes'])}")
         print(f"| {t} | " + " | ".join(cells) + " |")
     print()
     turns = sorted({s["max_turns"] for s in runs})
@@ -355,9 +503,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--effort", choices=["low", "medium", "high", "xhigh", "max"],
                    help="Claude effort level (default: the model's own default)")
     p.add_argument("--max-tokens", type=_positive_int,
-                   help="output token limit per call, thinking included")
+                   help="output token limit per call, thinking included "
+                        "(default: the model's own for Claude; 8192 for --agent ollama)")
     p.add_argument("--tasks", default="all")
     p.add_argument("--samples", type=_positive_int, default=1, help="episodes per task")
+    p.add_argument("--paired", action="store_true",
+                   help="grade one first attempt per episode, then branch it into the 'full' "
+                        "and 'none' feedback arms (a paired comparison); writes "
+                        "OUT__full.json, OUT__none.json, and OUT__paired.json")
     p.add_argument("--max-turns", type=_positive_int, default=3)
     p.add_argument("--reward-mode", choices=["improvement", "score"], default="improvement")
     p.add_argument("--feedback", choices=["none", "summary", "full"], default="full")
@@ -375,7 +528,8 @@ def main(argv: list[str] | None = None) -> int:
                         "multi-turn episodes)")
     g.add_argument("--think", choices=["default", "on", "off"], default="default",
                    help="reasoning mode for models that support it, e.g. Qwen3 "
-                        "(default: the model's own setting)")
+                        "(default: the model's own setting; ignored for models without one)")
+    g.add_argument("--seed", type=int, help="sampling seed passed to Ollama")
     p.set_defaults(fn=cmd_run)
 
     p = sub.add_parser("report", help="summarize `run --out` result files as Markdown")

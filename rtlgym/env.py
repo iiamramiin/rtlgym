@@ -88,7 +88,7 @@ class RTLEnv:
         st = self.state
         if st.done:
             raise RuntimeError("the episode is over; call reset() to start a new one")
-        code = extract_code(action)
+        code = extract_code(action, st.task.top)
         t0 = time.monotonic()
         res = evaluate(st.task, code, self.weights, use_cache=self.use_cache,
                        use_formal=self.use_formal)

@@ -343,6 +343,15 @@ def _clean_sim_log(log: str) -> str:
     return "\n".join(keep).strip()
 
 
+def _failure_message(el: ET.Element) -> str:
+    """The failure text, across cocotb versions: 2.1 writes message="...";
+    2.0.x writes error_msg="..." (and msg="..." for start-up failures)."""
+    for attr in ("message", "error_msg", "msg"):
+        if el.get(attr):
+            return el.get(attr, "")
+    return (el.text or "").strip() or "failed"
+
+
 def parse_junit(path: Path) -> dict[str, str | None]:
     """Map each reported testcase to None (passed) or its failure message."""
     try:
@@ -356,7 +365,7 @@ def parse_junit(path: Path) -> dict[str, str | None]:
         if bad is None:
             bad = tc.find("error")
         if bad is not None:
-            out[name] = (bad.get("message") or bad.text or "failed").strip()[:500]
+            out[name] = _failure_message(bad).strip()[:500]
         elif tc.find("skipped") is not None:
             out[name] = "skipped"
         else:
@@ -373,4 +382,10 @@ def tool_versions() -> dict[str, str]:
                                        timeout=10).stdout.splitlines()[0].strip()
         except Exception:  # noqa: BLE001
             out[name] = "missing"
+    # The test harness version matters too (e.g., its JUnit failure format).
+    try:
+        from importlib.metadata import version
+        out["cocotb"] = version("cocotb")
+    except Exception:  # noqa: BLE001
+        out["cocotb"] = "missing"
     return out

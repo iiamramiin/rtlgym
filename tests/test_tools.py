@@ -64,3 +64,57 @@ def test_expected_tests_come_from_the_testbench(tmp_path):
                   "@cocotb.test(timeout_time=5)\n@some_other_decorator\n"
                   "async def test_two(dut):\n    pass\n\nasync def helper(dut):\n    pass\n")
     assert tools.expected_tests(tb) == ["test_one", "test_two"]
+
+
+# cocotb changed its JUnit failure attributes between 2.0 and 2.1; both must keep
+# the message, or the agent only ever sees "failed".
+JUNIT_2_1 = """<testsuites><testsuite name="t">
+<testcase name="test_ok"/>
+<testcase name="test_bad">
+  <failure message="x=0xffff: count=0, expected 16" type="AssertionError">Traceback</failure>
+</testcase>
+<testcase name="test_skip"><skipped/></testcase>
+</testsuite></testsuites>"""
+JUNIT_2_0 = """<testsuites><testsuite name="t">
+<testcase name="test_ok"/>
+<testcase name="test_bad">
+  <failure error_type="AssertionError" error_msg="x=0xffff: count=0, expected 16"/>
+</testcase>
+<testcase name="test_init"><failure msg="Test initialization failed"/></testcase>
+<testcase name="test_text"><error>simulator crashed</error></testcase>
+<testcase name="test_bare"><failure/></testcase>
+</testsuite></testsuites>"""
+
+
+@pytest.mark.parametrize("xml", [JUNIT_2_1, JUNIT_2_0], ids=["cocotb-2.1", "cocotb-2.0"])
+def test_parse_junit_keeps_failure_messages(xml, tmp_path):
+    p = tmp_path / "results.xml"
+    p.write_text(xml)
+    got = tools.parse_junit(p)
+    assert got["test_ok"] is None
+    assert got["test_bad"] == "x=0xffff: count=0, expected 16"
+
+
+def test_parse_junit_fallbacks(tmp_path):
+    p = tmp_path / "results.xml"
+    p.write_text(JUNIT_2_0)
+    got = tools.parse_junit(p)
+    assert got["test_init"] == "Test initialization failed"
+    assert got["test_text"] == "simulator crashed"   # message in the element text
+    assert got["test_bare"] == "failed"               # nothing at all to report
+
+
+def test_tool_versions_include_cocotb():
+    v = tools.tool_versions()
+    assert v["cocotb"] not in ("", "missing")
+
+
+@pytest.mark.needs_tools
+def test_real_simulation_reports_expected_vs_actual():
+    """End to end with the installed cocotb: the failure must carry its message."""
+    from rtlgym.evaluator import evaluate
+    from rtlgym.task import load_task
+    task = load_task("popcount16")
+    r = evaluate(task, (task.root / "candidates" / "bug_width.sv").read_text(), use_cache=False)
+    msgs = [m for m in r.test_failures.values() if m]
+    assert msgs and any("expected" in m for m in msgs), r.test_failures
