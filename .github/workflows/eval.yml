@@ -1,20 +1,25 @@
 name: eval
 
-# Runs the Claude agent on every task and publishes the results. Manual only:
-# it calls the Claude API, which costs money. Needs the repository secret
-# ANTHROPIC_API_KEY (Settings > Secrets and variables > Actions).
+# Runs the Claude agent on the tasks and publishes the results. Manual only: it calls
+# the Claude API, which costs money. Needs the repository secret ANTHROPIC_API_KEY
+# (Settings > Secrets and variables > Actions).
 #
-# Default experiment: for each model, a "full" arm (the agent sees compiler, test,
-# and formal diagnostics between attempts) and a "none" arm (it only learns that the
-# attempt was not accepted), with the same turn budget, so the difference measures
-# what tool feedback adds over simply retrying. The key never reaches the EDA tools:
-# they run with a minimal environment.
+# Default experiment, per model: one first attempt per episode, branched into a "full"
+# arm (the agent sees compiler, test, and formal diagnostics between attempts) and a
+# "none" arm (it only learns the attempt was not accepted), with the same turn budget.
+# The difference measures what tool feedback adds over simply retrying. The run logic
+# is in scripts/ci/eval.sh, which also runs locally (AGENT=replay needs no API key).
+# The key never reaches the EDA tools: they run with a minimal environment.
 on:
   workflow_dispatch:
     inputs:
       models:
         description: "Comma-separated Claude model IDs"
         default: "claude-sonnet-5-5"
+        required: true
+      tasks:
+        description: "Comma-separated task IDs, or 'all' (e.g. popcount16,fifo_sync for a smoke run)"
+        default: "all"
         required: true
       samples:
         description: "Episodes per task"
@@ -24,14 +29,23 @@ on:
         description: "Attempts per episode"
         default: "3"
         required: true
+      paired:
+        description: "Paired arms: one first attempt branched into 'full' and 'none' feedback"
+        type: boolean
+        default: true
       feedback:
-        description: "Comma-separated feedback arms: full (tool diagnostics), none (retry only)"
+        description: "Feedback arms when not paired (comma-separated: full, summary, none)"
         default: "full,none"
-        required: true
-      effort:
-        description: "Effort level: low, medium, high (blank = model default)"
-        default: ""
         required: false
+      effort:
+        description: "Effort level"
+        type: choice
+        options: ["default", "low", "medium", "high", "xhigh", "max"]
+        default: "default"
+      workers:
+        description: "Episodes run in parallel (4 is safe on the 4-core runner)"
+        default: "4"
+        required: true
 
 permissions:
   contents: read
@@ -39,7 +53,7 @@ permissions:
 jobs:
   eval:
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 240
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -63,22 +77,15 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           MODELS: ${{ inputs.models }}
+          TASKS: ${{ inputs.tasks }}
           SAMPLES: ${{ inputs.samples }}
           MAX_TURNS: ${{ inputs.max_turns }}
+          PAIRED: ${{ inputs.paired }}
           FEEDBACK: ${{ inputs.feedback }}
           EFFORT: ${{ inputs.effort }}
-        run: |
-          mkdir -p results
-          for m in $(echo "$MODELS" | tr ',' ' '); do
-            for fb in $(echo "$FEEDBACK" | tr ',' ' '); do
-              args=(--agent claude --model "$m" --feedback "$fb" --samples "$SAMPLES"
-                    --max-turns "$MAX_TURNS" --workers 4 --out "results/${m}__${fb}.json")
-              if [ -n "$EFFORT" ]; then args+=(--effort "$EFFORT"); fi
-              python -m rtlgym run "${args[@]}"
-            done
-          done
-          python -m rtlgym report results/*.json | tee results/summary.md
-          cat results/summary.md >> "$GITHUB_STEP_SUMMARY"
+          WORKERS: ${{ inputs.workers }}
+          OUT: results
+        run: bash scripts/ci/eval.sh
       - uses: actions/upload-artifact@v4
         if: always()
         with:

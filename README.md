@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 8 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 177 tests
+pytest -q                                               # 182 tests
 ```
 
 ## Using it as an RL environment
@@ -207,27 +207,33 @@ elsewhere in the reply. Testbenches and prose are left out.
 
 **On GitHub (no local setup):** add the repository secret `ANTHROPIC_API_KEY`
 (Settings → Secrets and variables → Actions), then open Actions → eval → Run workflow.
-Choose the models and feedback arms (comma-separated), episodes per task, and turns.
-The run publishes a Markdown summary on the run page and uploads the raw JSON as the
-`eval-results` artifact. The API key stays in the agent process; the grading tools
-never see it.
+Inputs: models (comma-separated), tasks (`all`, or a comma-separated list for a cheap
+smoke run), episodes per task, attempts per episode, paired (on by default), feedback
+arms (used only when paired is off), effort, and the number of parallel episodes. The run
+prints the most API calls it can make before it starts, then publishes a summary on the
+run page: the results table, the inconclusive and errored counts, input and output
+tokens per model (for computing the cost), and the paired outcomes with the McNemar
+test. The raw JSON is uploaded as the `eval-results` artifact. The API key stays in the
+agent process; the grading tools never see it.
 
-**Locally:**
+**Locally:** the workflow runs [`scripts/ci/eval.sh`](scripts/ci/eval.sh), which takes the
+same settings as environment variables:
 
 ```bash
 pip install -e ".[claude]"
 export ANTHROPIC_API_KEY=...
-for fb in full none; do
-  python -m rtlgym run --agent claude --model claude-sonnet-5-5 --feedback $fb \
-      --samples 5 --max-turns 3 --out results/claude-sonnet-5-5__$fb.json
-done
-python -m rtlgym report results/*.json
+MODELS=claude-sonnet-5-5 TASKS=popcount16,fifo_sync SAMPLES=1 bash scripts/ci/eval.sh
+AGENT=replay TASKS=all SAMPLES=1 bash scripts/ci/eval.sh     # offline check, no API calls
 ```
 
 The agent sends no sampling parameters (Claude Sonnet 5.5 rejects them), streams
 responses, and leaves room for thinking in `max_tokens`. `--effort` sets the effort
-level; by default each model uses its own. With 8 tasks, 5 episodes per task, at most
-3 turns, and two arms, a run makes at most 240 API calls per model.
+level; by default each model uses its own. With 8 tasks, 5 episodes per task, and at
+most 3 attempts, a paired run makes at most 200 API calls per model (one shared first
+attempt, then up to two more in each arm); episodes accepted on the first attempt make
+only one. Grading is not the bottleneck: on 2 cores with 8 episodes graded at once, the
+slowest formal check took 7 s of its 60 s limit, so 4 parallel episodes on GitHub's
+4-core runner leave a wide margin before a design is marked inconclusive.
 
 ### Local models (Ollama)
 
@@ -349,9 +355,10 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            177 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            182 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
-.github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs)
+.github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)
 ```
 
 ## Limitations and next steps

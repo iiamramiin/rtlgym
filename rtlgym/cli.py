@@ -466,6 +466,12 @@ def _pct(v) -> str:
     return "n/a" if v is None else f"{100 * v:.0f}%"
 
 
+def _grading(s: dict) -> str:
+    if s.get("grading_s_p50") is None:
+        return "n/a (all cached)"
+    return f"{s['grading_s_p50']} s / {s['grading_s_p95']} s"
+
+
 def _count(rate, n: int) -> str:
     """'2/8 (25%)': raw counts with the denominator, not just a percentage."""
     if rate is None:
@@ -499,7 +505,7 @@ def cmd_report(args) -> int:
               f"{_count(s['pass@1'], n)} | {_count(s['pass@1_tests_only'], n)} | "
               f"{_count(s['solved_within_turns'], n)} (N={s['max_turns']}) | "
               f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
-              f"{s['mean_turns']} | {s['grading_s_p50']} s / {s['grading_s_p95']} s |")
+              f"{s['mean_turns']} | {_grading(s)} |")
     tasks = sorted({t for s in runs for t in s["per_task"]})
     print()
     print("| Task | " + " | ".join(_arm(s) for s in runs) + " |")
