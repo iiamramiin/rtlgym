@@ -43,7 +43,8 @@ def test_paired_table_counts_discordant_pairs():
     full = [ep("a", solved=True), ep("b", solved=True), ep("c"), ep("d", solved=True)]
     none = [ep("a", solved=True), ep("b"), ep("c", solved=True), ep("d")]
     t = paired_table({"full": full, "none": none}, ("full", "none"))
-    assert t["outcomes"] == {"both": 1, "only_full": 2, "only_none": 1, "neither": 0}
+    assert t["outcomes"] == {"both": 1, "only_full": 2, "only_none": 1, "neither": 0,
+                             "errored": 0}
     assert t["discordant_pairs"] == 3 and [r["outcome"] for r in t["rows"]] == [
         "both", "only_full", "only_none", "only_full"]
 
@@ -69,3 +70,28 @@ def test_git_commit_marks_uncommitted_changes(tmp_path, monkeypatch):
     (tmp_path / "f.txt").write_text("1")
     assert _git_commit(tmp_path) == clean           # untracked files do not count
     assert _git_commit(tmp_path / "nope") == "unknown"
+
+
+def test_paired_table_counts_errored_episodes_separately():
+    def first(error=None):
+        return {"shared_first": {"error": error, "usage": {}, "act_s": 0.0}}
+    full = [{**ep("a", solved=True), **first()},
+            {**ep("b", error="RuntimeError: overloaded", turns=0), **first("RuntimeError: x")},
+            {**ep("c"), **first()}]
+    none = [{**ep("a"), **first()},
+            {**ep("b", error="RuntimeError: overloaded", turns=0), **first("RuntimeError: x")},
+            {**ep("c"), **first()}]
+    t = paired_table({"full": full, "none": none}, ("full", "none"))
+    assert t["outcomes"] == {"both": 0, "only_full": 1, "only_none": 0, "neither": 1,
+                             "errored": 1}
+    assert t["discordant_pairs"] == 1 and t["informative_episodes"] == 2
+    assert [r["outcome"] for r in t["rows"]] == ["only_full", "errored", "neither"]
+
+
+def test_mcnemar_exact():
+    from rtlgym.cli import mcnemar_exact
+    assert mcnemar_exact(0, 0) == 1.0
+    assert mcnemar_exact(6, 0) == 2 / 64                      # 0.03125
+    assert abs(mcnemar_exact(7, 1) - 2 * 9 / 256) < 1e-12     # 0.0703
+    assert mcnemar_exact(3, 3) == 1.0
+    assert mcnemar_exact(1, 7) == mcnemar_exact(7, 1)

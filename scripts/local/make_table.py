@@ -69,8 +69,10 @@ def table(folder: str) -> None:
         o = t["outcomes"]
         print(f"\nPaired outcomes, {model} ({t['episodes']} episodes, same first attempt in "
               f"both arms): solved in both {o['both']}, only with {a} {o[f'only_{a}']}, "
-              f"only with {b} {o[f'only_{b}']}, in neither {o['neither']}. "
-              f"Only the {t['discordant_pairs']} discordant pair(s) inform the comparison.")
+              f"only with {b} {o[f'only_{b}']}, in neither {o['neither']}, "
+              f"errored {o.get('errored', 0)}. Informative episodes (first attempt not "
+              f"accepted): {t.get('informative_episodes', 'n/a')}; discordant pairs: "
+              f"{t['discordant_pairs']}; exact McNemar p = {t.get('mcnemar_exact_p', 'n/a')}.")
 
 
 def estimate(folder: str, tasks: int, arms: int, samples: int, turns: int) -> None:

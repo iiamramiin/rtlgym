@@ -78,10 +78,21 @@ def _fenced(text: str) -> tuple[list[tuple[int, int]], str]:
 
 
 def _module_body(src: str) -> str:
-    """The module's body: everything after its header, which ends at the first ';'
-    (ANSI port and parameter lists contain no ';'), so one-line modules work too."""
+    """The module's body, for finding what it instantiates: everything after its
+    header (which ends at the first ';'; ANSI port and parameter lists contain none,
+    so one-line modules work too), with comments and string literals removed."""
     i = src.find(";")
-    return src[i + 1:] if i >= 0 else ""
+    body = src[i + 1:] if i >= 0 else ""
+    return re.sub(r'"(?:\\.|[^"\\\n])*"', " ", _strip_comments(body))
+
+
+def _instantiates(body: str, name: str) -> bool:
+    """True if ``body`` instantiates module ``name``: the name followed by a
+    parameter list (``name #(...)``) or by an instance name, an optional instance
+    array range, and a port list (``name u0 (...)``, ``name u[3:0] (...)``).
+    A mere mention ("unlike tb, ...", ``tb_done = 1``) does not count."""
+    return re.search(rf"\b{re.escape(name)}\s*(?:#\s*\(|[A-Za-z_]\w*\s*(?:\[[^\]]*\]\s*)?\()",
+                     body) is not None
 
 
 def extract_code(text: str, top: str | None = None) -> str:
@@ -97,6 +108,8 @@ def extract_code(text: str, top: str | None = None) -> str:
     reports the problem.
     """
     spans, bare = _fenced(text)
+    unclosed = bool(spans) and spans[-1][1] == len(text) and not text.rstrip().endswith(
+        ("```", "~~~"))
     found = []                     # (position, name, source, region); region -1 = bare
     for i, (a, b) in enumerate(spans):
         for m in _MODULE_RE.finditer(text, a, b):
@@ -104,6 +117,11 @@ def extract_code(text: str, top: str | None = None) -> str:
     for m in _MODULE_RE.finditer(bare):
         found.append((m.start(), m.group(1), m.group(0).strip(), -1))
     if not found:
+        # No complete module. If the reply was cut off inside a code fence, hand the
+        # compiler just that code, so its error points at the real problem (the
+        # missing end) rather than at the prose before it.
+        if unclosed and re.search(r"\bmodule\b", text[spans[-1][0]:]):
+            return text[spans[-1][0]:].strip() + "\n"
         return text.strip() + "\n"
     found.sort()
     defs = {name: src for _, name, src, _ in found}          # last version of each name
@@ -128,7 +146,7 @@ def extract_code(text: str, top: str | None = None) -> str:
             continue
         needed.append(name)
         body = _module_body(defs[name])
-        todo += [d for d in defs if d not in needed and re.search(rf"\b{re.escape(d)}\b", body)]
+        todo += [d for d in defs if d not in needed and _instantiates(body, d)]
 
     if base >= 0:
         # Keep the fenced block whole (it may hold `timescale, packages, ...),

@@ -139,3 +139,34 @@ def test_extract_non_code_fence_with_a_bare_module():
 def test_extract_top_in_bare_text_wins_over_an_unrelated_fenced_module():
     reply = fence(TB) + "\nAnd the design:\n" + A
     assert extract_code(reply, "a").strip() == A
+
+
+def test_extract_ignores_modules_only_mentioned_in_comments():
+    top = "module a(input x, output y);\n  // unlike tb, this is synthesizable\n  assign y = x;\nendmodule"
+    reply = fence(top) + "\nTestbench:\n" + fence("module tb; initial $finish; endmodule")
+    code = extract_code(reply, "a")
+    assert code.strip() == top and "// unlike tb" in code      # comment kept in the code
+    assert static_check(code, "a").ok
+
+
+@pytest.mark.parametrize("body,uses_helper", [
+    ("inv u0(.i(x), .o(y));", True),
+    ("inv #(.W(1)) u0 (.i(x), .o(y));", True),
+    ("inv u[1:0] (.i(x), .o(y));", True),
+    ("/* inv u0(.i(x), .o(y)); */ assign y = x;", False),
+    ('initial $display("inv u0(...)"); assign y = x;', False),
+    ("wire inv_n; assign inv_n = x; assign y = inv_n;", False),
+])
+def test_extract_follows_real_instantiations_only(body, uses_helper):
+    top = f"module a(input x, output y);\n  {body}\nendmodule"
+    code = extract_code(fence(HELPER) + "\n" + fence(top), "a")
+    assert ("module inv" in code) == uses_helper
+
+
+def test_extract_cut_off_reply_returns_only_the_unclosed_code():
+    partial = "module a(input x, output y);\n  assign y ="
+    reply = "Here is my design, explained step by step.\n\n```verilog\n" + partial
+    assert extract_code(reply, "a") == partial + "\n"         # no prose for the compiler
+    # Without a fence, or with a fence that has no module, nothing changes.
+    assert extract_code("I cannot do that.", "a") == "I cannot do that.\n"
+    assert extract_code("See:\n```bash\nls -l", "a").startswith("See:")

@@ -8,6 +8,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import math
 import os
 import platform
 import statistics
@@ -200,7 +201,7 @@ def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, ta
     except Exception as exc:  # noqa: BLE001
         first_action, error = None, f"{type(exc).__name__}: {exc}"[:500]
     shared = {"usage": dict(getattr(agent, "usage", None) or {}),
-              "act_s": round(time.monotonic() - t0, 2)}
+              "act_s": round(time.monotonic() - t0, 2), "error": error}
     # Fork every arm now, from the state right after the first attempt.
     branches = {arm: agent.fork() for arm in arms}
     out = {}
@@ -271,17 +272,39 @@ def summarize(results: list[dict], meta: dict) -> dict:
     }
 
 
+def mcnemar_exact(b: int, c: int) -> float:
+    """Two-sided exact McNemar test: a binomial test of b successes out of b + c
+    discordant pairs, with p = 1/2. Returns 1.0 when there are no discordant pairs."""
+    n = b + c
+    if n == 0:
+        return 1.0
+    tail = sum(math.comb(n, i) for i in range(min(b, c) + 1)) / 2 ** n
+    return min(1.0, 2 * tail)
+
+
 def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
-    """Per-task outcomes of paired episodes (same first attempt in both arms)."""
+    """Per-task outcomes of paired episodes (same first attempt in both arms).
+
+    An episode whose shared first attempt failed (e.g., an API error) has no
+    outcome in either arm: it is counted as "errored" and left out of the other
+    counts and the test. An episode whose first attempt was accepted cannot differ
+    between the arms, so only the "informative" ones (first attempt not accepted)
+    can become discordant pairs."""
     a, b = arms
-    rows, totals = [], {"both": 0, f"only_{a}": 0, f"only_{b}": 0, "neither": 0}
+    totals = {"both": 0, f"only_{a}": 0, f"only_{b}": 0, "neither": 0, "errored": 0}
+    rows, informative = [], 0
     for ra, rb in zip(per_arm[a], per_arm[b], strict=True):
-        key = ("both" if ra["solved"] and rb["solved"] else f"only_{a}" if ra["solved"]
-               else f"only_{b}" if rb["solved"] else "neither")
+        if (ra.get("shared_first") or {}).get("error"):
+            key = "errored"
+        else:
+            key = ("both" if ra["solved"] and rb["solved"] else f"only_{a}" if ra["solved"]
+                   else f"only_{b}" if rb["solved"] else "neither")
+            informative += not ra["pass@1"]
         totals[key] += 1
         rows.append({"task": ra["task"], "first_attempt_solved": ra["pass@1"],
                      f"{a}_solved": ra["solved"], f"{b}_solved": rb["solved"],
                      f"{a}_best": ra["best_score"], f"{b}_best": rb["best_score"],
+                     f"{a}_error": ra["error"], f"{b}_error": rb["error"],
                      "outcome": key})
     shared: dict[str, float] = {"act_s": 0.0}
     for r in per_arm[a]:
@@ -289,8 +312,10 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
         shared["act_s"] = round(shared["act_s"] + first.get("act_s", 0.0), 2)
         for k, v in (first.get("usage") or {}).items():
             shared[k] = round(shared.get(k, 0) + v, 2)
+    only_a, only_b = totals[f"only_{a}"], totals[f"only_{b}"]
     return {"arms": list(arms), "episodes": len(rows), "outcomes": totals,
-            "discordant_pairs": totals[f"only_{a}"] + totals[f"only_{b}"],
+            "informative_episodes": informative, "discordant_pairs": only_a + only_b,
+            "mcnemar_exact_p": round(mcnemar_exact(only_a, only_b), 4),
             "shared_first": shared, "rows": rows}
 
 
@@ -430,9 +455,11 @@ def _print_paired(p: dict) -> None:
     o = p["outcomes"]
     print(f"\nPaired outcomes over {p['episodes']} episodes (same first attempt in both arms):")
     print(f"  solved in both: {o['both']}   only with {a}: {o[f'only_{a}']}   "
-          f"only with {b}: {o[f'only_{b}']}   in neither: {o['neither']}")
-    print(f"  {p['discordant_pairs']} discordant pair(s); only these carry information "
-          f"about the difference between the arms.")
+          f"only with {b}: {o[f'only_{b}']}   in neither: {o['neither']}   "
+          f"errored before a first attempt: {o['errored']}")
+    print(f"  {p['informative_episodes']} informative episode(s) (first attempt not accepted); "
+          f"{p['discordant_pairs']} discordant pair(s), exact McNemar p = "
+          f"{p['mcnemar_exact_p']}.")
 
 
 def _pct(v) -> str:

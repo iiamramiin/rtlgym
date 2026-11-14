@@ -39,7 +39,7 @@ python -m rtlgym list                                   # 8 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 167 tests
+pytest -q                                               # 177 tests
 ```
 
 ## Using it as an RL environment
@@ -190,8 +190,11 @@ attempt: each branch is forked from the state right after it, so neither arm see
 other's feedback, and each arm's tokens and time cover only its own turns (the shared
 first call is reported once, under `shared_first`). The run writes `OUT__full.json`,
 `OUT__none.json`, and `OUT__paired.json`, which counts the episodes solved in both
-arms, in only one, or in neither. Only the discordant episodes carry information about
-the difference.
+arms, in only one, or in neither, plus the exact McNemar p-value (a two-sided binomial
+test on the discordant pairs). Episodes whose first attempt was accepted cannot differ
+between the arms, and episodes whose first attempt failed with an error are counted
+separately ("errored"), so only the discordant episodes carry information about the
+difference.
 
 Every result file records the model, effort, sampling settings, git commit (marked
 `-dirty` if the code had uncommitted changes), Python, tool, and cocotb versions, and
@@ -346,7 +349,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            167 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            177 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs)
 ```
