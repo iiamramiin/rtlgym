@@ -35,11 +35,11 @@ next to the package, not inside it.
 sudo apt-get install -y iverilog verilator yosys        # Ubuntu 24.04
 pip install -e ".[dev]"
 
-python -m rtlgym list                                   # 8 tasks
+python -m rtlgym list                                   # 12 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 182 tests
+pytest -q                                               # 202 tests
 ```
 
 ## Using it as an RL environment
@@ -228,8 +228,8 @@ AGENT=replay TASKS=all SAMPLES=1 bash scripts/ci/eval.sh     # offline check, no
 
 The agent sends no sampling parameters (Claude Sonnet 5.5 rejects them), streams
 responses, and leaves room for thinking in `max_tokens`. `--effort` sets the effort
-level; by default each model uses its own. With 8 tasks, 5 episodes per task, and at
-most 3 attempts, a paired run makes at most 200 API calls per model (one shared first
+level; by default each model uses its own. With 12 tasks, 5 episodes per task, and at
+most 3 attempts, a paired run makes at most 300 API calls per model (one shared first
 attempt, then up to two more in each arm); episodes accepted on the first attempt make
 only one. Grading is not the bottleneck: on 2 cores with 8 episodes graded at once, the
 slowest formal check took 7 s of its 60 s limit, so 4 parallel episodes on GitHub's
@@ -304,6 +304,10 @@ above; no episode errored.
 | `fifo_sync` | medium | full/empty logic, pointer wrap, simultaneous read/write | 12 cycles at W=2, DEPTH=4 |
 | `rr_arbiter4` | medium | round-robin fairness, pointer update rules | 12 cycles |
 | `uart_tx` | hard | cycle-accurate protocol timing, ignoring inputs while busy | 48 cycles |
+| `noc_router5` | hard | XY routing, per-output round robin, elastic backpressure | 12 cycles at PAYLOAD_W=1, X=3, Y=0 |
+| `axil_regs` | hard | independent AXI4-Lite channels, byte strobes, interrupt priority | 8 cycles |
+| `mul_pipe3` | medium | signed multiplication, exact pipeline latency, bubbles and reset | 7 cycles at WIDTH=4 |
+| `crc32_stream` | medium | reflected CRC-32, byte order, stream restart | 4 cycles |
 
 Each task folder holds `spec.md` (the only thing the agent sees), `ref.sv`, a hidden
 `test_<task>.py`, `task.toml` (including the `[formal]` settings), and `candidates/`
@@ -354,8 +358,8 @@ rtlgym/
   simworker.py    child process that runs one cocotb testbench
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
-tasks/            8 tasks with specs, references, hidden tests, candidates
-tests/            182 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tasks/            12 tasks with specs, references, hidden tests, candidates
+tests/            202 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)
@@ -363,7 +367,7 @@ scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 
 ## Limitations and next steps
 
-- **Small, public benchmark.** Eight textbook-size designs exercise the harness; they
+- **Small, public benchmark.** Twelve small designs exercise the harness; they
   are not enough to measure how a model generalizes to production RTL. Their tests,
   seeds, and references are public, so treat them as development fixtures: a real
   evaluation needs private, held-out task families and independently seeded checks.

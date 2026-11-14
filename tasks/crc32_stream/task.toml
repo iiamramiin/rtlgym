@@ -1,0 +1,10 @@
+id = "crc32_stream"
+top = "crc32_stream"
+difficulty = "medium"
+tags = ["sequential", "streaming", "crc"]
+sim_timeout_s = 60
+demo_trajectory = ["bug_ignore_restart_byte.sv", "good_msb_shift.sv"]
+
+[formal]
+depth = 4
+reset = "rst"

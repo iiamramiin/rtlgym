@@ -1,0 +1,14 @@
+id = "noc_router5"
+top = "noc_router5"
+difficulty = "hard"
+tags = ["sequential", "noc", "round-robin", "ready-valid"]
+sim_timeout_s = 90
+demo_trajectory = ["bug_fixed_priority.sv", "good_retained_slot.sv"]
+
+[formal]
+# The center position (1, 1) makes all five outputs reachable, so every routing
+# direction and every output arbiter is checked; depth 8 lets each output's
+# round-robin cursor cycle through all five inputs within the bound.
+depth = 8
+reset = "rst"
+params = { PAYLOAD_W = 1, X = 1, Y = 1 }

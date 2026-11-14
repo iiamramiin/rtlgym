@@ -1,0 +1,10 @@
+id = "axil_regs"
+top = "axil_regs"
+difficulty = "hard"
+tags = ["bus", "axi4-lite", "handshake", "register-file", "interrupt"]
+sim_timeout_s = 30
+demo_trajectory = ["bug_scratch_strobes.sv", "good_write_fsm.sv"]
+
+[formal]
+depth = 8
+reset = "rst"

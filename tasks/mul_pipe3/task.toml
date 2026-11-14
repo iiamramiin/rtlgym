@@ -1,0 +1,12 @@
+id = "mul_pipe3"
+top = "mul_pipe3"
+difficulty = "medium"
+tags = ["sequential", "arithmetic", "pipeline", "signed"]
+sim_timeout_s = 60
+demo_trajectory = ["bug_unsigned_product.sv", "good_ingress_multiply.sv"]
+
+[formal]
+# The reduced instance covers signed corner cases and every valid pattern at this depth.
+depth = 7
+reset = "rst"
+params = { WIDTH = 4 }
