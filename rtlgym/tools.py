@@ -343,8 +343,8 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
                       resource_limit=None if parse_failed else yosys_resource_limit(r))
     if iface.is_file():
         res.ports = _ports_from_json(iface, top)
-    if res.resource_limit == "memory allocation failure":
-        # Generic techmap can exhaust memory expanding wide remainder cells.
+    if res.resource_limit in ("memory allocation failure", "time limit"):
+        # Generic techmap can exhaust the memory or wall budget expanding wide remainders.
         # Reuse the parsed source and require a fully lowered, checked netlist.
         parsed_src = workdir / "frontend_0.v" if frontend == "sv2v" else src
         retry = invoke(parsed_src, [
@@ -381,7 +381,7 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
         return res
     res.cell_types = types
     if res.resource_limit:
-        res.ppa_unavailable = "canonical synthesis ran out of memory; alternate netlist checked"
+        res.ppa_unavailable = f"canonical synthesis stopped ({res.resource_limit})"
         res.resource_limit = None
     else:
         res.cells = cells

@@ -240,7 +240,8 @@ def test_synthesis_resource_stop_and_cache(monkeypatch, passing):
 
 
 @pytest.mark.parametrize("latches", [0, 1])
-def test_synthesis_oom_retry_keeps_correctness_checks(monkeypatch, latches):
+@pytest.mark.parametrize("timeout", [False, True], ids=["oom", "timeout"])
+def test_synthesis_resource_retry_keeps_correctness_checks(monkeypatch, latches, timeout):
     import json
 
     from rtlgym import evaluator, tools
@@ -254,7 +255,7 @@ def test_synthesis_oom_retry_keeps_correctness_checks(monkeypatch, latches):
             script = cmd[-1].split("; synth -flatten", 1)[0]
             assert original([*cmd[:-1], script], cwd, timeout_s, env=env).ok
             if "check -assert" not in cmd[-1]:
-                return tools.ToolRun(False, -6, "std::bad_alloc", 0.1)
+                return tools.ToolRun(False, -6, "std::bad_alloc", 0.1, timed_out=timeout)
             assert "select -assert-none t:* t:$_* %d" in cmd[-1]
             stats = {"num_cells": 2 + latches, "num_cells_by_type": {"$_AND_": 2, "$_DLATCH_N_": latches}}
             (cwd / "stat.json").write_text(json.dumps({"design": stats}))
