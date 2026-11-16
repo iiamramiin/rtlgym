@@ -15,6 +15,7 @@ container, syscall filter, or network isolation.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import shutil
@@ -28,7 +29,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 MAX_LOG_CHARS = 4000
-CPU_LIMIT_S = 120
+MIN_CPU_LIMIT_S = 120
+MAX_CPU_LIMIT_S = 300
+CPU_GRACE_S = 5
 MEM_LIMIT_BYTES = 2 * 1024**3
 FILE_LIMIT_BYTES = 256 * 1024**2      # any single file a tool writes, including its log
 YOSYS_PARSE_MARKER = "parsed.txt"
@@ -80,11 +83,21 @@ def tool_env(extra: dict | None = None) -> dict:
     return env
 
 
-def _limited(cmd: list[str]) -> list[str]:
+def _cpu_limit_s(timeout_s: float) -> int:
+    # A CPU-bound process should reach its wall deadline before the kernel
+    # limit. Keep the existing floor for short stages and bound all requests.
+    max_wall_s = MAX_CPU_LIMIT_S - CPU_GRACE_S
+    if not math.isfinite(timeout_s) or not 0 < timeout_s <= max_wall_s:
+        raise ValueError(f"tool wall timeout must be in (0, {max_wall_s}] seconds")
+    return max(MIN_CPU_LIMIT_S, math.ceil(timeout_s) + CPU_GRACE_S)
+
+
+def _limited(cmd: list[str], timeout_s: float) -> list[str]:
+    cpu = _cpu_limit_s(timeout_s)
     if shutil.which("prlimit"):
-        return ["prlimit", f"--cpu={CPU_LIMIT_S}", f"--as={MEM_LIMIT_BYTES}",
+        return ["prlimit", f"--cpu={cpu}", f"--as={MEM_LIMIT_BYTES}",
                 f"--fsize={FILE_LIMIT_BYTES}", "--", *cmd]
-    return [sys.executable, "-c", _LAUNCHER, str(CPU_LIMIT_S), str(MEM_LIMIT_BYTES),
+    return [sys.executable, "-c", _LAUNCHER, str(cpu), str(MEM_LIMIT_BYTES),
             str(FILE_LIMIT_BYTES), *cmd]
 
 
@@ -120,13 +133,14 @@ def run(cmd: list[str], cwd: Path, timeout_s: float, env: dict | None = None) ->
     cannot exhaust this process's memory; only the tail is read back.
     """
     t0 = time.monotonic()
+    limited_cmd = _limited(cmd, timeout_s)
     if shutil.which(cmd[0]) is None and not Path(cmd[0]).is_file():
         return ToolRun(False, None, f"tool not found: {cmd[0]}", time.monotonic() - t0)
     cwd.mkdir(parents=True, exist_ok=True)
     out_path = cwd / f".{Path(cmd[0]).name}.{os.getpid()}.{time.monotonic_ns()}.out"
     with open(out_path, "wb") as out:
         try:
-            proc = subprocess.Popen(_limited(cmd), cwd=cwd, env=env or tool_env(), stdout=out,
+            proc = subprocess.Popen(limited_cmd, cwd=cwd, env=env or tool_env(), stdout=out,
                                     stderr=subprocess.STDOUT, start_new_session=True)
         except FileNotFoundError as exc:
             return ToolRun(False, None, f"tool not found: {exc}", time.monotonic() - t0)
