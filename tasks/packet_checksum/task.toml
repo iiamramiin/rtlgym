@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# Byte packing and end-around carry interact with a stalled result. Expected
+# errors include dropping the odd final byte and overwriting a pending checksum.
+id = "packet_checksum"
+top = "packet_checksum"
+difficulty = "hard"
+tags = ["sequential", "hierarchy", "streaming", "checksum"]
+sim_timeout_s = 30
+demo_trajectory = ["bug_overwrite_stall.sv", "good_byte_accumulator.sv"]
+
+[formal]
+# Two bits per byte preserve both packing lanes and the carry wrap. Nine steps
+# include a three-byte packet, a held result, and a same-edge replacement.
+depth = 9
+params = { BYTE_W = 2 }
+reset = "rst"
+timeout_s = 15

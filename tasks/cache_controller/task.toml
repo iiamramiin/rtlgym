@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# A refill spans both memory handshakes and an independently stalled CPU response.
+# Expect mistakes around line address vs word offset, held payloads, hit tags and
+# arbitration of invalidate against a concurrent new request.
+id = "cache_controller"
+top = "cache_controller"
+difficulty = "hard"
+tags = ["sequential", "memory", "cache", "ready-valid"]
+sim_timeout_s = 30
+demo_trajectory = ["bug_alias_hit.sv", "good_separate_word_banks.sv"]
+
+[formal]
+# A compulsory miss can fill and respond by cycle 5. A same-line hit, a
+# different-tag request to the same index, or an invalidate and re-access can
+# all affect observed outputs by cycle 10. Reduced widths preserve both line
+# indexes, the two word offsets and multiple tags per index.
+depth = 10
+reset = "rst"
+params = { DATA_W = 2, TAG_W = 2, INDEX_W = 1 }
+timeout_s = 20
