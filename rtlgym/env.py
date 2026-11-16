@@ -150,6 +150,8 @@ def _formal_lines(r: EvalResult, level: str) -> list[str]:
                          "compared from cycle 2:" if r.formal_depth > 1 else f"Counterexample{note}:")
             lines.append(r.formal_counterexample)
         return lines
+    if "formal" in r.resource_failures:
+        return [f"Formal: stopped by a resource limit ({r.resource_failures['formal']})."]
     if "formal" in r.frontend_errors:
         lines = ["Formal: the front end could not parse the design."]
         if level == "full":
@@ -204,7 +206,9 @@ def format_feedback(r: EvalResult, level: str = "full") -> str:
                      f"{r.latches} latches), logic depth {r.depth}; "
                      f"reference: {r.ref_cells} cells, depth {r.ref_depth}")
     else:
-        if "synthesis" in r.frontend_errors:
+        if "synthesis" in r.resource_failures:
+            lines.append(f"Synthesis: stopped by a resource limit ({r.resource_failures['synthesis']}).")
+        elif "synthesis" in r.frontend_errors:
             lines.append("Synthesis: the front end could not parse the design.")
         else:
             lines.append("Synthesis failed (Yosys).")

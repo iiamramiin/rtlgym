@@ -31,6 +31,7 @@ MAX_LOG_CHARS = 4000
 CPU_LIMIT_S = 120
 MEM_LIMIT_BYTES = 2 * 1024**3
 FILE_LIMIT_BYTES = 256 * 1024**2      # any single file a tool writes, including its log
+YOSYS_PARSE_MARKER = "parsed.txt"
 CAPTURE_TAIL_BYTES = 1024**2          # how much of a tool's output is kept in memory
 REQUIRED_TOOLS = ("iverilog", "verilator", "yosys", "sv2v")
 
@@ -94,6 +95,7 @@ class ToolRun:
     log: str
     elapsed_s: float
     timed_out: bool = False
+    parsed: bool = False
 
 
 def _read_tail(path: Path, n: int = CAPTURE_TAIL_BYTES) -> str:
@@ -160,6 +162,37 @@ def tail(text: str, n: int = MAX_LOG_CHARS) -> str:
     return text if len(text) <= n else "...\n" + text[-n:]
 
 
+_MEMORY_LIMIT_RE = re.compile(
+    r"std::bad_alloc|out of memory|cannot allocate memory|memory allocation fail(?:ed|ure)"
+    r"|oom[- ]kill(?:ed)?|heap exhausted",
+    re.IGNORECASE,
+)
+
+
+def _resource_limit(result: ToolRun, log: str) -> str | None:
+    if result.ok:
+        return None
+    if result.timed_out or "proof did time out" in log:
+        return "time limit"
+    if _MEMORY_LIMIT_RE.search(log):
+        return "memory allocation failure"
+    if result.returncode is not None and result.returncode < 0:
+        try:
+            name = signal.Signals(-result.returncode).name
+        except ValueError:
+            return None
+        if name == "SIGXCPU":
+            return "CPU time limit"
+        if name in ("SIGKILL", "SIGXFSZ"):
+            return f"killed by {name}"
+    return None
+
+
+def yosys_resource_limit(result: ToolRun, log: str = "") -> str | None:
+    """Count resource stops only after the final Yosys invocation read its sources."""
+    return _resource_limit(result, result.log + "\n" + log) if result.parsed else None
+
+
 def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
                    invoke: Callable[..., ToolRun]) -> tuple[ToolRun, str, bool]:
     """Keep native Yosys for accepted sources. Retry only inputs it cannot parse."""
@@ -167,8 +200,11 @@ def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
     converted = set()
     elapsed = 0.0
     diagnostics: list[str] = []
+    marker = workdir / YOSYS_PARSE_MARKER
     while True:
+        marker.unlink(missing_ok=True)
         result = invoke(*paths)
+        result.parsed = marker.is_file()
         elapsed += result.elapsed_s
         syntax = next((p for p in paths if re.search(
             rf"^{re.escape(str(p))}:\d+: ERROR: syntax error\b",
@@ -193,7 +229,7 @@ def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
             conversion.ok = False
             conversion.elapsed_s = elapsed
             conversion.log = "\n".join([*diagnostics, "sv2v: " + conversion.log])
-            return conversion, "sv2v", not conversion.timed_out
+            return conversion, "sv2v", _resource_limit(conversion, conversion.log) is None
         converted.add(lowered)
         paths[index] = lowered
 
@@ -256,6 +292,7 @@ class SynthResult:
     elapsed_s: float = 0.0
     frontend: str = "native"
     parse_failed: bool = False
+    resource_limit: str | None = None
 
 
 def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> SynthResult:
@@ -264,6 +301,7 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
     stat = workdir / "stat.json"
     ltp = workdir / "ltp.txt"
     stages = [
+        f"tee -q -o {YOSYS_PARSE_MARKER} log parsed",
         f"hierarchy -check -top {top}",
         "proc",
         f"write_json {iface}",
@@ -275,12 +313,15 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
     ]
 
     def invoke(path: Path) -> ToolRun:
+        for artifact in (iface, stat, ltp):
+            artifact.unlink(missing_ok=True)
         script = "; ".join([f'read_verilog -sv "{path}"', *stages])
         return run(["yosys", "-q", "-p", script], cwd=workdir, timeout_s=timeout_s)
 
     r, frontend, parse_failed = yosys_frontend((src,), workdir, invoke)
     res = SynthResult(ok=False, log=tail(r.log), elapsed_s=r.elapsed_s,
-                      frontend=frontend, parse_failed=parse_failed)
+                      frontend=frontend, parse_failed=parse_failed,
+                      resource_limit=None if parse_failed else yosys_resource_limit(r))
     if iface.is_file():
         res.ports = _ports_from_json(iface, top)
     if not r.ok or not stat.is_file():

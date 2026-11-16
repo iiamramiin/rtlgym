@@ -207,3 +207,48 @@ def test_unresolved_parse_failure_is_reported_separately(monkeypatch):
     assert set(r.frontend_errors) == {"synthesis", "formal"}
     assert "front end could not parse" in format_feedback(r)
     assert "converter syntax diagnostic" in format_feedback(r)
+
+
+@pytest.mark.parametrize("passing", [True, False], ids=["all-tests-pass", "some-tests-fail"])
+def test_synthesis_resource_stop_and_cache(monkeypatch, passing):
+    from rtlgym import evaluator, tools
+    from rtlgym.cli import _turn_record
+    from rtlgym.env import format_feedback
+
+    original = tools.run
+
+    def stop_after_read(cmd, cwd, timeout_s, env=None):
+        if cmd[0] == "yosys" and "-p" in cmd and "candidate.sv" in cmd[-1]:
+            read_only = cmd[-1].split("; hierarchy", 1)[0]
+            assert original([*cmd[:-1], read_only], cwd, timeout_s, env=env).ok
+            return tools.ToolRun(False, -6, "terminate called after throwing std::bad_alloc", 0.1)
+        return original(cmd, cwd, timeout_s, env=env)
+
+    monkeypatch.setattr(tools, "run", stop_after_read)
+    task = load_task("popcount16")
+    path = task.ref_path if passing else task.candidates_dir / "bug_width.sv"
+    r = evaluate(task, path.read_text())
+    assert r.all_tests_pass is passing and r.sim_complete
+    assert not r.accepted and r.inconclusive is passing
+    assert not r.frontend_errors
+    assert r.resource_failures == {"synthesis": "memory allocation failure"}
+    assert "Synthesis: stopped by a resource limit" in format_feedback(r)
+    assert bool(list(evaluator.CACHE_DIR.glob("*.json"))) is not passing
+    turn = _turn_record(r, 0, {"turn": 1, "grade_s": 0.1, "solved": False})
+    assert turn["resource_failures"] == r.resource_failures
+
+
+def test_formal_resource_stop_is_inconclusive(monkeypatch):
+    from rtlgym import evaluator, formal
+    from rtlgym.env import format_feedback
+
+    def stop_after_read(*args, **kwargs):
+        return formal.FormalResult(status="error", resource_limit="CPU time limit")
+
+    monkeypatch.setattr(formal, "check_equivalence", stop_after_read)
+    task = load_task("popcount16")
+    r = evaluate(task, task.ref_path.read_text())
+    assert r.all_tests_pass and r.synth_ok and r.inconclusive and not r.accepted
+    assert r.resource_failures == {"formal": "CPU time limit"}
+    assert "Formal: stopped by a resource limit" in format_feedback(r)
+    assert not list(evaluator.CACHE_DIR.glob("*.json"))

@@ -57,12 +57,14 @@ def report(folder: str) -> str:
                        f"{s.get('inconclusive_attempts', 0)} inconclusive, "
                        f"{s.get('errors', 0)} errored")
 
-    if any("frontend_failure_attempts" in s for s in arms):
-        out.append("\n### Front-end failures by arm\n")
+    failure_keys = ("frontend_failure_attempts", "resource_failure_attempts")
+    if any(key in s for s in arms for key in failure_keys):
+        out.append("\n### Front-end and resource failures by arm\n")
+        out.append("| Model | Feedback | Front-end failures | Resource failures |")
+        out.append("|---|---|---:|---:|")
         for s in arms:
-            if "frontend_failure_attempts" in s:
-                out.append(f"- {_name(s)}, feedback {s['feedback']}: "
-                           f"{s['frontend_failure_attempts']} attempts")
+            front_end, resource = (s.get(key, "n/a") for key in failure_keys)
+            out.append(f"| {_name(s)} | {s['feedback']} | {front_end} | {resource} |")
 
     # Tokens per model: every arm's own calls, plus the shared first calls of pairs.
     totals: dict[str, dict] = {}

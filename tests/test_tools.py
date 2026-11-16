@@ -166,3 +166,57 @@ def test_frontend_failure_distinct_from_downstream_error(monkeypatch, tmp_path):
 
     result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, downstream_error)
     assert not result.ok and not parse_failed and frontend == "native"
+
+
+@pytest.mark.parametrize(("exit_code", "log", "timed_out", "reason"), [
+    (None, "", True, "time limit"),
+    (-6, "terminate called after throwing std::bad_alloc", False, "memory allocation failure"),
+    (1, "ERROR: Out of memory", False, "memory allocation failure"),
+    (-9, "", False, "killed by SIGKILL"),
+    (-24, "", False, "CPU time limit"),
+    (-11, "Segmentation fault", False, None),
+    (1, "ERROR: Latch inferred for signal", False, None),
+])
+def test_resource_classifier_requires_successful_parse(exit_code, log, timed_out, reason):
+    result = tools.ToolRun(False, exit_code, log, 0.1, timed_out=timed_out)
+    assert tools.yosys_resource_limit(result) is None
+    result.parsed = True
+    assert tools.yosys_resource_limit(result) == reason
+
+
+def test_fallback_does_not_reuse_parse_marker(monkeypatch, tmp_path):
+    src = tmp_path / "candidate.sv"
+    marker = tmp_path / tools.YOSYS_PARSE_MARKER
+    marker.touch()
+
+    def syntax_error(*_):
+        assert not marker.exists()
+        return tools.ToolRun(False, 1, f"{src}:5: ERROR: syntax error", 0.1)
+
+    def stop_converter(*_, **__):
+        return tools.ToolRun(False, None, "[timeout after 15s]", 15, timed_out=True)
+
+    monkeypatch.setattr(tools, "run", stop_converter)
+    result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, syntax_error)
+    assert frontend == "sv2v" and not parse_failed and not result.parsed
+    assert tools.yosys_resource_limit(result) is None
+
+
+def test_resource_after_successful_fallback(monkeypatch, tmp_path):
+    src = tmp_path / "candidate.sv"
+
+    def invoke(path):
+        if path == src:
+            return tools.ToolRun(False, 1, f"{src}:5: ERROR: syntax error", 0.1)
+        (tmp_path / tools.YOSYS_PARSE_MARKER).touch()
+        return tools.ToolRun(False, -6, "std::bad_alloc", 0.1)
+
+    def convert(cmd, cwd, timeout_s):
+        output = next(arg.removeprefix("--write=") for arg in cmd if arg.startswith("--write="))
+        (cwd / output).write_text("module top; endmodule")
+        return tools.ToolRun(True, 0, "", 0.1)
+
+    monkeypatch.setattr(tools, "run", convert)
+    result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, invoke)
+    assert frontend == "sv2v" and not parse_failed
+    assert tools.yosys_resource_limit(result) == "memory allocation failure"

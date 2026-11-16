@@ -62,6 +62,7 @@ def test_formal_timeout_is_reported(tmp_path):
     task = dataclasses.replace(task, formal={**task.formal, "depth": 40, "params": {}})
     r = check_equivalence(task, task.ref_path, tmp_path, timeout_s=1)
     assert r.status == "timeout"
+    assert r.resource_limit == "time limit"
 
 
 def test_trace_parser_ignores_unrelated_lines():

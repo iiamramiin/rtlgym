@@ -80,3 +80,15 @@ def test_eval_script_reports_a_failed_run(tmp_path):
     r, out, step = _run(tmp_path, TASKS="no_such_task", SAMPLES="1")
     assert r.returncode == 1
     assert "No result files were written." in step.read_text()
+
+
+def test_report_lists_resource_and_frontend_counts_per_arm(tmp_path):
+    full = _arm("m", "full", {})
+    full["summary"].update(frontend_failure_attempts=2, resource_failure_attempts=3)
+    historical = _arm("m", "none", {})
+    historical["summary"]["frontend_failure_attempts"] = 1
+    (tmp_path / "full.json").write_text(json.dumps(full))
+    (tmp_path / "none.json").write_text(json.dumps(historical))
+    md = ci_summary.report(str(tmp_path))
+    assert "| m | full | 2 | 3 |" in md
+    assert "| m | none | 1 | n/a |" in md

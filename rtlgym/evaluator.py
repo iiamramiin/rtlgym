@@ -37,7 +37,7 @@ from .task import Task
 
 CACHE_DIR = Path(os.environ.get("RTLGYM_CACHE", Path.home() / ".cache" / "rtlgym"))
 # Bump when grading semantics change, so cached results from older graders are ignored.
-GRADER_VERSION = "6"
+GRADER_VERSION = "7"
 _TOOL_VERSIONS: dict[str, str] | None = None
 _REF_LOCK = threading.Lock()
 _REF_PPA: dict[str, dict] = {}
@@ -83,6 +83,7 @@ class EvalResult:
     synth_frontend: str | None = None
     formal_frontend: str | None = None
     frontend_errors: list[str] = field(default_factory=list)
+    resource_failures: dict[str, str] = field(default_factory=dict)
 
     @property
     def pass_rate(self) -> float:
@@ -100,21 +101,20 @@ class EvalResult:
     @property
     def inconclusive(self) -> bool:
         """The grader could not decide: a timeout, an incomplete simulation, or a
-        formal error or timeout on a design that otherwise looks correct. A design
-        that Yosys cannot read or synthesize is not inconclusive: it fails the
-        synthesis requirement (the formal check then errors for the same reason)."""
+        resource stop or formal error on a design that otherwise looks correct."""
         if not self.compile_ok:
             return False
         return (self.sim_timed_out or not self.sim_complete
-                or (self.all_tests_pass and self.synth_ok
-                    and self.formal_status in ("error", "timeout")))
+                or (self.all_tests_pass and (
+                    bool(self.resource_failures)
+                    or (self.synth_ok and self.formal_status in ("error", "timeout")))))
 
     @property
     def accepted(self) -> bool:
         """The single acceptance predicate: termination, solve rates, and the
         area/depth bonus all use it."""
         return (self.all_tests_pass and self.sim_complete and self.synth_ok
-                and not self.latches and not self.interface_errors
+                and not self.latches and not self.interface_errors and not self.resource_failures
                 and self.formal_status in ("pass", "disabled"))
 
     def to_dict(self) -> dict:
@@ -254,6 +254,8 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
         res.formal_frontend = fv.frontend
         if fv.parse_failed:
             res.frontend_errors.append("formal")
+        if fv.resource_limit:
+            res.resource_failures["formal"] = fv.resource_limit
         res.timings_s["formal"] = round(fv.elapsed_s, 3)
 
     res.lint_ok, res.lint_warnings, res.lint_log = lint.ok, lint.warnings, lint.log
@@ -263,6 +265,8 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
     res.synth_frontend = syn.frontend
     if syn.parse_failed:
         res.frontend_errors.append("synthesis")
+    if syn.resource_limit:
+        res.resource_failures["synthesis"] = syn.resource_limit
     sim_only = sorted(set(lint.warnings) & tools.SIM_ONLY_CODES)
     if sim_only:
         # Yosys silently drops delays; Verilator does not. Treat as not synthesizable.

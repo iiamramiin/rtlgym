@@ -95,3 +95,11 @@ def test_mcnemar_exact():
     assert abs(mcnemar_exact(7, 1) - 2 * 9 / 256) < 1e-12     # 0.0703
     assert mcnemar_exact(3, 3) == 1.0
     assert mcnemar_exact(1, 7) == mcnemar_exact(7, 1)
+
+
+def test_resource_attempt_counts_once_across_stages():
+    result = ep("x")
+    result["trajectory"][0]["resource_failures"] = {"synthesis": "time limit", "formal": "time limit"}
+    summary = summarize([result, ep("historical")], {})
+    assert summary["resource_failure_attempts"] == 1
+    assert summary["frontend_failure_attempts"] == 0

@@ -25,7 +25,15 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .task import Task
-from .tools import ToolRun, _read_tail, run, tail, yosys_frontend
+from .tools import (
+    YOSYS_PARSE_MARKER,
+    ToolRun,
+    _read_tail,
+    run,
+    tail,
+    yosys_frontend,
+    yosys_resource_limit,
+)
 
 _ROW_RE = re.compile(r"^\s+(init|\d+)\s+\\(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 _COMB_ROW_RE = re.compile(r"^\s+\\(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")  # no time column
@@ -44,6 +52,7 @@ class FormalResult:
     elapsed_s: float = 0.0
     frontend: str = "native"
     parse_failed: bool = False
+    resource_limit: str | None = None
 
 
 def _script(task: Task, ref: Path, cand: Path, depth: int, timeout_s: float) -> str:
@@ -55,7 +64,10 @@ def _script(task: Task, ref: Path, cand: Path, depth: int, timeout_s: float) -> 
         chparam = f"chparam {sets} {top}"
 
     def load(src: Path, name: str) -> list[str]:
-        lines = [f'read_verilog -sv "{src}"', f"hierarchy -check -top {top}"]
+        lines = [f'read_verilog -sv "{src}"']
+        if name == "gate":
+            lines.append(f"tee -q -o {YOSYS_PARSE_MARKER} log parsed")
+        lines.append(f"hierarchy -check -top {top}")
         if chparam:
             lines.append(chparam)
         lines += ["proc", "flatten", "memory", "opt_clean", f"rename {top} {name}",
@@ -134,8 +146,12 @@ def check_equivalence(task: Task, cand: Path, workdir: Path, timeout_s: float = 
     if parse_failed:
         res.message = tail(r.log, 1400)
         return res
-    if r.timed_out or "proof did time out" in log:
+    res.resource_limit = yosys_resource_limit(r, log)
+    if r.timed_out or res.resource_limit == "time limit" or "proof did time out" in log:
         res.status, res.message = "timeout", f"no result within {timeout_s:.0f}s"
+        return res
+    if res.resource_limit:
+        res.message = res.resource_limit
         return res
     if "no model found: SUCCESS" in log and r.ok:
         res.status = "pass"

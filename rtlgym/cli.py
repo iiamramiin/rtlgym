@@ -104,6 +104,7 @@ def cmd_baselines(args) -> int:
         rows.append({"task": task.id, "candidate": name, "score": r.score,
                      "tests": f"{r.tests_passed}/{r.tests_total}", "formal": r.formal_status,
                      "formal_message": r.formal_message, "frontend_errors": r.frontend_errors,
+                     "resource_failures": r.resource_failures,
                      "synth_frontend": r.synth_frontend, "formal_frontend": r.formal_frontend,
                      "timings_s": r.timings_s, "tools": versions,
                      "compile": r.compile_ok, "lint_warn": len(r.lint_warnings),
@@ -115,6 +116,9 @@ def cmd_baselines(args) -> int:
         note = "; ".join(row["violations"])[:50] or ("" if row["compile"] else "compile error")
         if row["frontend_errors"]:
             note = "front end could not parse: " + ", ".join(row["frontend_errors"])
+        elif row["resource_failures"]:
+            note = "resource limit: " + ", ".join(
+                f"{stage} ({reason})" for stage, reason in row["resource_failures"].items())
         elif row["formal"] == "fail" and row["tests"].split("/")[0] == row["tests"].split("/")[1]:
             note = "test escape: tests pass, formal finds a difference"
         elif row["formal"] == "error" and not note:
@@ -133,7 +137,7 @@ def _turn_record(r, reward: float, info: dict) -> dict:
             "tests": f"{r.tests_passed}/{r.tests_total}",
             "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
             "frontend_errors": r.frontend_errors, "synth_frontend": r.synth_frontend,
-            "formal_frontend": r.formal_frontend,
+            "formal_frontend": r.formal_frontend, "resource_failures": r.resource_failures,
             "test_escape": r.test_escape, "inconclusive": r.inconclusive,
             "solved": info["solved"],
             "cells": r.cells, "breakdown": r.breakdown,
@@ -274,6 +278,7 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "test_escape_attempts": sum(r["test_escapes"] for r in results),
         "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in results),
         "frontend_failure_attempts": sum(bool(t.get("frontend_errors")) for t in steps),
+        "resource_failure_attempts": sum(bool(t.get("resource_failures")) for t in steps),
         "mean_first_score": mean("first_score"),
         "mean_best_score": mean("best_score"),
         "mean_turns": mean("turns"),

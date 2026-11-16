@@ -72,6 +72,9 @@ while True:
   casts and function returns. A remaining parse failure is reported separately
   from a synthesis failure, in the tool report and the run summary. The original
   source still goes to Icarus and Verilator.
+- After parsing, a synthesis or formal timeout, memory allocation failure, or limit
+  kill is reported as a resource failure. When every hidden test passes, that attempt
+  is inconclusive, earns no acceptance, and is graded again if resubmitted.
 - `info` carries the full grading result for the trainer and for logging. A policy
   under evaluation should only see `obs`.
 - `reward_mode="improvement"` pays only the gain over the best score so far, so the
