@@ -4,13 +4,15 @@
       the most API calls the run can make
   python summary.py report DIR
       Markdown summary of the result files in DIR: inconclusive and error counts,
-      tokens per model, and paired outcomes (the main table comes from
-      `rtlgym report`)
+      tokens per model, acceptance by task kind, repair sizes, and paired outcomes
+      (the main table comes from `rtlgym report`)
 """
 
 import json
 import sys
+from collections import Counter
 from pathlib import Path
+from statistics import median
 
 
 def plan(models: int, tasks: int, samples: int, turns: int, paired: bool, arms: int) -> int:
@@ -28,7 +30,7 @@ def _load(folder: Path):
         except ValueError:
             continue
         if "summary" in d:
-            arms.append(d["summary"])
+            arms.append((d["summary"], d.get("episodes", [])))
         elif "paired" in d:
             pairs.append((d["meta"].get("model") or d["meta"].get("agent"), d["paired"]))
     return arms, pairs
@@ -38,8 +40,98 @@ def _name(s: dict) -> str:
     return s.get("model") or s.get("agent") or "?"
 
 
+def _by_task_kind(rows: list[dict]) -> dict[str, list[dict]]:
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        groups.setdefault(row.get("task_kind", "design"), []).append(row)
+    return groups
+
+
+def _edit_median(value: float | None, count: int) -> str:
+    return f"{value:g} (n={count})" if value is not None else "— (n=0)"
+
+
+def _arm_kind_counts(rows: list[dict]) -> dict:
+    """Recover kind-level counts from episodes when only raw rows are available."""
+    counts = {}
+    for kind, group in _by_task_kind(rows).items():
+        n = len(group)
+        first = sum(bool(episode.get("pass@1")) for episode in group)
+        solved = sum(bool(episode.get("solved")) for episode in group)
+        record = counts[kind] = {
+            "episodes": n,
+            "errors": sum(bool(episode.get("error")) for episode in group),
+            "pass@1_count": f"{first}/{n}",
+            "solved_count": f"{solved}/{n}",
+        }
+        if kind == "repair":
+            all_edits, accepted_edits = [], []
+            for episode in group:
+                for attempt in episode.get("trajectory", []):
+                    size = attempt.get("lines_changed")
+                    if type(size) is int and size >= 0:
+                        all_edits.append(size)
+                        if attempt.get("solved"):
+                            accepted_edits.append(size)
+            record["lines_changed"] = {
+                "attempts": len(all_edits),
+                "median": median(all_edits) if all_edits else None,
+                "accepted_attempts": len(accepted_edits),
+                "accepted_median": median(accepted_edits) if accepted_edits else None,
+            }
+    return counts
+
+
+def _report_arms_by_kind(out: list[str], arm_files: list[tuple[dict, list[dict]]]) -> None:
+    if not any(arm.get("by_kind") or any("task_kind" in row for row in rows) for arm, rows in arm_files):
+        return
+    out.append("\n### Acceptance by task kind\n")
+    out.append("| Model | Feedback | Kind | Episodes (errors) | First attempt | Within turn budget |")
+    out.append("|---|---|---|---:|---:|---:|")
+    repair_rows = []
+    for arm, rows in arm_files:
+        name, feedback = _name(arm), arm["feedback"]
+        counts = arm.get("by_kind") or _arm_kind_counts(rows)
+        for kind, group in sorted(counts.items()):
+            out.append(f"| {name} | {feedback} | {kind} | {group['episodes']} ({group['errors']}) | "
+                       f"{group['pass@1_count']} | {group['solved_count']} |")
+            if kind == "repair":
+                edits = group.get("lines_changed") or {}
+                all_edits = _edit_median(edits.get("median"), edits.get("attempts", 0))
+                accepted = _edit_median(edits.get("accepted_median"), edits.get("accepted_attempts", 0))
+                repair_rows.append(f"| {name} | {feedback} | {all_edits} | {accepted} |")
+    if repair_rows:
+        out.append("\n### Repair edit size\n")
+        out.append("| Model | Feedback | All graded attempts | Accepted attempts |")
+        out.append("|---|---|---:|---:|")
+        out.extend(repair_rows)
+        out.append("\nCells show median lines changed from the starter (n = attempts with an edit "
+                   "count). Zero is included. Each feedback arm counts its shared first submission "
+                   "once. Accepted attempts satisfied the grading checks.")
+
+
+def _report_pairs_by_kind(out: list[str], pairs: list[tuple[str, dict]]) -> None:
+    if not any(pair.get("by_kind") or any("task_kind" in row for row in pair.get("rows", []))
+               for _, pair in pairs):
+        return
+    out.append("\n### Paired outcomes by task kind\n")
+    out.append("| Model | Kind | Episodes | Solved in both | Only full | Only none | In neither | Errored |")
+    out.append("|---|---|---:|---:|---:|---:|---:|---:|")
+    for model, pair in pairs:
+        counts = pair.get("by_kind") or {
+            kind: {"episodes": len(rows), "outcomes": Counter(row["outcome"] for row in rows)}
+            for kind, rows in _by_task_kind(pair.get("rows", [])).items()
+        }
+        for kind, group in sorted(counts.items()):
+            count = group["outcomes"]
+            out.append(f"| {model} | {kind} | {group['episodes']} | {count.get('both', 0)} | "
+                       f"{count.get('only_full', 0)} | {count.get('only_none', 0)} | "
+                       f"{count.get('neither', 0)} | {count.get('errored', 0)} |")
+
+
 def report(folder: str) -> str:
-    arms, pairs = _load(Path(folder))
+    arm_files, pairs = _load(Path(folder))
+    arms = [summary for summary, _ in arm_files]
     out = []
     inconclusive = sum(s.get("inconclusive_attempts", 0) for s in arms)
     errors = sum(s.get("errors", 0) for s in arms)
@@ -65,6 +157,8 @@ def report(folder: str) -> str:
         for s in arms:
             front_end, resource = (s.get(key, "n/a") for key in failure_keys)
             out.append(f"| {_name(s)} | {s['feedback']} | {front_end} | {resource} |")
+
+    _report_arms_by_kind(out, arm_files)
 
     # Tokens per model: every arm's own calls, plus the shared first calls of pairs.
     totals: dict[str, dict] = {}
@@ -109,6 +203,7 @@ def report(folder: str) -> str:
                                f"{o['only_full']} | {o['only_none']} | {o['neither']} | {o['errored']} | "
                                f"{group['informative_episodes']} | {group['discordant_pairs']} | "
                                f"{group['mcnemar_exact_p']} |")
+        _report_pairs_by_kind(out, pairs)
         out.append("\nInformative: first attempt not accepted (only these can differ between "
                    "the arms). Discordant: solved in exactly one arm.")
     return "\n".join(out) + "\n"

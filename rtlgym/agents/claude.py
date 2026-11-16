@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import os
 
-from .base import Agent
+from .base import Agent, first_prompt
 
 SYSTEM_PROMPT = """You are an expert RTL design engineer.
 Write synthesizable SystemVerilog (IEEE 1800-2012) that implements the given spec exactly.
@@ -56,7 +56,7 @@ class ClaudeAgent(Agent):
 
     def act(self, obs: dict) -> str:
         if not self.messages:
-            content = f"Implement module `{obs['top']}`.\n\n## Specification\n\n{obs['spec']}"
+            content = first_prompt(obs)
         elif obs["feedback"]:
             content = ("Tool feedback on your last submission:\n\n```\n" + obs["feedback"]
                        + f"\n```\n\nYou have {obs['turns_left']} attempt(s) left. "

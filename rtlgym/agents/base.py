@@ -7,6 +7,15 @@ import copy
 from abc import ABC, abstractmethod
 
 
+def first_prompt(obs: dict) -> str:
+    if "starter_code" in obs:
+        return (f"Repair module `{obs['top']}`. Return the complete corrected module.\n\n"
+                f"## Specification\n\n{obs['spec']}\n\n"
+                f"## Starting RTL\n\n```systemverilog\n{obs['starter_code']}```\n\n"
+                f"## Starting RTL diagnostics\n\n{obs['starter_feedback']}")
+    return f"Implement module `{obs['top']}`.\n\n## Specification\n\n{obs['spec']}"
+
+
 class Agent(ABC):
     """A policy maps an observation (spec + feedback) to an action (RTL text)."""
 

@@ -21,7 +21,7 @@ from pathlib import Path
 from .agents import make_agent
 from .agents.claude import DEFAULT_MODEL
 from .env import RTLEnv, format_feedback, is_solved
-from .evaluator import evaluate
+from .evaluator import EvalResult, evaluate
 from .task import DEFAULT_TASKS_ROOT, list_tasks, load_task
 from .tools import tool_versions
 
@@ -70,7 +70,8 @@ def cmd_list(args) -> int:
     for tid in list_tasks(args.tasks_root):
         t = load_task(tid, args.tasks_root)
         fv = f"formal depth {t.formal.get('depth')}" if t.has_formal else "no formal"
-        print(f"{tid:20s} {t.difficulty:8s} {fv:16s} {', '.join(t.tags)}")
+        repair = f" (repair of {t.parent_id})" if t.kind == "repair" else ""
+        print(f"{tid:20s} {t.difficulty:8s} {fv:16s} {', '.join(t.tags)}{repair}")
     return 0
 
 
@@ -109,7 +110,9 @@ def cmd_baselines(args) -> int:
                      "timings_s": r.timings_s, "tools": versions,
                      "compile": r.compile_ok, "lint_warn": len(r.lint_warnings),
                      "cells": r.cells, "ref_cells": r.ref_cells, "depth": r.depth,
-                     "violations": r.violations, "breakdown": r.breakdown})
+                     "violations": r.violations, "breakdown": r.breakdown,
+                     "task_kind": task.kind, "accepted": r.accepted,
+                     "is_starter": path == task.start_path})
     print(f"{'task':18s} {'candidate':30s} {'score':>6s} {'tests':>6s} {'formal':>8s} "
           f"{'cells':>6s} {'ref':>5s} {'warn':>4s}  note")
     for row in rows:
@@ -125,6 +128,8 @@ def cmd_baselines(args) -> int:
             note = "PPA unavailable: " + row["ppa_unavailable"]
         elif row["formal"] == "error" and not note:
             note = "formal: " + row["formal_message"][:45]
+        if row["is_starter"]:
+            note = f"repair starter; {note}" if note else "repair starter"
         print(f"{row['task']:18s} {row['candidate']:30s} {row['score']:6.3f} {row['tests']:>6s} "
               f"{row['formal']:>8s} {str(row['cells']):>6s} {str(row['ref_cells']):>5s} "
               f"{row['lint_warn']:4d}  {note}")
@@ -136,6 +141,7 @@ def cmd_baselines(args) -> int:
 
 def _turn_record(r, reward: float, info: dict) -> dict:
     return {"turn": info["turn"], "score": r.score, "reward": round(reward, 4),
+            **({"lines_changed": info["lines_changed"]} if "lines_changed" in info else {}),
             "tests": f"{r.tests_passed}/{r.tests_total}",
             "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
             "frontend_errors": r.frontend_errors, "synth_frontend": r.synth_frontend,
@@ -149,13 +155,18 @@ def _turn_record(r, reward: float, info: dict) -> dict:
 
 
 def _play(env: RTLEnv, agent, obs: dict, turns: list, ret: float,
-          first_action: str | None = None) -> tuple[float, str | None]:
+          first_action: str | None = None,
+          first_grade: tuple[str, EvalResult, float] | None = None) -> tuple[float, str | None]:
     """Run turns until the episode ends. Returns (return, error)."""
     try:
         while True:
-            action = first_action if first_action is not None else agent.act(obs)
-            first_action = None
-            obs, reward, terminated, truncated, info = env.step(action)
+            if first_grade is not None:
+                obs, reward, terminated, truncated, info = env._apply_grade(*first_grade)
+                first_grade = None
+            else:
+                action = first_action if first_action is not None else agent.act(obs)
+                first_action = None
+                obs, reward, terminated, truncated, info = env.step(action)
             ret += reward
             rec = _turn_record(info["eval"], reward, info)
             # Kept for analysis: the graded design, what the agent was shown next, and
@@ -172,10 +183,13 @@ def _play(env: RTLEnv, agent, obs: dict, turns: list, ret: float,
 
 def _episode_record(task_id: str, env: RTLEnv, turns: list, ret: float, error: str | None,
                     t0: float, usage) -> dict:
-    hist = env.state.history if env.state else []
+    state = env.state
+    hist = state.history if state else []
     first, last = (hist[0], hist[-1]) if hist else (None, None)
     return {
         "task": task_id,
+        "task_kind": state.task.kind if state else "design",
+        **({"starter_score": state.starter_score} if state and state.starter_code is not None else {}),
         "error": error,
         "turns": len(turns),
         "pass@1": bool(first and is_solved(first)),
@@ -211,27 +225,37 @@ def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, ta
     after the first act(), before any arm plays, so no arm sees another arm's
     feedback. Each arm's usage and time cover only its own turns; the shared first
     call is recorded once, under "shared_first" (identical in every arm's record)."""
-    t0 = time.monotonic()
     agent = make_agent(agent_name, **agent_kwargs)
-    envs = {arm: RTLEnv(**{**env_kwargs, "feedback": arm}) for arm in arms}
-    obs = {arm: env.reset(task_id=task_id)[0] for arm, env in envs.items()}
-    agent.begin_episode(obs[arms[0]])
+    env = RTLEnv(**{**env_kwargs, "feedback": arms[0]})
+    obs, _ = env.reset(task_id=task_id)
+    agent.begin_episode(obs)
+    t0 = time.monotonic()
+    first_grade = None
     try:
-        first_action, error = agent.act(obs[arms[0]]), None
+        first_action, error = agent.act(obs), None
     except Exception as exc:  # noqa: BLE001
         first_action, error = None, f"{type(exc).__name__}: {exc}"[:500]
     shared = {"usage": dict(getattr(agent, "usage", None) or {}),
               "act_s": round(time.monotonic() - t0, 2), "error": error}
-    # Fork every arm now, from the state right after the first attempt.
+    repair = "starter_code" in obs
+    if repair and first_action is not None:
+        try:
+            first_grade = env._grade(first_action)
+        except Exception as exc:  # noqa: BLE001 - a shared grading error affects both arms
+            error = f"{type(exc).__name__}: {exc}"[:500]
+    # Fork before either arm receives its own feedback.
     branches = {arm: agent.fork() for arm in arms}
     out = {}
-    for arm in arms:
+    for arm, branch in branches.items():
+        branch_env = env._fork(arm)
         ta = time.monotonic()
         turns: list = []
-        ret, err = (0.0, error) if first_action is None else \
-            _play(envs[arm], branches[arm], obs[arm], turns, 0.0, first_action=first_action)
-        rec = _episode_record(task_id, envs[arm], turns, ret, err, ta,
-                              getattr(branches[arm], "usage", None))
+        ret, err = (0.0, error) if first_action is None or error else _play(
+            branch_env, branch, obs, turns, 0.0,
+            first_action=None if repair else first_action, first_grade=first_grade,
+        )
+        rec = _episode_record(task_id, branch_env, turns, ret, err, ta,
+                              getattr(branch, "usage", None))
         rec["shared_first"] = shared
         out[arm] = rec
     return out
@@ -245,6 +269,24 @@ def _by_verification(rows: list[dict], formal_by_task: dict[str, bool]) -> dict[
             mode = "formal" if formal_enabled else "simulation_only"
             groups.setdefault(mode, []).append(row)
     return groups
+
+
+def _by_kind(rows: list[dict]) -> dict[str, list[dict]]:
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        groups.setdefault(row.get("task_kind", "design"), []).append(row)
+    return groups
+
+
+def _repair_edits(steps: list[dict]) -> dict:
+    edits = [t["lines_changed"] for t in steps if "lines_changed" in t]
+    accepted = [t["lines_changed"] for t in steps if t.get("solved") and "lines_changed" in t]
+    return {
+        "attempts": len(edits),
+        "median": statistics.median(edits) if edits else None,
+        "accepted_attempts": len(accepted),
+        "accepted_median": statistics.median(accepted) if accepted else None,
+    }
 
 
 def _acceptance_counts(results: list[dict]) -> dict:
@@ -293,11 +335,21 @@ def summarize(results: list[dict], meta: dict) -> dict:
                          "mean_turns": round(sum(r["turns"] for r in rs) / len(rs), 2)}
         if tid in formal_by_task:
             per_task[tid]["formal_enabled"] = formal_by_task[tid]
+        kind = rs[0].get("task_kind", "design")
+        if kind == "repair":
+            per_task[tid]["task_kind"] = kind
+            per_task[tid]["lines_changed"] = _repair_edits([t for r in rs for t in r["trajectory"]])
     by_verification = {mode: _acceptance_counts(group)
                        for mode, group in _by_verification(results, formal_by_task).items()}
+    by_kind = {kind: _acceptance_counts(group) for kind, group in _by_kind(results).items()}
+    if "repair" in by_kind:
+        by_kind["repair"]["lines_changed"] = _repair_edits(
+            [t for r in results if r.get("task_kind") == "repair" for t in r["trajectory"]]
+        )
     return {
         **meta,
         "by_verification": by_verification,
+        "by_kind": by_kind,
         "episodes": n,
         "errors": n - len(ok),
         "pass@1": frac("pass@1"),
@@ -363,7 +415,8 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str],
         else:
             key = ("both" if ra["solved"] and rb["solved"] else f"only_{a}" if ra["solved"]
                    else f"only_{b}" if rb["solved"] else "neither")
-        rows.append({"task": ra["task"], "first_attempt_solved": ra["pass@1"],
+        rows.append({"task": ra["task"], "task_kind": ra.get("task_kind", "design"),
+                     "first_attempt_solved": ra["pass@1"],
                      f"{a}_solved": ra["solved"], f"{b}_solved": rb["solved"],
                      f"{a}_best": ra["best_score"], f"{b}_best": rb["best_score"],
                      f"{a}_error": ra["error"], f"{b}_error": rb["error"],
@@ -376,8 +429,9 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str],
             shared[k] = round(shared.get(k, 0) + v, 2)
     by_verification = {mode: _paired_counts(group, a, b)
                        for mode, group in _by_verification(rows, formal_by_task or {}).items()}
+    by_kind = {kind: _paired_counts(group, a, b) for kind, group in _by_kind(rows).items()}
     return {"arms": list(arms), **_paired_counts(rows, a, b), "by_verification": by_verification,
-            "shared_first": shared, "rows": rows}
+            "by_kind": by_kind, "shared_first": shared, "rows": rows}
 
 
 def cmd_run(args) -> int:

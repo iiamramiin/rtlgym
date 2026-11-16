@@ -32,7 +32,7 @@ import time
 import urllib.error
 import urllib.request
 
-from .base import Agent
+from .base import Agent, first_prompt
 
 # Same system prompt as the Claude agent, so the two are compared on equal terms.
 from .claude import SYSTEM_PROMPT
@@ -150,7 +150,7 @@ class OllamaAgent(Agent):
     def act(self, obs: dict) -> str:
         # The same user messages as the Claude agent (see agents/claude.py).
         if not self.messages:
-            content = f"Implement module `{obs['top']}`.\n\n## Specification\n\n{obs['spec']}"
+            content = first_prompt(obs)
         elif obs["feedback"]:
             content = ("Tool feedback on your last submission:\n\n```\n" + obs["feedback"]
                        + f"\n```\n\nYou have {obs['turns_left']} attempt(s) left. "
