@@ -37,7 +37,7 @@ bash scripts/setup_sv2v.sh
 export PATH="$HOME/.local/bin:$PATH"
 pip install -e ".[dev]"
 
-python -m rtlgym list                                   # 18 tasks
+python -m rtlgym list                                   # 26 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
@@ -50,7 +50,7 @@ pytest -q
 from rtlgym import RTLEnv
 
 env = RTLEnv(max_turns=3, reward_mode="improvement", feedback="full")
-obs, info = env.reset(task_id="uart_tx")          # or reset(seed=0) for a random task
+obs, info = env.reset(task_id="uart_tx")          # pick a design task by ID
 while True:
     action = policy(obs["spec"], obs["feedback"])   # any string containing a SystemVerilog module
     obs, reward, terminated, truncated, info = env.step(action)
@@ -83,14 +83,58 @@ while True:
   no area/depth bonus.
 - `info` carries the full grading result for the trainer and for logging. A policy
   under evaluation should only see `obs`.
-- `reward_mode="improvement"` pays only the gain over the best score so far, so the
-  episode return equals the best score reached and re-submitting the same answer earns
-  nothing. `reward_mode="score"` pays the raw score every turn.
+- `reward_mode="improvement"` pays only the gain over the best score so far.
+  Design episodes start at zero and repair episodes start at the starter's score.
+  `reward_mode="score"` pays the raw score every turn.
 - `feedback` is `"none"` (single-shot eval), `"summary"` (counts and status only), or
   `"full"`. Full feedback reveals failing test names, messages, and counterexamples,
   which is useful for training a repair loop but leaks information about the hidden
   checks; use `summary` or `none` for held-out evaluation.
 - `use_formal=False` turns the formal check off, for ablations.
+
+## Repair tasks
+
+A task defaults to `kind = "design"`. A repair task sets `kind = "repair"` and names
+a design `parent` and a `starter` file in the parent's candidates directory. It uses
+the parent's spec, reference, hidden tests, formal settings, and acceptance checks.
+The task manifest can name a `demo_trajectory` for offline replay. Unfiltered
+runs and random resets sample both task kinds.
+
+On reset, the observation includes the parent spec, `starter_code`, and
+`starter_feedback`. The starting RTL is shown with explanatory comments removed.
+The diagnostic gives failing test names and messages, or a formal counterexample
+when all tests pass. Both feedback arms see this at the start, and later turns
+use the selected feedback level. In paired mode, the first submission is one
+shared fix attempt, graded once before the branches continue.
+
+Submit the complete corrected module. Improvement starts at the starter score,
+and an unchanged starter earns zero improvement and stays unaccepted. The run
+records `lines_changed` for repair attempts, excluding comments. An insertion,
+deletion, or one-for-one replacement counts as one line. This metric is for
+reporting. Full rewrites can pass, and formatting can affect the count. The
+reports include task-kind acceptance and medians for all and accepted repairs.
+
+| Repair task | Starting file | Initial diagnostic |
+|---|---|---|
+| `repair_popcount16` | `bug_width.sv` | Hidden tests |
+| `repair_rr_arbiter4` | `bug_pointer_reset_on_idle.sv` | Hidden tests |
+| `repair_noc_router5` | `bug_fixed_priority.sv` | Hidden tests |
+| `repair_axi4_burst_slave` | `bug_read_ignores_backpressure.sv` | Hidden tests |
+| `repair_cache_controller` | `bug_alias_hit.sv` | Hidden tests |
+| `repair_axil_regs` | `escape_status_alias.sv` | Formal counterexample |
+| `repair_gearbox_16to12` | `escape_lost_all_ones.sv` | Formal counterexample |
+| `repair_secded_ecc` | `escape_shortened_syndrome.sv` | Formal counterexample |
+
+The replay agent submits the starter once, then a verified alternative. For example:
+
+```bash
+python -m rtlgym run --agent replay --tasks repair_popcount16,repair_secded_ecc --paired --out repair.json
+```
+
+Keep formal enabled for the three formal-only tasks. Their hidden tests already
+pass on the starter, so a simulation-only run loses the bug signal. The parent
+proof can be bounded and use reduced parameters. All eight starters and their
+fixes are public fixtures.
 
 ## Formal equivalence checking
 
@@ -487,7 +531,7 @@ rtlgym/
   simworker.py    child process that runs one cocotb testbench
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
-tasks/            18 tasks with specs, references, hidden tests, candidates
+tasks/            18 design tasks and 8 repair variants
 tests/            Tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
