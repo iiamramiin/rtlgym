@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# An idle cycle incorrectly resets the priority cursor.
+# Follow an idle interval with multiple requesters to expose the stale priority order.
+id = "repair_rr_arbiter4"
+kind = "repair"
+parent = "rr_arbiter4"
+starter = "bug_pointer_reset_on_idle.sv"
+demo_trajectory = ["bug_pointer_reset_on_idle.sv", "good_double_vector.sv"]

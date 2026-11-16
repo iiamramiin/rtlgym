@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# An odd error with syndrome H+1 looks like a correctable bit in a nonexistent position.
+# The shortened code's formal input space exposes the out-of-range syndrome.
+id = "repair_secded_ecc"
+kind = "repair"
+parent = "secded_ecc"
+starter = "escape_shortened_syndrome.sv"
+demo_trajectory = ["escape_shortened_syndrome.sv", "good_parity_matrix.sv"]

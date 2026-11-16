@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# Fixed priority ignores the rotating cursor after a completed transfer.
+# Reproduce with contention plus output stalls or same-edge drain and refill.
+id = "repair_noc_router5"
+kind = "repair"
+parent = "noc_router5"
+starter = "bug_fixed_priority.sv"
+demo_trajectory = ["bug_fixed_priority.sv", "good_retained_slot.sv"]

@@ -37,6 +37,25 @@ def _strip_comments(code: str) -> str:
     return re.sub(r"//[^\n]*", " ", code)
 
 
+_RTL_COMMENTS = re.compile(r'"(?:\\.|[^"\\])*"|\\\S+|//[^\n]*|/\*.*?\*/', re.S)
+
+
+def repair_source(code: str) -> str:
+    """Remove explanatory comments without treating quoted text as a comment."""
+    def scrub(match: re.Match[str]) -> str:
+        text = match.group()
+        return " " + "\n" * text.count("\n") if text.startswith(("//", "/*")) else text
+
+    body = _RTL_COMMENTS.sub(scrub, code)
+    return "\n".join(line.rstrip() for line in body.splitlines()).strip() + "\n"
+
+
+def same_repair_source(a: str, b: str) -> bool:
+    """Compare RTL while ignoring comments, blank lines and indentation."""
+    return ([line.strip() for line in repair_source(a).splitlines() if line.strip()]
+            == [line.strip() for line in repair_source(b).splitlines() if line.strip()])
+
+
 def static_check(code: str, top: str) -> CheckResult:
     violations: list[str] = []
     if len(code.encode()) > MAX_SOURCE_BYTES:

@@ -12,14 +12,20 @@ Each task lives in its own folder under ``tasks/``:
         ref.sv             reference RTL (hidden; used for interface and PPA baselines)
         test_<task_id>.py  hidden cocotb testbench with a Python reference model
         candidates/        hand-written correct / buggy / adversarial solutions
+
+A repair task has its own task.toml, with kind="repair", parent (a design task
+directory), starter (a bug_* or escape_* filename in the parent's candidates/),
+and an optional demo trajectory. It inherits all grading materials and settings.
 """
 
 from __future__ import annotations
 
 import hashlib
 import tomllib
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
+
+from .checks import same_repair_source
 
 DEFAULT_TASKS_ROOT = Path(__file__).resolve().parent.parent / "tasks"
 
@@ -36,6 +42,18 @@ class Task:
     tags: tuple[str, ...] = ()
     demo_trajectory: tuple[str, ...] = field(default_factory=tuple)
     formal: dict = field(default_factory=dict)
+    kind: str = "design"
+    parent_id: str | None = None
+    start_path: Path | None = None
+    _grading_root: Path | None = field(default=None, repr=False)
+
+    @property
+    def start_code(self) -> str | None:
+        return self.start_path.read_text(encoding="utf-8") if self.start_path else None
+
+    @property
+    def _sources_root(self) -> Path:
+        return self._grading_root if self._grading_root is not None else self.root
 
     @property
     def has_formal(self) -> bool:
@@ -43,15 +61,15 @@ class Task:
 
     @property
     def ref_path(self) -> Path:
-        return self.root / "ref.sv"
+        return self._sources_root / "ref.sv"
 
     @property
     def test_path(self) -> Path:
-        return self.root / f"{self.test_module}.py"
+        return self._sources_root / f"{self.test_module}.py"
 
     @property
     def candidates_dir(self) -> Path:
-        return self.root / "candidates"
+        return self._sources_root / "candidates"
 
     def candidates(self) -> list[Path]:
         if not self.candidates_dir.is_dir():
@@ -61,17 +79,35 @@ class Task:
     def fingerprint(self) -> str:
         """Hash of everything that affects grading, used as part of the cache key."""
         h = hashlib.sha256()
-        for p in (self.root / "task.toml", self.ref_path, self.test_path):
-            h.update(p.read_bytes())
+        paths = [self._sources_root / "task.toml", self.ref_path, self.test_path]
+        if self.start_path is not None:
+            paths.extend((self.root / "task.toml", self.start_path))
+        for path in paths:
+            h.update(path.read_bytes())
         return h.hexdigest()[:16]
 
 
-def load_task(task_id: str, tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> Task:
-    root = Path(tasks_root) / task_id
-    meta_path = root / "task.toml"
-    if not meta_path.is_file():
+def _is_basename(name: object) -> bool:
+    return isinstance(name, str) and name not in ("", ".", "..") and not any(
+        char in name for char in ("/", "\\", ":", "\0")
+    )
+
+
+def _manifest(task_id: str, tasks_root: Path) -> tuple[Path, dict]:
+    if not _is_basename(task_id):
+        raise ValueError(f"invalid task ID: {task_id!r}")
+    root = tasks_root / task_id
+    if root.resolve().parent != tasks_root.resolve():
+        raise ValueError(f"task '{task_id}' is outside the tasks root")
+    path = root / "task.toml"
+    if path.resolve().parent != root.resolve():
+        raise ValueError(f"manifest for task '{task_id}' is outside its directory")
+    if not path.is_file():
         raise FileNotFoundError(f"no task.toml for task '{task_id}' in {root}")
-    meta = tomllib.loads(meta_path.read_text())
+    return root, tomllib.loads(path.read_text(encoding="utf-8"))
+
+
+def _design_task(task_id: str, root: Path, meta: dict) -> Task:
     spec = (root / "spec.md").read_text()
     return Task(
         id=meta.get("id", task_id),
@@ -85,6 +121,55 @@ def load_task(task_id: str, tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> Task
         demo_trajectory=tuple(meta.get("demo_trajectory", [])),
         formal=dict(meta.get("formal", {})),
     )
+
+
+def _repair_task(task_id: str, root: Path, meta: dict, tasks_root: Path) -> Task:
+    if meta.get("id", task_id) != task_id:
+        raise ValueError(f"repair task '{task_id}' must use its directory name as its ID")
+    extra = meta.keys() - {"id", "kind", "parent", "starter", "demo_trajectory"}
+    if extra:
+        raise ValueError(f"repair task '{task_id}' inherits grading; unexpected keys: {sorted(extra)}")
+    parent_id = meta.get("parent")
+    if not _is_basename(parent_id) or parent_id == task_id:
+        raise ValueError(f"repair task '{task_id}' must name a separate design parent")
+    parent_root, parent_meta = _manifest(parent_id, tasks_root)
+    if parent_meta.get("kind", "design") != "design":
+        raise ValueError(f"repair task '{task_id}' needs a design parent, got '{parent_id}'")
+    parent = _design_task(parent_id, parent_root, parent_meta)
+
+    starter = meta.get("starter")
+    if not _is_basename(starter) or not starter.endswith(".sv") or not starter.startswith(
+            ("bug_", "escape_")):
+        raise ValueError(f"repair task '{task_id}' needs a bug_* or escape_* candidate filename as starter")
+    candidates = parent.candidates_dir
+    path = candidates / starter
+    if (candidates.resolve() != parent.root.resolve() / "candidates"
+            or path.resolve().parent != candidates.resolve() or not path.is_file()):
+        raise ValueError(f"repair task '{task_id}' starter '{starter}' is not in the parent candidates")
+    starter_bytes, reference_bytes = path.read_bytes(), parent.ref_path.read_bytes()
+    if (path.resolve() == parent.ref_path.resolve() or starter_bytes == reference_bytes
+            or same_repair_source(starter_bytes.decode("utf-8"), reference_bytes.decode("utf-8"))):
+        raise ValueError(f"repair task '{task_id}' starter cannot be the reference design")
+
+    trajectory = meta.get("demo_trajectory", [])
+    names = {candidate.name for candidate in parent.candidates()
+             if candidate.is_file() and candidate.resolve().parent == candidates.resolve()}
+    if not isinstance(trajectory, list) or not all(_is_basename(n) and n in names for n in trajectory):
+        raise ValueError(f"repair task '{task_id}' demo trajectory must name parent candidates")
+
+    return replace(parent, id=task_id, root=root, kind="repair", parent_id=parent_id,
+                   start_path=path, _grading_root=parent.root, demo_trajectory=tuple(trajectory))
+
+
+def load_task(task_id: str, tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> Task:
+    tasks_root = Path(tasks_root)
+    root, meta = _manifest(task_id, tasks_root)
+    kind = meta.get("kind", "design")
+    if kind == "design":
+        return _design_task(task_id, root, meta)
+    if kind == "repair":
+        return _repair_task(task_id, root, meta, tasks_root)
+    raise ValueError(f"task '{task_id}' has unknown kind {kind!r}")
 
 
 def list_tasks(tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> list[str]:

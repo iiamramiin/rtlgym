@@ -11,7 +11,7 @@ import pytest
 from rtlgym import evaluate, list_tasks, load_task
 
 pytestmark = pytest.mark.needs_tools
-TASKS = list_tasks()
+TASKS = [task_id for task_id in list_tasks() if load_task(task_id).kind == "design"]
 
 
 def test_task_suite_is_populated():

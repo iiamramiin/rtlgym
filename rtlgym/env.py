@@ -16,10 +16,12 @@ from __future__ import annotations
 
 import random
 import time
-from dataclasses import dataclass, field
+from copy import copy
+from dataclasses import dataclass, field, replace
+from difflib import SequenceMatcher
 from pathlib import Path
 
-from .checks import extract_code
+from .checks import extract_code, repair_source
 from .evaluator import EvalResult, evaluate
 from .reward import RewardWeights
 from .task import DEFAULT_TASKS_ROOT, Task, list_tasks, load_task
@@ -34,6 +36,9 @@ class EpisodeState:
     best_score: float = 0.0
     done: bool = False
     history: list[EvalResult] = field(default_factory=list)
+    starter_code: str | None = None
+    starter_feedback: str = ""
+    starter_score: float = 0.0
 
 
 class RTLEnv:
@@ -42,7 +47,8 @@ class RTLEnv:
         tasks_root: folder with task subfolders.
         max_turns: attempts per episode.
         reward_mode: "improvement" (reward = gain over best score so far; the
-            episode return equals the best score reached) or "score" (reward =
+            episode return starts at zero for design and measures gain over the
+            starter score for repair) or "score" (reward =
             score of the current attempt).
         feedback: "none" (single-shot eval), "summary" (pass/fail counts only),
             or "full" (tool logs and failing test names).
@@ -79,10 +85,22 @@ class RTLEnv:
         if seed is not None:
             self._rng.seed(seed)
         task_id = task_id or self._rng.choice(self.task_ids)
-        self.state = EpisodeState(task=load_task(task_id, self.tasks_root))
+        task = load_task(task_id, self.tasks_root)
+        self.state = EpisodeState(task=task)
+        starter = task.start_code
+        if starter is not None:
+            shown = repair_source(starter)
+            grade = evaluate(task, shown, self.weights, use_cache=self.use_cache,
+                             use_formal=self.use_formal)
+            self.state.starter_code = shown
+            self.state.starter_feedback = _starter_feedback(grade)
+            self.state.starter_score = self.state.best_score = grade.score
         return self._obs(feedback=""), {"task_id": task_id}
 
     def step(self, action: str) -> tuple[dict, float, bool, bool, dict]:
+        return self._apply_grade(*self._grade(action))
+
+    def _grade(self, action: str) -> tuple[str, EvalResult, float]:
         if self.state is None:
             raise RuntimeError("call reset() before step()")
         st = self.state
@@ -92,16 +110,22 @@ class RTLEnv:
         t0 = time.monotonic()
         res = evaluate(st.task, code, self.weights, use_cache=self.use_cache,
                        use_formal=self.use_formal)
-        grade_s = time.monotonic() - t0
+        return code, res, time.monotonic() - t0
+
+    def _apply_grade(self, code: str, res: EvalResult, grade_s: float
+                     ) -> tuple[dict, float, bool, bool, dict]:
+        st = self.state
+        assert st is not None and not st.done
         st.turn += 1
         st.history.append(res)
 
         if self.reward_mode == "improvement":
-            reward = max(0.0, res.score - st.best_score)
+            reward = 0.0 if res.unchanged_starter else max(0.0, res.score - st.best_score)
         else:
             reward = res.score
         reward = round(reward, 4)
-        st.best_score = max(st.best_score, res.score)
+        if not res.unchanged_starter:
+            st.best_score = max(st.best_score, res.score)
 
         solved = is_solved(res)
         terminated = self.stop_on_pass and solved
@@ -109,14 +133,23 @@ class RTLEnv:
         st.done = terminated or truncated
         info = {"eval": res, "score": res.score, "best_score": st.best_score, "turn": st.turn,
                 "solved": solved, "grade_s": round(grade_s, 3), "code": code}
+        if st.starter_code is not None:
+            info["lines_changed"] = 0 if res.unchanged_starter else _lines_changed(st.starter_code, code)
         return self._obs(feedback=format_feedback(res, self.feedback)), reward, terminated, \
             truncated, info
+
+    def _fork(self, feedback: str) -> RTLEnv:
+        assert self.state is not None
+        other = copy(self)
+        other.feedback = feedback
+        other.state = replace(self.state, history=self.state.history.copy())
+        return other
 
     # ------------------------------------------------------------------ helpers
     def _obs(self, feedback: str) -> dict:
         st = self.state
         assert st is not None
-        return {
+        obs = {
             "task_id": st.task.id,
             "top": st.task.top,
             "spec": st.task.spec,
@@ -124,6 +157,15 @@ class RTLEnv:
             "turns_left": self.max_turns - st.turn,
             "feedback": feedback,
         }
+        if st.starter_code is not None and st.turn == 0:
+            obs.update(starter_code=st.starter_code, starter_feedback=st.starter_feedback)
+        return obs
+
+
+def _lines_changed(starter: str, code: str) -> int:
+    matcher = SequenceMatcher(None, starter.splitlines(), repair_source(code).splitlines())
+    return sum(max(a_end - a, b_end - b) for tag, a, a_end, b, b_end in matcher.get_opcodes()
+               if tag != "equal")
 
 
 def is_solved(r: EvalResult) -> bool:
@@ -164,10 +206,29 @@ def _formal_lines(r: EvalResult, level: str) -> list[str]:
     return []
 
 
+def _test_failure_lines(r: EvalResult) -> list[str]:
+    return [f"  FAIL {name}: {msg.splitlines()[0][:300] if msg else ''}"
+            for name, msg in r.test_failures.items()]
+
+
+def _starter_feedback(r: EvalResult) -> str:
+    tests = f"Hidden tests: {r.tests_passed}/{r.tests_total} passed"
+    if r.sim_complete and r.test_failures:
+        return "\n".join([tests, *_test_failure_lines(r)])
+    if r.all_tests_pass and r.sim_complete:
+        if r.formal_status == "disabled":
+            return f"{tests}\nFormal checking is disabled."
+        if lines := _formal_lines(r, "full"):
+            return "\n".join([tests, *lines])
+    return format_feedback(r)
+
+
 def format_feedback(r: EvalResult, level: str = "full") -> str:
     if level == "none":
         return ""
     lines = [f"Score: {r.score:.3f}"]
+    if r.unchanged_starter:
+        lines.append("The starting RTL is unchanged.")
     if not r.static_ok:
         lines.append("Rejected before compilation:")
         lines += [f"  - {v}" for v in r.violations]
@@ -186,8 +247,7 @@ def format_feedback(r: EvalResult, level: str = "full") -> str:
         lines.append("  The simulation ended before every test reported; missing tests count "
                      "as failed.")
     if level == "full":
-        for name, msg in r.test_failures.items():
-            lines.append(f"  FAIL {name}: {msg.splitlines()[0][:300] if msg else ''}")
+        lines += _test_failure_lines(r)
         if not r.sim_complete and not r.sim_timed_out and r.sim_log:
             lines.append("  simulation log tail:\n" + r.sim_log[-1500:])
         if r.interface_errors:

@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# The accumulator cannot represent a result of sixteen.
+# Lower counts appear correct, so the all-ones input exposes the width error.
+id = "repair_popcount16"
+kind = "repair"
+parent = "popcount16"
+starter = "bug_width.sv"
+demo_trajectory = ["bug_width.sv", "good_loop.sv"]

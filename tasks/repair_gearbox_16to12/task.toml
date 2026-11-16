@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# A rare simultaneous pop and all-ones push corrupts one incoming bit.
+# The difference reaches the output only after subsequent units are emitted.
+id = "repair_gearbox_16to12"
+kind = "repair"
+parent = "gearbox_16to12"
+starter = "escape_lost_all_ones.sv"
+demo_trajectory = ["escape_lost_all_ones.sv", "good_high_aligned.sv"]

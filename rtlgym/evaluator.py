@@ -31,7 +31,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 from . import __version__, formal, tools
-from .checks import static_check
+from .checks import same_repair_source, static_check
 from .reward import RewardWeights, compute_reward
 from .task import Task
 
@@ -85,6 +85,7 @@ class EvalResult:
     frontend_errors: list[str] = field(default_factory=list)
     resource_failures: dict[str, str] = field(default_factory=dict)
     ppa_unavailable: str | None = None
+    unchanged_starter: bool = False
 
     @property
     def pass_rate(self) -> float:
@@ -116,7 +117,7 @@ class EvalResult:
         area/depth bonus all use it."""
         return (self.all_tests_pass and self.sim_complete and self.synth_ok
                 and not self.latches and not self.interface_errors and not self.resource_failures
-                and self.formal_status in ("pass", "disabled"))
+                and self.formal_status in ("pass", "disabled") and not self.unchanged_starter)
 
     def to_dict(self) -> dict:
         d = asdict(self)
@@ -171,7 +172,9 @@ def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
         if cached is not None:
             return cached
 
-    res = EvalResult(task_id=task.id, code_sha=sha)
+    starter = task.start_code
+    res = EvalResult(task_id=task.id, code_sha=sha,
+                     unchanged_starter=starter is not None and same_repair_source(code, starter))
     ref = reference_ppa(task)
     res.ref_cells, res.ref_depth = ref["cells"], ref["depth"]
 
