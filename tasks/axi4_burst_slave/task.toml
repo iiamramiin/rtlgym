@@ -20,4 +20,6 @@ demo_trajectory = ["bug_read_ignores_backpressure.sv", "good_byte_banks.sv"]
 depth = 9
 params = { ADDR_W = 3, ID_W = 1, LEN_W = 2 }
 reset = "rst"
-timeout_s = 15
+# Structurally different but equivalent burst controllers can take longer
+# to prove than the reference, especially under parallel grading.
+timeout_s = 120
