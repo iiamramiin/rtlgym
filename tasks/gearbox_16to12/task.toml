@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# Simultaneous transfers change occupancy by one unit. Word boundaries drift;
+# early ready/valid or reversed unit order can survive several cycles before failing.
+id = "gearbox_16to12"
+top = "gearbox_16to12"
+difficulty = "hard"
+tags = ["sequential", "streaming", "width-conversion", "backpressure"]
+sim_timeout_s = 30
+demo_trajectory = ["bug_no_lookahead.sv", "good_circular_slots.sv"]
+
+[formal]
+# One bit per unit preserves the occupancy and routing logic. Eight steps allow a
+# full buffer, stalled and simultaneous transfers, and output across word boundaries.
+depth = 8
+params = { UNIT_W = 1 }
+reset = "rst"
+timeout_s = 15

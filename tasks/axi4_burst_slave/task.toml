@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+id = "axi4_burst_slave"
+top = "axi4_burst_slave"
+difficulty = "hard"
+tags = ["axi4", "burst", "memory", "handshake", "backpressure"]
+sim_timeout_s = 30
+demo_trajectory = ["bug_read_ignores_backpressure.sv", "good_byte_banks.sv"]
+
+# The write descriptor and data arrive independently. Burst length, error
+# draining, partial-byte stores, and the held read snapshot each have their own
+# update edge. Likely mistakes are early R advancement, using WLAST to terminate
+# a write, or checking the wrapped address after it has already truncated.
+[formal]
+# Two words admit a two-beat legal burst, nonzero addresses and overflow;
+# a two-bit LEN permits all 1..4 beat bursts, including invalid long bursts.
+# Nine steps cover reset, AW/AR, read and write stalls, a final W and its B, and
+# a readback after a W completes. One ID bit preserves ID propagation checks.
+depth = 9
+params = { ADDR_W = 3, ID_W = 1, LEN_W = 2 }
+reset = "rst"
+timeout_s = 15

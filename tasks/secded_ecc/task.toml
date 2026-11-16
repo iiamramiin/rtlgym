@@ -1,0 +1,20 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+id = "secded_ecc"
+top = "secded_ecc"
+difficulty = "hard"
+tags = ["combinational", "error-correction", "parameterized"]
+sim_timeout_s = 60
+demo_trajectory = ["bug_correct_double.sv", "good_parity_matrix.sv"]
+
+# The task combines one-based position numbers with zero-based packed bits.
+# A missing overall check can miscorrect double errors, and an odd syndrome
+# can point beyond the end of a shortened codeword.
+[formal]
+# No state or clock. Depth 1 checks every encoder and decoder input at once.
+# Width 5 is the smallest supported shortened code with invalid syndromes:
+# H=9 and the 4-bit syndrome can exceed it. All rows and flags are reachable.
+depth = 1
+params = { DATA_W = 5 }
+timeout_s = 20

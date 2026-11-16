@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# Cross-domain status can look stale by design. Expected errors include computing
+# full from one Gray wrap bit and using the first synchronizer stage in a flag.
+id = "async_fifo"
+top = "async_fifo"
+difficulty = "hard"
+tags = ["sequential", "memory", "cdc", "parameterized"]
+sim_timeout_s = 30
+demo_trajectory = ["bug_single_sync_stage.sv", "good_gray_counters.sv"]
+
+[formal]
+# The existing SAT miter advances both domains every step. It cannot establish
+# correctness under independent clock rates/phases or model metastability.
+# Simulate varied clock ratios, phases and coincident edges until a sound
+# multiclock proof harness can express independently scheduled clock edges.
+enabled = false

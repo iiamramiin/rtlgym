@@ -37,11 +37,11 @@ bash scripts/setup_sv2v.sh
 export PATH="$HOME/.local/bin:$PATH"
 pip install -e ".[dev]"
 
-python -m rtlgym list                                   # 12 tasks
+python -m rtlgym list                                   # 16 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 209 tests
+pytest -q                                               # 236 tests
 ```
 
 ## Using it as an RL environment
@@ -62,7 +62,7 @@ while True:
   (per-stage results, logs, gate counts, formal status and counterexample, timings).
 - An episode ends when an attempt is **accepted**: every expected hidden test ran and
   passed, the design synthesizes without latches, its ports match the reference, and
-  the formal check passed. A formal error or timeout on a design that otherwise passes
+  the formal check passed or is disabled for the task. A formal error or timeout on a design that otherwise passes
   (tests and synthesis), or a simulation that ended before every test reported, is
   **inconclusive**: not accepted, and never cached. The same acceptance rule ends
   episodes, defines solve rates, and gates the area/depth bonus.
@@ -237,8 +237,8 @@ AGENT=replay TASKS=all SAMPLES=1 bash scripts/ci/eval.sh     # offline check, no
 
 The agent sends no sampling parameters (Claude Sonnet 5.5 rejects them), streams
 responses, and leaves room for thinking in `max_tokens`. `--effort` sets the effort
-level; by default each model uses its own. With 12 tasks, 5 episodes per task, and at
-most 3 attempts, a paired run makes at most 300 API calls per model (one shared first
+level; by default each model uses its own. With 16 tasks, 5 episodes per task, and at
+most 3 attempts, a paired run makes at most 400 API calls per model (one shared first
 attempt, then up to two more in each arm); episodes accepted on the first attempt make
 only one. Grading is not the bottleneck: on 2 cores with 8 episodes graded at once, the
 slowest formal check took 7 s of its 60 s limit, so 4 parallel episodes on GitHub's
@@ -362,16 +362,20 @@ Haiku 80 calls, 204,278 input and 173,303 output.
 |---|---|---|---|
 | `popcount16` | easy | combinational arithmetic, area/depth trade-off | exhaustive |
 | `alu8` | easy | signed vs unsigned, flags, complete case coverage | exhaustive |
-| `up_down_counter` | easy | priority of controls, wrap-around, synchronous reset | 12 cycles |
-| `edge_detect` | easy | registered vs combinational outputs, cycle timing | 12 cycles |
-| `seq_detect_1011` | medium | FSM design, overlapping matches | 12 cycles |
-| `fifo_sync` | medium | full/empty logic, pointer wrap, simultaneous read/write | 12 cycles at W=2, DEPTH=4 |
-| `rr_arbiter4` | medium | round-robin fairness, pointer update rules | 12 cycles |
-| `uart_tx` | hard | cycle-accurate protocol timing, ignoring inputs while busy | 48 cycles |
-| `noc_router5` | hard | XY routing, per-output round robin, elastic backpressure | 8 cycles at PAYLOAD_W=1, X=1, Y=1 (240 s timeout) |
-| `axil_regs` | hard | independent AXI4-Lite channels, byte strobes, interrupt priority | 8 cycles |
-| `mul_pipe3` | medium | signed multiplication, exact pipeline latency, bubbles and reset | 7 cycles at WIDTH=4 |
-| `crc32_stream` | medium | reflected CRC-32, byte order, stream restart | 4 cycles |
+| `up_down_counter` | easy | priority of controls, wrap-around, synchronous reset | bounded SAT, 12 cycles |
+| `edge_detect` | easy | registered vs combinational outputs, cycle timing | bounded SAT, 12 cycles |
+| `seq_detect_1011` | medium | FSM design, overlapping matches | bounded SAT, 12 cycles |
+| `fifo_sync` | medium | full/empty logic, pointer wrap, simultaneous read/write | bounded SAT, 12 cycles at W=2, DEPTH=4 |
+| `rr_arbiter4` | medium | round-robin fairness, pointer update rules | bounded SAT, 12 cycles |
+| `uart_tx` | hard | cycle-accurate protocol timing, ignoring inputs while busy | bounded SAT, 48 cycles |
+| `noc_router5` | hard | XY routing, per-output round robin, elastic backpressure | bounded SAT, 8 cycles at PAYLOAD_W=1, X=1, Y=1 (240 s timeout) |
+| `axil_regs` | hard | independent AXI4-Lite channels, byte strobes, interrupt priority | bounded SAT, 8 cycles |
+| `mul_pipe3` | medium | signed multiplication, exact pipeline latency, bubbles and reset | bounded SAT, 7 cycles at WIDTH=4 |
+| `crc32_stream` | medium | reflected CRC-32, byte order, stream restart | bounded SAT, 4 cycles |
+| `secded_ecc` | hard | shortened Hamming code, correction and detection | exhaustive at DATA_W=5 |
+| `gearbox_16to12` | hard | stream ordering, width conversion, simultaneous handshakes | bounded SAT, 8 cycles at UNIT_W=1 |
+| `async_fifo` | hard | Gray pointers, synchronized status and independent clocks | simulation only |
+| `axi4_burst_slave` | hard | INCR bursts, byte strobes, write errors and stalled reads | bounded SAT, 9 cycles at ADDR_W=3, ID_W=1, LEN_W=2 |
 
 Each task folder holds `spec.md` (the only thing the agent sees), `ref.sv`, a hidden
 `test_<task>.py`, `task.toml` (including the `[formal]` settings), and `candidates/`
@@ -422,8 +426,8 @@ rtlgym/
   simworker.py    child process that runs one cocotb testbench
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
-tasks/            12 tasks with specs, references, hidden tests, candidates
-tests/            209 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tasks/            16 tasks with specs, references, hidden tests, candidates
+tests/            236 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)
@@ -431,13 +435,16 @@ scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 
 ## Limitations and next steps
 
-- **Small, public benchmark.** Twelve small designs exercise the harness; they
+- **Small, public benchmark.** Sixteen designs exercise the harness; they
   are not enough to measure how a model generalizes to production RTL. Their tests,
   seeds, and references are public, so treat them as development fixtures: a real
   evaluation needs private, held-out task families and independently seeded checks.
 - **Equal-weight tests.** Each cocotb test counts once toward the functional score,
   whatever it covers. Scoring explicit requirement groups would make partial credit
   mean more.
+- **Independent clocks.** `async_fifo` uses deterministic simulation at several clock
+  ratios and phases, including coincident edges. The single-clock SAT model is unsuitable
+  for independent clocks. Simulation cannot establish metastability safety.
 - **Bounded proofs.** Sequential checks cover a fixed number of cycles from reset, with
   reset held low afterwards. k-induction would turn some of them into full proofs.
 - **Proxies, not signoff.** Area and depth are generic-gate estimates. A Liberty-based
