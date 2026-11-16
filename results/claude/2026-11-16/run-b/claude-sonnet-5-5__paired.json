@@ -1,0 +1,327 @@
+{
+  "paired": {
+    "arms": [
+      "full",
+      "none"
+    ],
+    "episodes": 21,
+    "outcomes": {
+      "both": 18,
+      "only_full": 2,
+      "only_none": 1,
+      "neither": 0,
+      "errored": 0
+    },
+    "informative_episodes": 3,
+    "discordant_pairs": 3,
+    "mcnemar_exact_p": 1.0,
+    "by_verification": {
+      "formal": {
+        "episodes": 18,
+        "outcomes": {
+          "both": 15,
+          "only_full": 2,
+          "only_none": 1,
+          "neither": 0,
+          "errored": 0
+        },
+        "informative_episodes": 3,
+        "discordant_pairs": 3,
+        "mcnemar_exact_p": 1.0
+      },
+      "simulation_only": {
+        "episodes": 3,
+        "outcomes": {
+          "both": 3,
+          "only_full": 0,
+          "only_none": 0,
+          "neither": 0,
+          "errored": 0
+        },
+        "informative_episodes": 0,
+        "discordant_pairs": 0,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "shared_first": {
+      "act_s": 301.68,
+      "calls": 21,
+      "input_tokens": 32223,
+      "output_tokens": 47389,
+      "refusals": 0,
+      "truncated": 0
+    },
+    "rows": [
+      {
+        "task": "secded_ecc",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9152,
+        "none_best": 0.9152,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "secded_ecc",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9258,
+        "none_best": 0.9258,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "secded_ecc",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9238,
+        "none_best": 0.9238,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "gearbox_16to12",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.997,
+        "none_best": 0.997,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "gearbox_16to12",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9865,
+        "none_best": 0.9865,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "gearbox_16to12",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9611,
+        "none_best": 0.9611,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "async_fifo",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9736,
+        "none_best": 0.9736,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "async_fifo",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9714,
+        "none_best": 0.9714,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "async_fifo",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9736,
+        "none_best": 0.9736,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "axi4_burst_slave",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9497,
+        "none_best": 0.9497,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "axi4_burst_slave",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9701,
+        "none_best": 0.9701,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "axi4_burst_slave",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9701,
+        "none_best": 0.9701,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "cache_controller",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9699,
+        "none_best": 0.9699,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "cache_controller",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9737,
+        "none_best": 0.9737,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "cache_controller",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "packet_checksum",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9553,
+        "none_best": 0.9553,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "packet_checksum",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9453,
+        "none_best": 0.9453,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "packet_checksum",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9553,
+        "none_best": 0.9553,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "noc_router5",
+        "first_attempt_solved": false,
+        "full_solved": true,
+        "none_solved": false,
+        "full_best": 0.9768,
+        "none_best": 0.85,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "only_full"
+      },
+      {
+        "task": "noc_router5",
+        "first_attempt_solved": false,
+        "full_solved": true,
+        "none_solved": false,
+        "full_best": 0.9788,
+        "none_best": 0.85,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "only_full"
+      },
+      {
+        "task": "noc_router5",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": true,
+        "full_best": 0.7,
+        "none_best": 0.9044,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "only_none"
+      }
+    ]
+  },
+  "meta": {
+    "agent": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": null,
+    "samples_per_task": 3,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "secded_ecc": true,
+      "gearbox_16to12": true,
+      "async_fifo": false,
+      "axi4_burst_slave": true,
+      "cache_controller": true,
+      "packet_checksum": true,
+      "noc_router5": true
+    },
+    "tasks": [
+      "secded_ecc",
+      "gearbox_16to12",
+      "async_fifo",
+      "axi4_burst_slave",
+      "cache_controller",
+      "packet_checksum",
+      "noc_router5"
+    ],
+    "started_utc": "2026-11-16T16:42:50+00:00",
+    "wall_s": 643.2,
+    "git_commit": "e12a9a327a3f491df7797af437b506b4d73fd4b1",
+    "python": "3.12.16",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    }
+  }
+}

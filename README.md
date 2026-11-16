@@ -41,7 +41,7 @@ python -m rtlgym list                                   # 18 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 269 tests
+pytest -q
 ```
 
 ## Using it as an RL environment
@@ -72,9 +72,15 @@ while True:
   casts and function returns. A remaining parse failure is reported separately
   from a synthesis failure, in the tool report and the run summary. The original
   source still goes to Icarus and Verilator.
-- After parsing, a synthesis or formal timeout, memory allocation failure, or limit
-  kill is reported as a resource failure. When every hidden test passes, that attempt
-  is inconclusive, earns no acceptance, and is graded again if resubmitted.
+- A synthesis or formal timeout, allocation failure, or limit kill after parsing
+  is reported as a resource failure. An unresolved resource failure on an attempt
+  that passes every hidden test is inconclusive and is graded again if resubmitted.
+- After an allocation failure or timeout in canonical synthesis, a bounded mapping for
+  remainder with positive constant divisor five can recover synthesis. The
+  alternate flow must fully lower the design to generic gate cells and pass
+  structural checks. Interface, latch, simulation and formal requirements still
+  apply. The canonical area and depth proxies are unavailable, so this path adds
+  no area/depth bonus.
 - `info` carries the full grading result for the trainer and for logging. A policy
   under evaluation should only see `obs`.
 - `reward_mode="improvement"` pays only the gain over the best score so far, so the
@@ -147,8 +153,8 @@ Design choices, and the failure modes they guard against:
 - **Hidden tests check behavior, not structure.** Testbenches compare against a Python
   model, not the reference RTL, so any correct micro-architecture scores full marks
   (the FSM, shift-register, and extra-MSB-pointer alternatives all pass, formally too).
-- **Determinism.** Fixed simulator and stimulus seeds: the same code always gets the
-  same reward.
+- **Deterministic stimulus.** Fixed simulator and stimulus seeds make the functional
+  checks repeatable. Tool resource availability can still affect a grade.
 
 ## Tool latency
 
@@ -159,8 +165,9 @@ EDA tools are the slow part of an RL step. The harness keeps it low:
 2. **Parallel stages.** Lint, synthesis, simulation, and the formal check run
    concurrently, so a step costs the slowest tool, not the sum.
 3. **Content-addressed cache.** Results are keyed on (task files, candidate text, tool
-   versions, reward weights, formal on/off). Duplicate samples, common in RL batches,
-   cost nothing.
+   versions, reward weights, formal on/off). Cache hits avoid another run.
+   Inconclusive results and results with unavailable canonical proxies are graded
+   again if resubmitted.
 4. **Parallel episodes.** `--workers N` runs episodes concurrently.
 5. **Resource limits.** Every tool runs in its own session with a wall-clock timeout
    and CPU, memory, and file-size limits (set by `prlimit`, not `preexec_fn`, which is
@@ -170,6 +177,11 @@ EDA tools are the slow part of an RL step. The harness keeps it low:
    cannot exhaust memory. A missing tool stops the run with an error instead of being
    scored as a candidate failure. This is not a hardened sandbox: there is no
    container, syscall filter, or network isolation.
+
+The per-process address-space limit stays at 2 GiB. The CPU limit now covers each
+tool's wall deadline with a 120-second floor and five seconds of margin, capped at
+300 CPU seconds. For `noc_router5`, the SAT solver still gets 240 seconds. The wrapper
+allows 255 seconds wall time and 260 CPU seconds, up from 120 CPU seconds.
 
 Measured on a 2-core Linux machine with an empty cache, one grading step takes 0.8 to
 2.1 seconds depending on the task; simulator start-up dominates, except for
@@ -362,6 +374,46 @@ and this toolchain; they are not a general measure of RTL ability. Tokens (all c
 including shared first attempts): Sonnet 87 calls, 156,029 input and 122,187 output;
 Haiku 80 calls, 204,278 input and 173,303 output.
 
+### Paired runs on November 16, 2026
+
+[Run A](results/claude/2026-11-16/run-a/summary.md) used the original 12 tasks
+and five samples per task per model. [Run B](results/claude/2026-11-16/run-b/summary.md)
+used the six new tasks plus `noc_router5` and three samples per task per model.
+Both used paired feedback and plain retries, up to three turns, at `e12a9a3`.
+Run B included `async_fifo`, which has simulation and synthesis checks with
+formal disabled. Both models passed all three first attempts on it.
+
+| Run | Model | Accepted first | Accepted within 3 with feedback | Accepted within 3 with plain retries |
+|---|---|---:|---:|---:|
+| A | Sonnet 5.5 | 51/60 | 60/60 | 56/60 |
+| A | Haiku 5.5 | 58/60 | 60/60 | 58/60 |
+| B | Sonnet 5.5 | 18/21 | 20/21 | 19/21 |
+| B | Haiku 5.5 | 16/21 | 20/21 | 18/21 |
+
+Feedback recovered 11 of 11 failed first attempts in Run A, compared with 5
+of 11 with plain retries. In Run B, it recovered 6 of 8, compared with 3 of 8.
+Both runs recorded zero unresolved synthesis/formal parser failures and zero
+test escapes.
+
+| First-attempt failures | Logic bugs | Tool resource stops | Latches | Icarus compile |
+|---|---:|---:|---:|---:|
+| A (11) | 5 | 3 | 2 | 1 |
+| B (8) | 3 | 4 | 0 | 1 |
+
+One Run A latch error also failed a hidden test and is counted under latches.
+On the six new tasks, Sonnet passed 18/18 on the first try and Haiku passed
+16/18. These tasks were too easy to separate the models much in this sample.
+The router was the clearest separator, and every case where only one retry arm
+recovered came from that task.
+
+The run files retain their original verdicts. The router's formal solver gets
+240 seconds inside a 255-second wall deadline. The process CPU limit rose from
+120 to 260 seconds. Two saved routers hit the 2 GiB address-space limit in
+Yosys's wide remainder expansion before ABC. The grader keeps the memory cap
+and can retry with checked modulo-five mapping, with area and depth unavailable
+on that path. The [offline router regrade](results/claude/2026-11-16/router-regrade.md)
+lists every saved attempt before and after the fixes.
+
 ## Tasks
 
 | Task | Difficulty | Exercises | Formal check |
@@ -436,7 +488,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            18 tasks with specs, references, hidden tests, candidates
-tests/            269 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            Tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)
