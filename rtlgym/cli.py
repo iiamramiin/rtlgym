@@ -234,6 +234,27 @@ def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, ta
     return out
 
 
+def _by_verification(rows: list[dict], formal_by_task: dict[str, bool]) -> dict[str, list[dict]]:
+    groups: dict[str, list[dict]] = {}
+    for row in rows:
+        formal_enabled = formal_by_task.get(row["task"])
+        if formal_enabled is not None:
+            mode = "formal" if formal_enabled else "simulation_only"
+            groups.setdefault(mode, []).append(row)
+    return groups
+
+
+def _acceptance_counts(results: list[dict]) -> dict:
+    n = len(results)
+    return {
+        "tasks": sorted({r["task"] for r in results}),
+        "episodes": n,
+        "errors": sum(bool(r["error"]) for r in results),
+        "pass@1_count": f"{sum(bool(r['pass@1']) for r in results)}/{n}",
+        "solved_count": f"{sum(bool(r['solved']) for r in results)}/{n}",
+    }
+
+
 def summarize(results: list[dict], meta: dict) -> dict:
     """Rates over ALL episodes: an episode that errored (e.g., a timeout) counts as
     unsolved, with the scores it reached before the error (0 if it never got a
@@ -256,6 +277,7 @@ def summarize(results: list[dict], meta: dict) -> dict:
     for r in results:
         for k, v in (r.get("usage") or {}).items():
             usage[k] = round(usage.get(k, 0) + v, 2)
+    formal_by_task = meta.get("formal_by_task") or {}
     per_task = {}
     for tid in sorted({r["task"] for r in results}):
         rs = [r for r in results if r["task"] == tid]
@@ -266,8 +288,13 @@ def summarize(results: list[dict], meta: dict) -> dict:
                          "pass@1_count": f"{sum(r['pass@1'] for r in rs)}/{len(rs)}",
                          "solved_count": f"{sum(r['solved'] for r in rs)}/{len(rs)}",
                          "mean_turns": round(sum(r["turns"] for r in rs) / len(rs), 2)}
+        if tid in formal_by_task:
+            per_task[tid]["formal_enabled"] = formal_by_task[tid]
+    by_verification = {mode: _acceptance_counts(group)
+                       for mode, group in _by_verification(results, formal_by_task).items()}
     return {
         **meta,
+        "by_verification": by_verification,
         "episodes": n,
         "errors": n - len(ok),
         "pass@1": frac("pass@1"),
@@ -301,7 +328,23 @@ def mcnemar_exact(b: int, c: int) -> float:
     return min(1.0, 2 * tail)
 
 
-def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
+def _paired_counts(rows: list[dict], a: str, b: str) -> dict:
+    totals = dict.fromkeys(("both", f"only_{a}", f"only_{b}", "neither", "errored"), 0)
+    for row in rows:
+        totals[row["outcome"]] += 1
+    only_a, only_b = totals[f"only_{a}"], totals[f"only_{b}"]
+    return {
+        "episodes": len(rows),
+        "outcomes": totals,
+        "informative_episodes": sum(row["outcome"] != "errored" and not row["first_attempt_solved"]
+                                    for row in rows),
+        "discordant_pairs": only_a + only_b,
+        "mcnemar_exact_p": round(mcnemar_exact(only_a, only_b), 4),
+    }
+
+
+def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str],
+                 formal_by_task: dict[str, bool] | None = None) -> dict:
     """Per-task outcomes of paired episodes (same first attempt in both arms).
 
     An episode whose shared first attempt failed (e.g., an API error) has no
@@ -310,16 +353,13 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
     between the arms, so only the "informative" ones (first attempt not accepted)
     can become discordant pairs."""
     a, b = arms
-    totals = {"both": 0, f"only_{a}": 0, f"only_{b}": 0, "neither": 0, "errored": 0}
-    rows, informative = [], 0
+    rows = []
     for ra, rb in zip(per_arm[a], per_arm[b], strict=True):
         if (ra.get("shared_first") or {}).get("error"):
             key = "errored"
         else:
             key = ("both" if ra["solved"] and rb["solved"] else f"only_{a}" if ra["solved"]
                    else f"only_{b}" if rb["solved"] else "neither")
-            informative += not ra["pass@1"]
-        totals[key] += 1
         rows.append({"task": ra["task"], "first_attempt_solved": ra["pass@1"],
                      f"{a}_solved": ra["solved"], f"{b}_solved": rb["solved"],
                      f"{a}_best": ra["best_score"], f"{b}_best": rb["best_score"],
@@ -331,10 +371,9 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str]) -> dict:
         shared["act_s"] = round(shared["act_s"] + first.get("act_s", 0.0), 2)
         for k, v in (first.get("usage") or {}).items():
             shared[k] = round(shared.get(k, 0) + v, 2)
-    only_a, only_b = totals[f"only_{a}"], totals[f"only_{b}"]
-    return {"arms": list(arms), "episodes": len(rows), "outcomes": totals,
-            "informative_episodes": informative, "discordant_pairs": only_a + only_b,
-            "mcnemar_exact_p": round(mcnemar_exact(only_a, only_b), 4),
+    by_verification = {mode: _paired_counts(group, a, b)
+                       for mode, group in _by_verification(rows, formal_by_task or {}).items()}
+    return {"arms": list(arms), **_paired_counts(rows, a, b), "by_verification": by_verification,
             "shared_first": shared, "rows": rows}
 
 
@@ -371,6 +410,7 @@ def cmd_run(args) -> int:
     if args.seed is not None and args.agent != "ollama":
         sys.exit("--seed applies to --agent ollama only")
     ids = _tasks_arg(args.tasks, args.tasks_root)
+    formal_by_task = {tid: not args.no_formal and load_task(tid, args.tasks_root).has_formal for tid in ids}
     episodes = [tid for tid in ids for _ in range(args.samples)]
 
     def kwargs_for(i: int) -> dict:
@@ -406,6 +446,7 @@ def cmd_run(args) -> int:
         "feedback": args.feedback,
         "reward_mode": args.reward_mode,
         "formal": not args.no_formal,
+        "formal_by_task": formal_by_task,
         "tasks": ids,
         "started_utc": started,
         "wall_s": None,
@@ -431,9 +472,9 @@ def cmd_run(args) -> int:
             summaries[arm]["shared_first_s"] = round(
                 sum((r.get("shared_first") or {}).get("act_s", 0.0) for r in results), 2)
         print("\n" + json.dumps({k: v for k, v in summaries[arm].items()
-                                 if k not in ("per_task", "tasks")}, indent=2))
+                                 if k not in ("per_task", "tasks", "formal_by_task")}, indent=2))
     if args.paired:
-        paired = paired_table(per_arm, arms)
+        paired = paired_table(per_arm, arms, formal_by_task)
         _print_paired(paired)
     if args.out:
         out = Path(args.out)
@@ -469,16 +510,24 @@ def _print_episodes(results: list[dict]) -> None:
               f"{r['first_score']:6.3f} {r['best_score']:6.3f}  {scores}")
 
 
+def _verification_label(mode: str) -> str:
+    return {"formal": "Formal enabled", "simulation_only": "Simulation only"}[mode]
+
+
 def _print_paired(p: dict) -> None:
     a, b = p["arms"]
-    o = p["outcomes"]
-    print(f"\nPaired outcomes over {p['episodes']} episodes (same first attempt in both arms):")
-    print(f"  solved in both: {o['both']}   only with {a}: {o[f'only_{a}']}   "
-          f"only with {b}: {o[f'only_{b}']}   in neither: {o['neither']}   "
-          f"errored before a first attempt: {o['errored']}")
-    print(f"  {p['informative_episodes']} informative episode(s) (first attempt not accepted); "
-          f"{p['discordant_pairs']} discordant pair(s), exact McNemar p = "
-          f"{p['mcnemar_exact_p']}.")
+    groups = [("All tasks", p)]
+    groups.extend((_verification_label(mode), group)
+                  for mode, group in sorted(p.get("by_verification", {}).items()))
+    print("\nPaired outcomes (same first attempt in both arms):")
+    for label, group in groups:
+        o = group["outcomes"]
+        print(f"  {label}: {group['episodes']} episodes, solved in both: {o['both']}, "
+              f"only with {a}: {o[f'only_{a}']}, only with {b}: {o[f'only_{b}']}, "
+              f"in neither: {o['neither']}, errored before a first attempt: {o['errored']}")
+        print(f"  {group['informative_episodes']} informative episode(s) (first attempt not accepted), "
+              f"{group['discordant_pairs']} discordant pair(s), exact McNemar p = "
+              f"{group['mcnemar_exact_p']}.")
 
 
 def _pct(v) -> str:
@@ -525,6 +574,15 @@ def cmd_report(args) -> int:
               f"{_count(s['solved_within_turns'], n)} (N={s['max_turns']}) | "
               f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
               f"{s['mean_turns']} | {_grading(s)} |")
+    if any(s.get("by_verification") for s in runs):
+        print("\n### Acceptance by verification mode\n")
+        print("| Arm | Verification | Episodes (errors) | First attempt | Within turn budget |")
+        print("|---|---|---:|---:|---:|")
+        for s in runs:
+            for mode, group in sorted(s.get("by_verification", {}).items()):
+                print(f"| {_arm(s)} | {_verification_label(mode)} | "
+                      f"{group['episodes']} ({group['errors']}) | "
+                      f"{group['pass@1_count']} | {group['solved_count']} |")
     tasks = sorted({t for s in runs for t in s["per_task"]})
     print()
     print("| Task | " + " | ".join(_arm(s) for s in runs) + " |")
@@ -533,9 +591,13 @@ def cmd_report(args) -> int:
         cells = []
         for s in runs:
             pt = s["per_task"].get(t)
-            cells.append("n/a" if not pt else
-                         f"{_count(pt['pass@1'], pt['episodes'])} → "
-                         f"{_count(pt['solved'], pt['episodes'])}")
+            if not pt:
+                cells.append("n/a")
+                continue
+            simulation_only = pt.get("formal_enabled", s.get("formal")) is False
+            label = " (simulation only)" if simulation_only else ""
+            cells.append(f"{_count(pt['pass@1'], pt['episodes'])} → "
+                         f"{_count(pt['solved'], pt['episodes'])}{label}")
         print(f"| {t} | " + " | ".join(cells) + " |")
     print()
     turns = sorted({s["max_turns"] for s in runs})
@@ -544,7 +606,7 @@ def cmd_report(args) -> int:
     first = runs[0]
     print(f"Per-task cells: accepted on the first attempt → accepted within the turn budget. "
           f"Accepted means every hidden test passed, the design synthesized without latches, "
-          f"and the formal check passed. Commit {first['git_commit'][:7]}; "
+          f"and the formal check passed where enabled. Commit {first['git_commit'][:7]}; "
           f"{first['tools'].get('yosys', '')}.")
     return 0
 

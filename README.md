@@ -41,7 +41,7 @@ python -m rtlgym list                                   # 18 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 250 tests
+pytest -q                                               # 269 tests
 ```
 
 ## Using it as an RL environment
@@ -184,7 +184,7 @@ Measured on a 2-core Linux machine with an empty cache, one grading step takes 0
   how often tests alone would have been fooled;
 - **accepted within N turns**;
 - **test escapes**: attempts that pass every test but fail the formal check;
-- **inconclusive** attempts, reported separately rather than hidden in a rate;
+- **inconclusive** attempts and separate counts for front-end and resource failures;
 - episodes run and episodes that hit an error (a timeout, an API failure): these count as
   unsolved in every rate, with the scores they reached before the error, and are also
   reported separately. Rates are shown with their denominators (e.g. "2/8");
@@ -207,6 +207,9 @@ test on the discordant pairs). Episodes whose first attempt was accepted cannot 
 between the arms, and episodes whose first attempt failed with an error are counted
 separately ("errored"), so only the discordant episodes carry information about the
 difference.
+
+The acceptance and paired-outcome reports show formal-backed and simulation-only
+tasks separately, including `async_fifo`. The overall totals are still included.
 
 Every result file records the model, effort, sampling settings, git commit (marked
 `-dirty` if the code had uncommitted changes), Python, tool, and cocotb versions, and
@@ -433,7 +436,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            18 tasks with specs, references, hidden tests, candidates
-tests/            250 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            269 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)

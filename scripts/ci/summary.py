@@ -96,6 +96,19 @@ def report(folder: str) -> str:
                        f"{o['only_none']} | {o['neither']} | {o.get('errored', 0)} | "
                        f"{p.get('informative_episodes', 'n/a')} | {p['discordant_pairs']} | "
                        f"{p.get('mcnemar_exact_p', 'n/a')} |")
+        if any(p.get("by_verification") for _, p in pairs):
+            out.append("\n### Paired outcomes by verification mode\n")
+            out.append("| Model | Verification | Episodes | Solved in both | Only full | Only none "
+                       "| In neither | Errored | Informative | Discordant | Exact McNemar p |")
+            out.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+            labels = {"formal": "Formal enabled", "simulation_only": "Simulation only"}
+            for model, p in pairs:
+                for mode, group in sorted(p.get("by_verification", {}).items()):
+                    o = group["outcomes"]
+                    out.append(f"| {model} | {labels[mode]} | {group['episodes']} | {o['both']} | "
+                               f"{o['only_full']} | {o['only_none']} | {o['neither']} | {o['errored']} | "
+                               f"{group['informative_episodes']} | {group['discordant_pairs']} | "
+                               f"{group['mcnemar_exact_p']} |")
         out.append("\nInformative: first attempt not accepted (only these can differ between "
                    "the arms). Discordant: solved in exactly one arm.")
     return "\n".join(out) + "\n"
