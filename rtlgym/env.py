@@ -201,7 +201,10 @@ def format_feedback(r: EvalResult, level: str = "full") -> str:
         else:
             lines.append("Lint failed:\n" + r.lint_log[-1000:])
     lines += _formal_lines(r, level)
-    if r.synth_ok:
+    if r.ppa_unavailable and r.synth_ok:
+        lines.append(f"Synthesis: alternate netlist checked ({r.flops} flops, {r.latches} latches). "
+                     f"PPA unavailable: {r.ppa_unavailable}.")
+    elif r.synth_ok:
         lines.append(f"Synthesis: {r.cells} generic cells ({r.flops} flops, "
                      f"{r.latches} latches), logic depth {r.depth}; "
                      f"reference: {r.ref_cells} cells, depth {r.ref_depth}")

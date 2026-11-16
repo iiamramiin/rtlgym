@@ -291,6 +291,7 @@ def lint_verilator(src: Path, top: str, workdir: Path, timeout_s: float = 30) ->
 
 _LTP_RE = re.compile(r"Longest topological path in \S+ \(length=(\d+)\)")
 GATE_LIB = "AND,NAND,OR,NOR,XOR,XNOR,ANDNOT,ORNOT,MUX"
+_MOD5_MAP = Path(__file__).resolve().with_name("constant_mod5.v")
 
 
 @dataclass
@@ -307,6 +308,7 @@ class SynthResult:
     frontend: str = "native"
     parse_failed: bool = False
     resource_limit: str | None = None
+    ppa_unavailable: str | None = None
 
 
 def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> SynthResult:
@@ -314,22 +316,25 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
     iface = workdir / "iface.json"
     stat = workdir / "stat.json"
     ltp = workdir / "ltp.txt"
-    stages = [
+    setup = [
         f"tee -q -o {YOSYS_PARSE_MARKER} log parsed",
         f"hierarchy -check -top {top}",
         "proc",
         f"write_json {iface}",
-        f"synth -flatten -top {top}",
+    ]
+    synth = f"synth -flatten -top {top}"
+    canonical = [
+        synth,
         f"abc -g {GATE_LIB}",
         "opt_clean",
         f"tee -q -o {stat} stat -json",
         f"tee -q -o {ltp} ltp -noff",
     ]
 
-    def invoke(path: Path) -> ToolRun:
+    def invoke(path: Path, stages: list[str] = canonical) -> ToolRun:
         for artifact in (iface, stat, ltp):
             artifact.unlink(missing_ok=True)
-        script = "; ".join([f'read_verilog -sv "{path}"', *stages])
+        script = "; ".join([f'read_verilog -sv "{path}"', *setup, *stages])
         return run(["yosys", "-q", "-p", script], cwd=workdir, timeout_s=timeout_s)
 
     r, frontend, parse_failed = yosys_frontend((src,), workdir, invoke)
@@ -338,6 +343,32 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
                       resource_limit=None if parse_failed else yosys_resource_limit(r))
     if iface.is_file():
         res.ports = _ports_from_json(iface, top)
+    if res.resource_limit == "memory allocation failure":
+        # Generic techmap can exhaust memory expanding wide remainder cells.
+        # Reuse the parsed source and require a fully lowered, checked netlist.
+        parsed_src = workdir / "frontend_0.v" if frontend == "sv2v" else src
+        retry = invoke(parsed_src, [
+            f"{synth} -run begin:fine",
+            "select -assert-any t:$mod",
+            f'techmap -map "{_MOD5_MAP}"',
+            "select -assert-none t:$mod",
+            f"{synth} -run fine: -noabc",
+            "check -assert",
+            "select -assert-none t:* t:$_* %d",
+            f"tee -q -o {stat} stat -json",
+        ])
+        res.elapsed_s += retry.elapsed_s
+        res.log = tail(
+            f"Canonical synthesis: {r.log}\nConstant-divisor synthesis: {retry.log}"
+        )
+        if not retry.ok:
+            return res
+        ports = _ports_from_json(iface, top) if iface.is_file() else {}
+        if not ports:
+            res.log += "\nMissing port information in alternate netlist"
+            return res
+        res.ports = ports
+        r = retry
     if not r.ok or not stat.is_file():
         return res
     try:
@@ -349,11 +380,17 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
         res.log = tail(f"malformed synthesis statistics: {exc}\n" + r.log)
         return res
     res.cell_types = types
-    res.cells = cells
+    if res.resource_limit:
+        res.ppa_unavailable = "canonical synthesis ran out of memory; alternate netlist checked"
+        res.resource_limit = None
+    else:
+        res.cells = cells
+        m = _LTP_RE.search(ltp.read_text()) if ltp.is_file() else None
+        res.depth = int(m.group(1)) if m else None
     res.flops = sum(n for t, n in types.items() if "DFF" in t.upper() or "SDFF" in t.upper())
     res.latches = sum(n for t, n in types.items() if "DLATCH" in t.upper())
-    m = _LTP_RE.search(ltp.read_text()) if ltp.is_file() else None
-    res.depth = int(m.group(1)) if m else None
+    if res.ppa_unavailable:
+        res.latches += sum(n for t, n in types.items() if t.startswith("$_SR_"))
     res.ok = True
     return res
 

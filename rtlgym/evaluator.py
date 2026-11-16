@@ -37,7 +37,7 @@ from .task import Task
 
 CACHE_DIR = Path(os.environ.get("RTLGYM_CACHE", Path.home() / ".cache" / "rtlgym"))
 # Bump when grading semantics change, so cached results from older graders are ignored.
-GRADER_VERSION = "7"
+GRADER_VERSION = "8"
 _TOOL_VERSIONS: dict[str, str] | None = None
 _REF_LOCK = threading.Lock()
 _REF_PPA: dict[str, dict] = {}
@@ -84,6 +84,7 @@ class EvalResult:
     formal_frontend: str | None = None
     frontend_errors: list[str] = field(default_factory=list)
     resource_failures: dict[str, str] = field(default_factory=dict)
+    ppa_unavailable: str | None = None
 
     @property
     def pass_rate(self) -> float:
@@ -188,7 +189,7 @@ def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
                 ctx.cleanup()
 
     res.score, res.breakdown = compute_reward(res, weights)
-    if use_cache and not res.inconclusive:
+    if use_cache and not res.inconclusive and res.ppa_unavailable is None:
         _store_cached(cache_file, res)
     return res
 
@@ -263,6 +264,7 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
 
     res.synth_ok, res.synth_log = syn.ok, syn.log
     res.synth_frontend = syn.frontend
+    res.ppa_unavailable = syn.ppa_unavailable
     if syn.parse_failed:
         res.frontend_errors.append("synthesis")
     if syn.resource_limit:

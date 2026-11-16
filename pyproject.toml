@@ -25,6 +25,9 @@ rtlgym = "rtlgym.cli:main"
 [tool.setuptools.packages.find]
 include = ["rtlgym*"]
 
+[tool.setuptools.package-data]
+rtlgym = ["constant_mod5.v"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["needs_tools: requires iverilog, verilator, yosys and sv2v on PATH"]

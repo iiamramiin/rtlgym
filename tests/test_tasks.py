@@ -238,6 +238,43 @@ def test_synthesis_resource_stop_and_cache(monkeypatch, passing):
     assert turn["resource_failures"] == r.resource_failures
 
 
+
+@pytest.mark.parametrize("latches", [0, 1])
+def test_synthesis_oom_retry_keeps_correctness_checks(monkeypatch, latches):
+    import json
+
+    from rtlgym import evaluator, tools
+    from rtlgym.cli import _turn_record
+    from rtlgym.env import format_feedback
+
+    original = tools.run
+
+    def stop_canonical_synthesis(cmd, cwd, timeout_s, env=None):
+        if cmd[0] == "yosys" and "candidate.sv" in cmd[-1] and "stat -json" in cmd[-1]:
+            script = cmd[-1].split("; synth -flatten", 1)[0]
+            assert original([*cmd[:-1], script], cwd, timeout_s, env=env).ok
+            if "check -assert" not in cmd[-1]:
+                return tools.ToolRun(False, -6, "std::bad_alloc", 0.1)
+            assert "select -assert-none t:* t:$_* %d" in cmd[-1]
+            stats = {"num_cells": 2 + latches, "num_cells_by_type": {"$_AND_": 2, "$_DLATCH_N_": latches}}
+            (cwd / "stat.json").write_text(json.dumps({"design": stats}))
+            return tools.ToolRun(True, 0, "", 0.1)
+        return original(cmd, cwd, timeout_s, env=env)
+
+    monkeypatch.setattr(tools, "run", stop_canonical_synthesis)
+    task = load_task("popcount16")
+    r = evaluate(task, task.ref_path.read_text())
+    assert r.all_tests_pass and r.formal_status == "pass" and r.sim_complete
+    assert r.synth_ok and r.latches == latches and not r.interface_errors
+    assert r.accepted is (latches == 0) and not r.inconclusive
+    assert r.cells is None and r.depth is None and r.breakdown["ppa"] == 0
+    assert not r.resource_failures and r.ppa_unavailable
+    assert "PPA unavailable" in format_feedback(r)
+    turn = _turn_record(r, 0, {"turn": 1, "grade_s": 0.1, "solved": r.accepted})
+    assert turn["ppa_unavailable"] == r.ppa_unavailable
+    assert not list(evaluator.CACHE_DIR.glob("*.json"))
+
+
 def test_formal_resource_stop_is_inconclusive(monkeypatch):
     from rtlgym import evaluator, formal
     from rtlgym.env import format_feedback

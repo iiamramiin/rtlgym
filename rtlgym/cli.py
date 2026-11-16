@@ -104,7 +104,7 @@ def cmd_baselines(args) -> int:
         rows.append({"task": task.id, "candidate": name, "score": r.score,
                      "tests": f"{r.tests_passed}/{r.tests_total}", "formal": r.formal_status,
                      "formal_message": r.formal_message, "frontend_errors": r.frontend_errors,
-                     "resource_failures": r.resource_failures,
+                     "resource_failures": r.resource_failures, "ppa_unavailable": r.ppa_unavailable,
                      "synth_frontend": r.synth_frontend, "formal_frontend": r.formal_frontend,
                      "timings_s": r.timings_s, "tools": versions,
                      "compile": r.compile_ok, "lint_warn": len(r.lint_warnings),
@@ -121,6 +121,8 @@ def cmd_baselines(args) -> int:
                 f"{stage} ({reason})" for stage, reason in row["resource_failures"].items())
         elif row["formal"] == "fail" and row["tests"].split("/")[0] == row["tests"].split("/")[1]:
             note = "test escape: tests pass, formal finds a difference"
+        elif row["ppa_unavailable"]:
+            note = "PPA unavailable: " + row["ppa_unavailable"]
         elif row["formal"] == "error" and not note:
             note = "formal: " + row["formal_message"][:45]
         print(f"{row['task']:18s} {row['candidate']:30s} {row['score']:6.3f} {row['tests']:>6s} "
@@ -139,6 +141,7 @@ def _turn_record(r, reward: float, info: dict) -> dict:
             "frontend_errors": r.frontend_errors, "synth_frontend": r.synth_frontend,
             "formal_frontend": r.formal_frontend, "resource_failures": r.resource_failures,
             "test_escape": r.test_escape, "inconclusive": r.inconclusive,
+            "ppa_unavailable": r.ppa_unavailable,
             "solved": info["solved"],
             "cells": r.cells, "breakdown": r.breakdown,
             "timings_s": r.timings_s, "grade_s": info["grade_s"],
