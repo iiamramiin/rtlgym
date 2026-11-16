@@ -27,7 +27,7 @@ include = ["rtlgym*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["needs_tools: requires iverilog, verilator and yosys on PATH"]
+markers = ["needs_tools: requires iverilog, verilator, yosys and sv2v on PATH"]
 
 [tool.ruff]
 line-length = 110

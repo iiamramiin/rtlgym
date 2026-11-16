@@ -162,8 +162,8 @@ def test_retained_work_directory_can_be_reused(tmp_path):
 
 
 # Valid SystemVerilog that Icarus and Verilator accept but Yosys 0.33's parser rejects
-# (a function with a local variable, a loop, and `return`). Every test passes, but the
-# design fails the synthesis requirement: that is a clear rejection, not inconclusive.
+# (a function with a local variable, a loop, and `return`). These cases exercise
+# the exact native-parser fallback path without changing the fixture suite.
 YOSYS_UNREADABLE = """module popcount16 (input logic [15:0] x, output logic [4:0] count);
     function automatic logic [4:0] pc(input logic [15:0] v);
         logic [4:0] n;
@@ -176,8 +176,32 @@ endmodule
 """
 
 
-def test_yosys_unreadable_design_is_a_synthesis_failure_not_inconclusive():
+@pytest.mark.parametrize("code", [
+    YOSYS_UNREADABLE,
+    YOSYS_UNREADABLE.replace("return n;", "return v == '0 ? 5'd0 : n;"),
+    YOSYS_UNREADABLE.replace("v[i]", "v[int'(i)]").replace("return n;", "pc = n;"),
+], ids=["return", "conditional-return", "int-cast"])
+def test_sv2v_recovers_valid_systemverilog(code):
+    r = evaluate(load_task("popcount16"), code, use_cache=False)
+    assert r.accepted, (r.synth_log, r.formal_message, r.test_failures)
+    assert r.synth_frontend == r.formal_frontend == "sv2v"
+    assert not r.frontend_errors
+
+
+def test_unresolved_parse_failure_is_reported_separately(monkeypatch):
+    from rtlgym import tools
+    from rtlgym.env import format_feedback
+
+    original = tools.run
+
+    def reject_conversion(cmd, cwd, timeout_s, env=None):
+        if cmd[0] == "sv2v":
+            return tools.ToolRun(False, 1, "converter syntax diagnostic", 0.01)
+        return original(cmd, cwd, timeout_s, env=env)
+
+    monkeypatch.setattr(tools, "run", reject_conversion)
     r = evaluate(load_task("popcount16"), YOSYS_UNREADABLE, use_cache=False)
-    assert r.compile_ok and r.all_tests_pass, r.test_failures
-    assert not r.synth_ok and r.formal_status == "error"
-    assert not r.inconclusive and r.score < 0.6
+    assert r.all_tests_pass and not r.accepted and not r.inconclusive
+    assert set(r.frontend_errors) == {"synthesis", "formal"}
+    assert "front end could not parse" in format_feedback(r)
+    assert "converter syntax diagnostic" in format_feedback(r)

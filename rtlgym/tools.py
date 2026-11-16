@@ -23,6 +23,7 @@ import subprocess
 import sys
 import time
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -31,7 +32,7 @@ CPU_LIMIT_S = 120
 MEM_LIMIT_BYTES = 2 * 1024**3
 FILE_LIMIT_BYTES = 256 * 1024**2      # any single file a tool writes, including its log
 CAPTURE_TAIL_BYTES = 1024**2          # how much of a tool's output is kept in memory
-REQUIRED_TOOLS = ("iverilog", "verilator", "yosys")
+REQUIRED_TOOLS = ("iverilog", "verilator", "yosys", "sv2v")
 
 # Only these variables reach tool processes. Everything else, including API keys
 # and tokens in the parent environment, is dropped.
@@ -65,7 +66,8 @@ def require_tools() -> None:
     missing = [t for t in REQUIRED_TOOLS if shutil.which(t) is None]
     if missing:
         raise MissingToolError(f"missing EDA tools: {', '.join(missing)} "
-                               "(on Ubuntu: sudo apt-get install iverilog verilator yosys)")
+                               "(on Ubuntu: sudo apt-get install iverilog verilator yosys; "
+                               "run bash scripts/setup_sv2v.sh)")
     _TOOLS_CHECKED = True
 
 
@@ -158,6 +160,44 @@ def tail(text: str, n: int = MAX_LOG_CHARS) -> str:
     return text if len(text) <= n else "...\n" + text[-n:]
 
 
+def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
+                   invoke: Callable[..., ToolRun]) -> tuple[ToolRun, str, bool]:
+    """Keep native Yosys for accepted sources. Retry only inputs it cannot parse."""
+    paths = list(sources)
+    converted = set()
+    elapsed = 0.0
+    diagnostics: list[str] = []
+    while True:
+        result = invoke(*paths)
+        elapsed += result.elapsed_s
+        syntax = next((p for p in paths if re.search(
+            rf"^{re.escape(str(p))}:\d+: ERROR: syntax error\b",
+            result.log, re.M)), None)
+        if result.ok or result.timed_out or syntax is None or syntax in converted:
+            result.elapsed_s = elapsed
+            result.log = "\n".join([*diagnostics, result.log])
+            return result, "sv2v" if converted else "native", syntax is not None
+
+        index = paths.index(syntax)
+        lowered = workdir / f"frontend_{index}.v"
+        lowered.unlink(missing_ok=True)
+        # Match read_verilog's synthesis/preprocessor defaults. Keep conversion
+        # output in a file, away from the bounded diagnostic log.
+        # The release defaults to a worker per logical CPU, which can exhaust
+        # the address-space limit even for a tiny input on a many-core host.
+        conversion = run(["sv2v", "+RTS", "-N1", "-M256m", "-RTS", "-DSYNTHESIS", "-DYOSYS",
+                          f"--write={lowered}", str(syntax)], cwd=workdir, timeout_s=15)
+        elapsed += conversion.elapsed_s
+        diagnostics.append("Native Yosys parser: " + tail(result.log, 1000))
+        if not conversion.ok or not lowered.is_file() or lowered.stat().st_size == 0:
+            conversion.ok = False
+            conversion.elapsed_s = elapsed
+            conversion.log = "\n".join([*diagnostics, "sv2v: " + conversion.log])
+            return conversion, "sv2v", not conversion.timed_out
+        converted.add(lowered)
+        paths[index] = lowered
+
+
 # --------------------------------------------------------------------------- compile
 
 
@@ -214,6 +254,8 @@ class SynthResult:
     cell_types: dict[str, int] = field(default_factory=dict)
     log: str = ""
     elapsed_s: float = 0.0
+    frontend: str = "native"
+    parse_failed: bool = False
 
 
 def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> SynthResult:
@@ -221,8 +263,7 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
     iface = workdir / "iface.json"
     stat = workdir / "stat.json"
     ltp = workdir / "ltp.txt"
-    script = "; ".join([
-        f"read_verilog -sv {src}",
+    stages = [
         f"hierarchy -check -top {top}",
         "proc",
         f"write_json {iface}",
@@ -231,9 +272,15 @@ def synth_yosys(src: Path, top: str, workdir: Path, timeout_s: float = 60) -> Sy
         "opt_clean",
         f"tee -q -o {stat} stat -json",
         f"tee -q -o {ltp} ltp -noff",
-    ])
-    r = run(["yosys", "-q", "-p", script], cwd=workdir, timeout_s=timeout_s)
-    res = SynthResult(ok=False, log=tail(r.log), elapsed_s=r.elapsed_s)
+    ]
+
+    def invoke(path: Path) -> ToolRun:
+        script = "; ".join([f'read_verilog -sv "{path}"', *stages])
+        return run(["yosys", "-q", "-p", script], cwd=workdir, timeout_s=timeout_s)
+
+    r, frontend, parse_failed = yosys_frontend((src,), workdir, invoke)
+    res = SynthResult(ok=False, log=tail(r.log), elapsed_s=r.elapsed_s,
+                      frontend=frontend, parse_failed=parse_failed)
     if iface.is_file():
         res.ports = _ports_from_json(iface, top)
     if not r.ok or not stat.is_file():
@@ -380,10 +427,10 @@ def parse_junit(path: Path) -> dict[str, str | None]:
 def tool_versions() -> dict[str, str]:
     out = {}
     for name, cmd in {"iverilog": ["iverilog", "-V"], "yosys": ["yosys", "-V"],
-                      "verilator": ["verilator", "--version"]}.items():
+                      "verilator": ["verilator", "--version"], "sv2v": ["sv2v", "--version"]}.items():
         try:
             out[name] = subprocess.run(cmd, capture_output=True, text=True,
-                                       timeout=10).stdout.splitlines()[0].strip()
+                                       timeout=10, env=tool_env()).stdout.splitlines()[0].strip()
         except Exception:  # noqa: BLE001
             out[name] = "missing"
     # The test harness version matters too (e.g., its JUnit failure format).

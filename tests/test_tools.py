@@ -145,3 +145,24 @@ def test_every_testbench_assert_has_a_message():
         bare += [f"{f.parent.name}:{n.lineno}" for n in ast.walk(tree)
                  if isinstance(n, ast.Assert) and n.msg is None]
     assert not bare, bare
+
+
+def test_frontend_failure_distinct_from_downstream_error(monkeypatch, tmp_path):
+    src = tmp_path / "candidate.sv"
+
+    def native_error(*_):
+        return tools.ToolRun(False, 1, f"{src}:5: ERROR: syntax error, unexpected TOK_INT", 0.01)
+
+    def converter_error(*_, **__):
+        return tools.ToolRun(False, 1, "Parse error: malformed declaration", 0.02)
+
+    monkeypatch.setattr(tools, "run", converter_error)
+    result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, native_error)
+    assert not result.ok and parse_failed and frontend == "sv2v"
+    assert "unexpected TOK_INT" in result.log and "malformed declaration" in result.log
+
+    def downstream_error(*_):
+        return tools.ToolRun(False, 1, "ERROR: Latch inferred for signal", 0.01)
+
+    result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, downstream_error)
+    assert not result.ok and not parse_failed and frontend == "native"

@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .task import Task
-from .tools import _read_tail, run, tail
+from .tools import ToolRun, _read_tail, run, tail, yosys_frontend
 
 _ROW_RE = re.compile(r"^\s+(init|\d+)\s+\\(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")
 _COMB_ROW_RE = re.compile(r"^\s+\\(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$")  # no time column
@@ -42,6 +42,8 @@ class FormalResult:
     message: str = ""
     log: str = ""
     elapsed_s: float = 0.0
+    frontend: str = "native"
+    parse_failed: bool = False
 
 
 def _script(task: Task, ref: Path, cand: Path, depth: int, timeout_s: float) -> str:
@@ -53,7 +55,7 @@ def _script(task: Task, ref: Path, cand: Path, depth: int, timeout_s: float) -> 
         chparam = f"chparam {sets} {top}"
 
     def load(src: Path, name: str) -> list[str]:
-        lines = [f"read_verilog -sv {src}", f"hierarchy -check -top {top}"]
+        lines = [f'read_verilog -sv "{src}"', f"hierarchy -check -top {top}"]
         if chparam:
             lines.append(chparam)
         lines += ["proc", "flatten", "memory", "opt_clean", f"rename {top} {name}",
@@ -115,16 +117,23 @@ def check_equivalence(task: Task, cand: Path, workdir: Path, timeout_s: float = 
     depth = int(cfg.get("depth", 1))
     workdir.mkdir(parents=True, exist_ok=True)
     script = workdir / "equiv.ys"
-    script.write_text(_script(task, task.ref_path, cand, depth, timeout_s))
     logfile = workdir / "equiv.log"
-    # Read Yosys's own log file: stdout and stderr interleave unpredictably and can
-    # split the counterexample table.
-    r = run(["yosys", "-q", "-l", str(logfile), "-s", str(script)], cwd=workdir,
-            timeout_s=timeout_s + 15)
+
+    def invoke(ref: Path, candidate: Path) -> ToolRun:
+        script.write_text(_script(task, ref, candidate, depth, timeout_s))
+        logfile.unlink(missing_ok=True)
+        return run(["yosys", "-q", "-l", str(logfile), "-s", str(script)], cwd=workdir,
+                   timeout_s=timeout_s + 15)
+
+    r, frontend, parse_failed = yosys_frontend((task.ref_path, cand), workdir, invoke)
+    # The unmodified Yosys log preserves the counterexample table and proof status.
     log = _read_tail(logfile, 8 * 1024**2) if logfile.is_file() else r.log
     res = FormalResult(status="error", depth=depth, complete=depth <= 1,
                        params=dict(cfg.get("params", {})), log=tail(log, 6000),
-                       elapsed_s=r.elapsed_s)
+                       elapsed_s=r.elapsed_s, frontend=frontend, parse_failed=parse_failed)
+    if parse_failed:
+        res.message = tail(r.log, 1400)
+        return res
     if r.timed_out or "proof did time out" in log:
         res.status, res.message = "timeout", f"no result within {timeout_s:.0f}s"
         return res

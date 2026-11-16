@@ -3,7 +3,7 @@ import shutil
 
 import pytest
 
-TOOLS = ("iverilog", "verilator", "yosys")
+TOOLS = ("iverilog", "verilator", "yosys", "sv2v")
 
 
 def pytest_collection_modifyitems(config, items):

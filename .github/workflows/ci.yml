@@ -17,6 +17,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends iverilog verilator yosys
           iverilog -V | head -1; verilator --version; yosys -V
+      - name: Install pinned SystemVerilog converter
+        run: |
+          bash scripts/setup_sv2v.sh "$RUNNER_TEMP/rtlgym-bin"
+          echo "$RUNNER_TEMP/rtlgym-bin" >> "$GITHUB_PATH"
       - name: Install package
         run: pip install -e ".[dev,claude]"
       - name: Lint

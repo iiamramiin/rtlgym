@@ -24,7 +24,7 @@ Write synthesizable SystemVerilog (IEEE 1800-2012) that implements the given spe
 Rules:
 - Return exactly one module with the requested name and port list, in one ```systemverilog code block.
 - Use only synthesizable constructs: no delays, no initial blocks for logic, no system tasks.
-- Keep the code compatible with Icarus Verilog 12 (-g2012), Verilator lint, and Yosys.
+- Use synthesizable SystemVerilog accepted by Icarus Verilog 12 (-g2012) and Verilator.
 - Prefer clean, lint-free code and small area once the design is correct.
 When you get tool feedback, fix the reported problems and return the complete corrected module."""
 

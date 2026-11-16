@@ -98,11 +98,14 @@ def cmd_baselines(args) -> int:
         results = list(pool.map(lambda j: evaluate(j[0], j[1].read_text(),
                                                    use_cache=not args.no_cache,
                                                    use_formal=not args.no_formal), jobs))
+    versions = tool_versions()
     for (task, path), r in zip(jobs, results, strict=True):
         name = "ref.sv" if path == task.ref_path else path.name
         rows.append({"task": task.id, "candidate": name, "score": r.score,
                      "tests": f"{r.tests_passed}/{r.tests_total}", "formal": r.formal_status,
-                     "formal_message": r.formal_message,
+                     "formal_message": r.formal_message, "frontend_errors": r.frontend_errors,
+                     "synth_frontend": r.synth_frontend, "formal_frontend": r.formal_frontend,
+                     "timings_s": r.timings_s, "tools": versions,
                      "compile": r.compile_ok, "lint_warn": len(r.lint_warnings),
                      "cells": r.cells, "ref_cells": r.ref_cells, "depth": r.depth,
                      "violations": r.violations, "breakdown": r.breakdown})
@@ -110,7 +113,9 @@ def cmd_baselines(args) -> int:
           f"{'cells':>6s} {'ref':>5s} {'warn':>4s}  note")
     for row in rows:
         note = "; ".join(row["violations"])[:50] or ("" if row["compile"] else "compile error")
-        if row["formal"] == "fail" and row["tests"].split("/")[0] == row["tests"].split("/")[1]:
+        if row["frontend_errors"]:
+            note = "front end could not parse: " + ", ".join(row["frontend_errors"])
+        elif row["formal"] == "fail" and row["tests"].split("/")[0] == row["tests"].split("/")[1]:
             note = "test escape: tests pass, formal finds a difference"
         elif row["formal"] == "error" and not note:
             note = "formal: " + row["formal_message"][:45]
@@ -127,6 +132,8 @@ def _turn_record(r, reward: float, info: dict) -> dict:
     return {"turn": info["turn"], "score": r.score, "reward": round(reward, 4),
             "tests": f"{r.tests_passed}/{r.tests_total}",
             "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
+            "frontend_errors": r.frontend_errors, "synth_frontend": r.synth_frontend,
+            "formal_frontend": r.formal_frontend,
             "test_escape": r.test_escape, "inconclusive": r.inconclusive,
             "solved": info["solved"],
             "cells": r.cells, "breakdown": r.breakdown,
@@ -266,6 +273,7 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "solved_count": count("solved"),
         "test_escape_attempts": sum(r["test_escapes"] for r in results),
         "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in results),
+        "frontend_failure_attempts": sum(bool(t.get("frontend_errors")) for t in steps),
         "mean_first_score": mean("first_score"),
         "mean_best_score": mean("best_score"),
         "mean_turns": mean("turns"),

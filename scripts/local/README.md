@@ -8,7 +8,7 @@ rtlgym inside Ubuntu (WSL) and the models in [Ollama](https://ollama.com) on Win
 | `RUN_ME.bat` | you (double-click) | starts `run_all.ps1` with admin rights |
 | `run_all.ps1` | Administrator | installs WSL and Ubuntu 24.04 if needed, sets up networking, runs the two setup scripts, starts Ollama, runs the experiment |
 | `setup_system.sh` | root in Ubuntu | installs Icarus Verilog, Verilator, Yosys, and Python tooling |
-| `setup_user.sh` | a normal user in Ubuntu | copies the repo (with `.git`) into Linux, creates a venv, runs the test suite |
+| `setup_user.sh` | a normal user in Ubuntu | copies the repo (with `.git`) into Linux, creates a venv, installs pinned sv2v, runs the test suite |
 | `run_eval.sh` | a normal user in Ubuntu | runs the experiment; `probe` mode estimates run time first |
 | `make_table.py` | | summary tables and run-time estimates |
 

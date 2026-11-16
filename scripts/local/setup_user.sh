@@ -17,5 +17,8 @@ echo "== Python environment in $VENV"
 "$VENV/bin/pip" install -q -e "$RTLGYM_DIR[dev]"
 "$VENV/bin/python" -c "import cocotb; print('cocotb', cocotb.__version__)"
 
+bash "$RTLGYM_DIR/scripts/setup_sv2v.sh"
+export PATH="$HOME/.local/bin:$PATH"
+
 echo "== Test suite"
 cd "$RTLGYM_DIR" && "$VENV/bin/python" -m pytest -q -n auto

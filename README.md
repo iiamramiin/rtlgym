@@ -32,14 +32,16 @@ rtlgym runs on Linux (on Windows, use WSL). Install it from a clone: the tasks l
 next to the package, not inside it.
 
 ```bash
-sudo apt-get install -y iverilog verilator yosys        # Ubuntu 24.04
+sudo apt-get install -y iverilog verilator yosys curl   # Ubuntu 24.04
+bash scripts/setup_sv2v.sh
+export PATH="$HOME/.local/bin:$PATH"
 pip install -e ".[dev]"
 
 python -m rtlgym list                                   # 12 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
-pytest -q                                               # 205 tests
+pytest -q                                               # 209 tests
 ```
 
 ## Using it as an RL environment
@@ -62,11 +64,14 @@ while True:
   passed, the design synthesizes without latches, its ports match the reference, and
   the formal check passed. A formal error or timeout on a design that otherwise passes
   (tests and synthesis), or a simulation that ended before every test reported, is
-  **inconclusive**: not accepted, and never cached. A design that Yosys 0.33 cannot read
-  is a synthesis failure, not inconclusive: its SystemVerilog parser rejects some valid
-  constructs (for example, a function with a loop and `return`, or `foreach`), the tool
-  report shows the exact error, and the system prompt asks for Yosys-compatible code. The same
-  predicate ends episodes, defines solve rates, and gates the area/depth bonus.
+  **inconclusive**: not accepted, and never cached. The same acceptance rule ends
+  episodes, defines solve rates, and gates the area/depth bonus.
+- Synthesis and formal use Yosys directly when it reads the source. If its parser
+  rejects the source, they retry with sv2v v0.0.13, pinned by archive checksum. This
+  keeps the existing flow for supported RTL and recovers constructs such as typed
+  casts and function returns. A remaining parse failure is reported separately
+  from a synthesis failure, in the tool report and the run summary. The original
+  source still goes to Icarus and Verilator.
 - `info` carries the full grading result for the trainer and for logging. A policy
   under evaluation should only see `obs`.
 - `reward_mode="improvement"` pays only the gain over the best score so far, so the
@@ -363,7 +368,7 @@ Haiku 80 calls, 204,278 input and 173,303 output.
 | `fifo_sync` | medium | full/empty logic, pointer wrap, simultaneous read/write | 12 cycles at W=2, DEPTH=4 |
 | `rr_arbiter4` | medium | round-robin fairness, pointer update rules | 12 cycles |
 | `uart_tx` | hard | cycle-accurate protocol timing, ignoring inputs while busy | 48 cycles |
-| `noc_router5` | hard | XY routing, per-output round robin, elastic backpressure | 12 cycles at PAYLOAD_W=1, X=3, Y=0 |
+| `noc_router5` | hard | XY routing, per-output round robin, elastic backpressure | 8 cycles at PAYLOAD_W=1, X=1, Y=1 (240 s timeout) |
 | `axil_regs` | hard | independent AXI4-Lite channels, byte strobes, interrupt priority | 8 cycles |
 | `mul_pipe3` | medium | signed multiplication, exact pipeline latency, bubbles and reset | 7 cycles at WIDTH=4 |
 | `crc32_stream` | medium | reflected CRC-32, byte order, stream restart | 4 cycles |
@@ -418,7 +423,7 @@ rtlgym/
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
 tasks/            12 tasks with specs, references, hidden tests, candidates
-tests/            205 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
+tests/            209 tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
 .github/workflows ci.yml (lint and tests on every push), eval.yml (manual model runs, via scripts/ci/eval.sh)
@@ -440,7 +445,8 @@ scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
   timing in physical units, and would let the proxies be checked against them.
 - **Why cocotb and not UVM.** UVM needs a commercial simulator; cocotb runs on
   open-source simulators, so every check here runs in public CI.
-- **Language coverage.** Icarus Verilog supports a subset of SystemVerilog (for example
+- **Language coverage.** The converter handles a synthesizable subset of SystemVerilog.
+  Icarus Verilog supports a subset of SystemVerilog (for example
   it requires explicit casts when assigning a ternary of enum values). A Verilator
   simulation backend would widen coverage and speed up long tests.
 - **No policy training yet.** The environment exposes a Gym-style interface and reward;

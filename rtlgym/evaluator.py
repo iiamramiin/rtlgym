@@ -37,7 +37,7 @@ from .task import Task
 
 CACHE_DIR = Path(os.environ.get("RTLGYM_CACHE", Path.home() / ".cache" / "rtlgym"))
 # Bump when grading semantics change, so cached results from older graders are ignored.
-GRADER_VERSION = "5"
+GRADER_VERSION = "6"
 _TOOL_VERSIONS: dict[str, str] | None = None
 _REF_LOCK = threading.Lock()
 _REF_PPA: dict[str, dict] = {}
@@ -80,6 +80,9 @@ class EvalResult:
     score: float = 0.0
     breakdown: dict[str, float] = field(default_factory=dict)
     cached: bool = False
+    synth_frontend: str | None = None
+    formal_frontend: str | None = None
+    frontend_errors: list[str] = field(default_factory=list)
 
     @property
     def pass_rate(self) -> float:
@@ -248,12 +251,18 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
         res.formal_complete, res.formal_params = fv.complete, fv.params
         res.formal_first_mismatch, res.formal_message = fv.first_mismatch, fv.message
         res.formal_counterexample = formal.format_counterexample(fv)
+        res.formal_frontend = fv.frontend
+        if fv.parse_failed:
+            res.frontend_errors.append("formal")
         res.timings_s["formal"] = round(fv.elapsed_s, 3)
 
     res.lint_ok, res.lint_warnings, res.lint_log = lint.ok, lint.warnings, lint.log
     res.timings_s["lint"] = round(lint.elapsed_s, 3)
 
     res.synth_ok, res.synth_log = syn.ok, syn.log
+    res.synth_frontend = syn.frontend
+    if syn.parse_failed:
+        res.frontend_errors.append("synthesis")
     sim_only = sorted(set(lint.warnings) & tools.SIM_ONLY_CODES)
     if sim_only:
         # Yosys silently drops delays; Verilator does not. Treat as not synthesizable.

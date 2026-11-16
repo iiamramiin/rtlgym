@@ -36,6 +36,7 @@ mkdir -p "$OUT"
 LOG="$OUT/run_$(date +%Y%m%d_%H%M%S).log"
 exec > >(tee -a "$LOG") 2>&1
 PY="$VENV/bin/python"
+export PATH="$HOME/.local/bin:$PATH"
 
 # Run the latest code from the Windows side (with .git, so results record the commit).
 if [ -d "$REPO_SRC" ] && [ "$(realpath "$REPO_SRC")" != "$(realpath -m "$RTLGYM_DIR")" ]; then
