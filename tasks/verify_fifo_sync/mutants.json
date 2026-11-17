@@ -1,0 +1,6303 @@
+{
+  "schema_version": 1,
+  "profile": {
+    "depth": 12,
+    "params": {
+      "W": 2,
+      "DEPTH": 4
+    },
+    "reset": "rst",
+    "clock": "clk",
+    "observe_extra_cycle": true,
+    "fifo_dout": "read_only"
+  },
+  "reference": {
+    "path": "designs/ref.sv",
+    "sha256": "86d5b198151fb4b3c37c484399df9744c0d7eab370929318a485214ce001af24"
+  },
+  "correct_designs": [
+    {
+      "path": "designs/good_ptr_msb.sv",
+      "sha256": "3dad8b33b23c984ac31b6a8eaa043ed45236ec40c2cf7f1133a775fd5f794c36"
+    },
+    {
+      "path": "designs/good_zero_idle.sv",
+      "sha256": "5c0f4bfad8dc361f764d6c639ee4588c973d73f1e169e8151fa4612d9ab9b707"
+    },
+    {
+      "path": "designs/good_expose_idle.sv",
+      "sha256": "65918660f6da08250d46b629760f531c28e3969079a7f11f16474b26cfb0d01b"
+    }
+  ],
+  "mutants": [
+    {
+      "id": "bug_full_flag",
+      "path": "mutants/bug_full_flag.sv",
+      "sha256": "5c67e5755eb446f8acfee161513973216f39471929702ec4a3ce5c90dd8f7407",
+      "family": "comparison",
+      "origin": "parent:fifo_sync/candidates/bug_full_flag.sv",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "11"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1657
+    },
+    {
+      "id": "bug_fwft",
+      "path": "mutants/bug_fwft.sv",
+      "sha256": "d991d9a8ad722e079076f53c7f20dd201dfe673add811c88c82b2405a1c8a01d",
+      "family": "behavioral",
+      "origin": "parent:fifo_sync/candidates/bug_fwft.sv",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1147
+    },
+    {
+      "id": "full_one_late",
+      "path": "mutants/full_one_late.sv",
+      "sha256": "ead9c95e985c3bcfe793476c6bb099b03d44cf1b84360f9c447bea8a13303c48",
+      "family": "off_by_one",
+      "origin": "generated:fifo_sync/full_one_late",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1652
+    },
+    {
+      "id": "empty_one_early",
+      "path": "mutants/empty_one_early.sv",
+      "sha256": "31c88cf8b2981efd9ea8313fef2c2d77dbee41c5d76c1b79095bc17bf32ac566",
+      "family": "off_by_one",
+      "origin": "generated:fifo_sync/empty_one_early",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.115
+    },
+    {
+      "id": "write_full_on_read",
+      "path": "mutants/write_full_on_read.sv",
+      "sha256": "a7d0a52496a8852584bf3a15610d3ce5139da04c8649e6387a684f8399f73498",
+      "family": "comparison",
+      "origin": "generated:fifo_sync/write_full_on_read",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1147
+    },
+    {
+      "id": "read_empty_on_write",
+      "path": "mutants/read_empty_on_write.sv",
+      "sha256": "e58c870846d063b06f4ea6b5c9448d5ca42e7647ea235145b98d04904b04933f",
+      "family": "comparison",
+      "origin": "generated:fifo_sync/read_empty_on_write",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "11"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "11"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1152
+    },
+    {
+      "id": "drop_write_pointer",
+      "path": "mutants/drop_write_pointer.sv",
+      "sha256": "fcc0bb9bd44dc1c8a80b5f31598fcf1b638f9401dce6aaae13ca478dd5222330",
+      "family": "dropped_update",
+      "origin": "generated:fifo_sync/drop_write_pointer",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "11"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1152
+    },
+    {
+      "id": "drop_read_pointer",
+      "path": "mutants/drop_read_pointer.sv",
+      "sha256": "a4bfb98e16678c2feadf9e577f6831d87d629df19370cdadef82df21640a98bd",
+      "family": "dropped_update",
+      "origin": "generated:fifo_sync/drop_read_pointer",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.115
+    },
+    {
+      "id": "reset_count_one",
+      "path": "mutants/reset_count_one.sv",
+      "sha256": "ee6b7c9a39dd1782682d631fbb6bd9266a63356c963d51ceae67643509a7d684",
+      "family": "reset",
+      "origin": "generated:fifo_sync/reset_count_one",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1155
+    },
+    {
+      "id": "swap_write_index",
+      "path": "mutants/swap_write_index.sv",
+      "sha256": "c1b8683bf118c393bddf8c5adb913ad588d939ab8e25f9ad1472476319faaa3c",
+      "family": "index_swap",
+      "origin": "generated:fifo_sync/swap_write_index",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "01"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1153
+    },
+    {
+      "id": "read_pointer_two",
+      "path": "mutants/read_pointer_two.sv",
+      "sha256": "f0bf14a5fe3e74de71b8e4ef2c016ae26e95de3a8376c0d2350c361dcb3f2c99",
+      "family": "off_by_one",
+      "origin": "generated:fifo_sync/read_pointer_two",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1172
+    },
+    {
+      "id": "write_zero",
+      "path": "mutants/write_zero.sv",
+      "sha256": "f6801c51a4de68b51cc8efdc5b9fbdaab5d395f650a6abad314b3efeb2150559",
+      "family": "operator",
+      "origin": "generated:fifo_sync/write_zero",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1162
+    },
+    {
+      "id": "write_msb_invert",
+      "path": "mutants/write_msb_invert.sv",
+      "sha256": "3c9537b20c0421c9fdcb19405f5eab8a6c78cb8f81af4750236d80c5a1a49b2c",
+      "family": "operator",
+      "origin": "generated:fifo_sync/write_msb_invert",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1142
+    },
+    {
+      "id": "count_increment_on_read",
+      "path": "mutants/count_increment_on_read.sv",
+      "sha256": "77b8313ae9903fce9cdd718bb4c690e2fea1e0dccab12d9d56489da36a95055a",
+      "family": "operator",
+      "origin": "generated:fifo_sync/count_increment_on_read",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "10"
+            },
+            "rd_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "din": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "00"
+            },
+            "rd_en": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "wr_en": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1144
+    }
+  ],
+  "hand_checker_sha256": "7a09b5496d74bce993912cf1dc7b9351694e330059e4ad03270f0019be4b9c09",
+  "qualification": {
+    "tool_versions": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "missing",
+      "cocotb": "missing"
+    },
+    "correct_design_checks": [
+      {
+        "path": "designs/good_ptr_msb.sv",
+        "status": "pass",
+        "seconds": 1.2382
+      },
+      {
+        "path": "designs/good_zero_idle.sv",
+        "status": "pass",
+        "seconds": 2.5857
+      },
+      {
+        "path": "designs/good_expose_idle.sv",
+        "status": "pass",
+        "seconds": 2.0785
+      }
+    ],
+    "pairwise_checks": [
+      {
+        "first": "bug_full_flag",
+        "second": "bug_fwft",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "full_one_late",
+        "status": "different",
+        "seconds": 0.1649
+      },
+      {
+        "first": "bug_fwft",
+        "second": "full_one_late",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "empty_one_early",
+        "status": "different",
+        "seconds": 0.1148
+      },
+      {
+        "first": "bug_fwft",
+        "second": "empty_one_early",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "full_one_late",
+        "second": "empty_one_early",
+        "status": "different",
+        "seconds": 0.1151
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "write_full_on_read",
+        "status": "different",
+        "seconds": 0.1656
+      },
+      {
+        "first": "bug_fwft",
+        "second": "write_full_on_read",
+        "status": "different",
+        "seconds": 0.1657
+      },
+      {
+        "first": "full_one_late",
+        "second": "write_full_on_read",
+        "status": "different",
+        "seconds": 0.1662
+      },
+      {
+        "first": "empty_one_early",
+        "second": "write_full_on_read",
+        "status": "different",
+        "seconds": 0.1154
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "read_empty_on_write",
+        "status": "different",
+        "seconds": 0.115
+      },
+      {
+        "first": "bug_fwft",
+        "second": "read_empty_on_write",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "full_one_late",
+        "second": "read_empty_on_write",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "empty_one_early",
+        "second": "read_empty_on_write",
+        "status": "different",
+        "seconds": 0.1661
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "read_empty_on_write",
+        "status": "different",
+        "seconds": 0.1155
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "drop_write_pointer",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "bug_fwft",
+        "second": "drop_write_pointer",
+        "status": "different",
+        "seconds": 0.1157
+      },
+      {
+        "first": "full_one_late",
+        "second": "drop_write_pointer",
+        "status": "different",
+        "seconds": 0.1151
+      },
+      {
+        "first": "empty_one_early",
+        "second": "drop_write_pointer",
+        "status": "different",
+        "seconds": 0.1155
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "drop_write_pointer",
+        "status": "different",
+        "seconds": 0.1153
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "drop_write_pointer",
+        "status": "different",
+        "seconds": 0.1153
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1151
+      },
+      {
+        "first": "bug_fwft",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1151
+      },
+      {
+        "first": "full_one_late",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1155
+      },
+      {
+        "first": "empty_one_early",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1148
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1157
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "drop_read_pointer",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1155
+      },
+      {
+        "first": "bug_fwft",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1157
+      },
+      {
+        "first": "full_one_late",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1153
+      },
+      {
+        "first": "empty_one_early",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1153
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1159
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1154
+      },
+      {
+        "first": "drop_read_pointer",
+        "second": "reset_count_one",
+        "status": "different",
+        "seconds": 0.1154
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "bug_fwft",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1151
+      },
+      {
+        "first": "full_one_late",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1155
+      },
+      {
+        "first": "empty_one_early",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1179
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1179
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1185
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1177
+      },
+      {
+        "first": "drop_read_pointer",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1181
+      },
+      {
+        "first": "reset_count_one",
+        "second": "swap_write_index",
+        "status": "different",
+        "seconds": 0.1167
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1179
+      },
+      {
+        "first": "bug_fwft",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1184
+      },
+      {
+        "first": "full_one_late",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1192
+      },
+      {
+        "first": "empty_one_early",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1156
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1179
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1171
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1179
+      },
+      {
+        "first": "drop_read_pointer",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1187
+      },
+      {
+        "first": "reset_count_one",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1184
+      },
+      {
+        "first": "swap_write_index",
+        "second": "read_pointer_two",
+        "status": "different",
+        "seconds": 0.1197
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1183
+      },
+      {
+        "first": "bug_fwft",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.118
+      },
+      {
+        "first": "full_one_late",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1188
+      },
+      {
+        "first": "empty_one_early",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1193
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1195
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1181
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.0651
+      },
+      {
+        "first": "drop_read_pointer",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1168
+      },
+      {
+        "first": "reset_count_one",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.115
+      },
+      {
+        "first": "swap_write_index",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1149
+      },
+      {
+        "first": "read_pointer_two",
+        "second": "write_zero",
+        "status": "different",
+        "seconds": 0.1165
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1142
+      },
+      {
+        "first": "bug_fwft",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1146
+      },
+      {
+        "first": "full_one_late",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1149
+      },
+      {
+        "first": "empty_one_early",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1147
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1141
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "drop_read_pointer",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1142
+      },
+      {
+        "first": "reset_count_one",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1141
+      },
+      {
+        "first": "swap_write_index",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "read_pointer_two",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1146
+      },
+      {
+        "first": "write_zero",
+        "second": "write_msb_invert",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "bug_full_flag",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1146
+      },
+      {
+        "first": "bug_fwft",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "full_one_late",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "empty_one_early",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "write_full_on_read",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "read_empty_on_write",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "drop_write_pointer",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "drop_read_pointer",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "reset_count_one",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "swap_write_index",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "read_pointer_two",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1146
+      },
+      {
+        "first": "write_zero",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "write_msb_invert",
+        "second": "count_increment_on_read",
+        "status": "different",
+        "seconds": 0.1149
+      }
+    ],
+    "hand_checker_checks": [
+      {
+        "path": "designs/ref.sv",
+        "status": "pass",
+        "seconds": 1.5692
+      },
+      {
+        "path": "designs/good_ptr_msb.sv",
+        "status": "pass",
+        "seconds": 1.6706
+      },
+      {
+        "path": "designs/good_zero_idle.sv",
+        "status": "pass",
+        "seconds": 1.821
+      },
+      {
+        "path": "designs/good_expose_idle.sv",
+        "status": "pass",
+        "seconds": 1.4223
+      },
+      {
+        "path": "mutants/bug_full_flag.sv",
+        "status": "different",
+        "seconds": 0.166
+      },
+      {
+        "path": "mutants/bug_fwft.sv",
+        "status": "different",
+        "seconds": 0.1655
+      },
+      {
+        "path": "mutants/full_one_late.sv",
+        "status": "different",
+        "seconds": 0.1648
+      },
+      {
+        "path": "mutants/empty_one_early.sv",
+        "status": "different",
+        "seconds": 0.1646
+      },
+      {
+        "path": "mutants/write_full_on_read.sv",
+        "status": "different",
+        "seconds": 0.1653
+      },
+      {
+        "path": "mutants/read_empty_on_write.sv",
+        "status": "different",
+        "seconds": 0.1649
+      },
+      {
+        "path": "mutants/drop_write_pointer.sv",
+        "status": "different",
+        "seconds": 0.1647
+      },
+      {
+        "path": "mutants/drop_read_pointer.sv",
+        "status": "different",
+        "seconds": 0.1647
+      },
+      {
+        "path": "mutants/reset_count_one.sv",
+        "status": "different",
+        "seconds": 0.1647
+      },
+      {
+        "path": "mutants/swap_write_index.sv",
+        "status": "different",
+        "seconds": 0.1653
+      },
+      {
+        "path": "mutants/read_pointer_two.sv",
+        "status": "different",
+        "seconds": 0.1652
+      },
+      {
+        "path": "mutants/write_zero.sv",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "path": "mutants/write_msb_invert.sv",
+        "status": "different",
+        "seconds": 0.1646
+      },
+      {
+        "path": "mutants/count_increment_on_read.sv",
+        "status": "different",
+        "seconds": 0.165
+      }
+    ],
+    "excluded": [],
+    "seconds": 27.8571
+  }
+}

@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+id = "verify_rr_arbiter4"
+kind = "verify"
+parent = "rr_arbiter4"
+top = "rtl_checker"
+
+[verification]
+dut_top = "rr_arbiter4"
+depth = 12
+clock = "clk"
+params = {}
+reset = "rst"
+timeout_s = 15
+manifest = "mutants.json"

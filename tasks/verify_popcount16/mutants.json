@@ -1,0 +1,672 @@
+{
+  "schema_version": 1,
+  "profile": {
+    "depth": 1,
+    "params": {},
+    "reset": null,
+    "clock": null,
+    "observe_extra_cycle": true,
+    "fifo_dout": null
+  },
+  "reference": {
+    "path": "designs/ref.sv",
+    "sha256": "610e73ffc9da4162683fe23133b5dce31d7e33d2f200b88f7bddc582a1f0ea99"
+  },
+  "correct_designs": [
+    {
+      "path": "designs/good_loop.sv",
+      "sha256": "69cea64f3ca1ac487ce14dacab9664c16bcef74cbf633f7879de4f6347e9e3eb"
+    }
+  ],
+  "mutants": [
+    {
+      "id": "bug_width",
+      "path": "mutants/bug_width.sv",
+      "sha256": "4f265bf65fc8dd6ab2b53696382f23686875e09060a906c214362825257e9060",
+      "family": "comparison",
+      "origin": "parent:popcount16/candidates/bug_width.sv",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "65535",
+              "hex": "ffff",
+              "bin": "1111111111111111"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0319
+    },
+    {
+      "id": "escape_rare_input",
+      "path": "mutants/escape_rare_input.sv",
+      "sha256": "ef8f356b615c3fca84b2c4d956d482e076da39503b62a38987bd2dbf5ed30f51",
+      "family": "behavioral",
+      "origin": "parent:popcount16/candidates/escape_rare_input.sv",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "48879",
+              "hex": "beef",
+              "bin": "1011111011101111"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0321
+    },
+    {
+      "id": "operator_xor",
+      "path": "mutants/operator_xor.sv",
+      "sha256": "9fe2b9b867b0a15e90fda23f3602e247ef746271d9d01231eae33a73017dbc29",
+      "family": "operator",
+      "origin": "generated:popcount16/operator_xor",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "54080",
+              "hex": "d340",
+              "bin": "1101001101000000"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0161
+    },
+    {
+      "id": "operator_or",
+      "path": "mutants/operator_or.sv",
+      "sha256": "6677eb825ac8a60282a399d997e0eb70c6f03f292d115cdd00568d4c6cfbabf1",
+      "family": "operator",
+      "origin": "generated:popcount16/operator_or",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "29448",
+              "hex": "7308",
+              "bin": "0111001100001000"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0159
+    },
+    {
+      "id": "offset_plus",
+      "path": "mutants/offset_plus.sv",
+      "sha256": "8c6c69048b5c32773ae06a8755626fd35f3b1427b2d246553fec7192cf767ae0",
+      "family": "off_by_one",
+      "origin": "generated:popcount16/offset_plus",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000000000000000"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0159
+    },
+    {
+      "id": "offset_minus",
+      "path": "mutants/offset_minus.sv",
+      "sha256": "404c9dd0de8eb46a837e20d716e3d9fa1095d7ab28f6f2d39f390a1712c1a8a4",
+      "family": "off_by_one",
+      "origin": "generated:popcount16/offset_minus",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000000000000000"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0158
+    },
+    {
+      "id": "threshold_eight",
+      "path": "mutants/threshold_eight.sv",
+      "sha256": "3022f9fb2d4f37d6fb5d4638bfefbb0a17a4c8e43c63eefc4be3ddb626da4ab1",
+      "family": "comparison",
+      "origin": "generated:popcount16/threshold_eight",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "15103",
+              "hex": "3aff",
+              "bin": "0011101011111111"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0158
+    },
+    {
+      "id": "drop_bit_zero",
+      "path": "mutants/drop_bit_zero.sv",
+      "sha256": "fc74102b1fc220c7d130f375c7faa8c74200e1860d5f2124ea7ac8c7f53fe577",
+      "family": "dropped_input",
+      "origin": "generated:popcount16/drop_bit_zero",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "41983",
+              "hex": "a3ff",
+              "bin": "1010001111111111"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0164
+    },
+    {
+      "id": "duplicate_bit_two",
+      "path": "mutants/duplicate_bit_two.sv",
+      "sha256": "74b2082f0e6b279d20292b302edaa98042526c0f721b066a5d3d017a18ef99a6",
+      "family": "index_swap",
+      "origin": "generated:popcount16/duplicate_bit_two",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "60",
+              "hex": "3c",
+              "bin": "0000000000111100"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0162
+    },
+    {
+      "id": "rare_zero",
+      "path": "mutants/rare_zero.sv",
+      "sha256": "1222e486371c755017fe45f25ce8549e1d6ba258cad4bdf804064b47c2ca618b",
+      "family": "comparison",
+      "origin": "generated:popcount16/rare_zero",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000000000000000"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.016
+    },
+    {
+      "id": "drop_bit_fifteen",
+      "path": "mutants/drop_bit_fifteen.sv",
+      "sha256": "1ea43b1877e3216224a32f20caefc347123f77594edcbeafc9ad029ab1aa2d5b",
+      "family": "dropped_input",
+      "origin": "generated:popcount16/drop_bit_fifteen",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "x": {
+              "dec": "35020",
+              "hex": "88cc",
+              "bin": "1000100011001100"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.016
+    }
+  ],
+  "hand_checker_sha256": "efc69a4ef9d2f3fd3320e6a26ce810b6b015c41300aa89a7c5d418843e47f0cc",
+  "qualification": {
+    "tool_versions": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "missing",
+      "cocotb": "missing"
+    },
+    "correct_design_checks": [
+      {
+        "path": "designs/good_loop.sv",
+        "status": "pass",
+        "seconds": 0.032
+      }
+    ],
+    "pairwise_checks": [
+      {
+        "first": "bug_width",
+        "second": "escape_rare_input",
+        "status": "different",
+        "seconds": 0.0322
+      },
+      {
+        "first": "bug_width",
+        "second": "operator_xor",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "operator_xor",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "bug_width",
+        "second": "operator_or",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "operator_or",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "operator_xor",
+        "second": "operator_or",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "bug_width",
+        "second": "offset_plus",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "offset_plus",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "operator_xor",
+        "second": "offset_plus",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "operator_or",
+        "second": "offset_plus",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "bug_width",
+        "second": "offset_minus",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "offset_minus",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "operator_xor",
+        "second": "offset_minus",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "operator_or",
+        "second": "offset_minus",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "offset_plus",
+        "second": "offset_minus",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "bug_width",
+        "second": "threshold_eight",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "threshold_eight",
+        "status": "different",
+        "seconds": 0.0323
+      },
+      {
+        "first": "operator_xor",
+        "second": "threshold_eight",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "operator_or",
+        "second": "threshold_eight",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "offset_plus",
+        "second": "threshold_eight",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "offset_minus",
+        "second": "threshold_eight",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "bug_width",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.0328
+      },
+      {
+        "first": "operator_xor",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.0163
+      },
+      {
+        "first": "operator_or",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.0162
+      },
+      {
+        "first": "offset_plus",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "offset_minus",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "threshold_eight",
+        "second": "drop_bit_zero",
+        "status": "different",
+        "seconds": 0.0163
+      },
+      {
+        "first": "bug_width",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.0163
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "operator_xor",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "operator_or",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "offset_plus",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "offset_minus",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.0162
+      },
+      {
+        "first": "threshold_eight",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "drop_bit_zero",
+        "second": "duplicate_bit_two",
+        "status": "different",
+        "seconds": 0.0323
+      },
+      {
+        "first": "bug_width",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.032
+      },
+      {
+        "first": "operator_xor",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "operator_or",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "offset_plus",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "offset_minus",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "threshold_eight",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "drop_bit_zero",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "duplicate_bit_two",
+        "second": "rare_zero",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "bug_width",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "escape_rare_input",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "operator_xor",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "operator_or",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0162
+      },
+      {
+        "first": "offset_plus",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "offset_minus",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0161
+      },
+      {
+        "first": "threshold_eight",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "first": "drop_bit_zero",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "first": "duplicate_bit_two",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "first": "rare_zero",
+        "second": "drop_bit_fifteen",
+        "status": "different",
+        "seconds": 0.0166
+      },
+      {
+        "first": "bug_width",
+        "second": "rare_all_ones",
+        "status": "pass",
+        "seconds": 0.0321
+      }
+    ],
+    "hand_checker_checks": [
+      {
+        "path": "designs/ref.sv",
+        "status": "pass",
+        "seconds": 0.0641
+      },
+      {
+        "path": "designs/good_loop.sv",
+        "status": "pass",
+        "seconds": 0.0319
+      },
+      {
+        "path": "mutants/bug_width.sv",
+        "status": "different",
+        "seconds": 0.032
+      },
+      {
+        "path": "mutants/escape_rare_input.sv",
+        "status": "different",
+        "seconds": 0.032
+      },
+      {
+        "path": "mutants/operator_xor.sv",
+        "status": "different",
+        "seconds": 0.0158
+      },
+      {
+        "path": "mutants/operator_or.sv",
+        "status": "different",
+        "seconds": 0.0159
+      },
+      {
+        "path": "mutants/offset_plus.sv",
+        "status": "different",
+        "seconds": 0.0321
+      },
+      {
+        "path": "mutants/offset_minus.sv",
+        "status": "different",
+        "seconds": 0.016
+      },
+      {
+        "path": "mutants/threshold_eight.sv",
+        "status": "different",
+        "seconds": 0.0319
+      },
+      {
+        "path": "mutants/drop_bit_zero.sv",
+        "status": "different",
+        "seconds": 0.0319
+      },
+      {
+        "path": "mutants/duplicate_bit_two.sv",
+        "status": "different",
+        "seconds": 0.032
+      },
+      {
+        "path": "mutants/rare_zero.sv",
+        "status": "different",
+        "seconds": 0.0323
+      },
+      {
+        "path": "mutants/drop_bit_fifteen.sv",
+        "status": "different",
+        "seconds": 0.016
+      }
+    ],
+    "excluded": [
+      {
+        "id": "rare_all_ones",
+        "reason": "equivalent:bug_width"
+      }
+    ],
+    "seconds": 2.2007
+  }
+}

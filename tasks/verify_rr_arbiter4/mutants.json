@@ -1,0 +1,3769 @@
+{
+  "schema_version": 1,
+  "profile": {
+    "depth": 12,
+    "params": {},
+    "reset": "rst",
+    "clock": "clk",
+    "observe_extra_cycle": true,
+    "fifo_dout": null
+  },
+  "reference": {
+    "path": "designs/ref.sv",
+    "sha256": "61c6beae0f8a864dbf9aab682df01e58c7c0fabfd4162becc52cd590dfa41186"
+  },
+  "correct_designs": [
+    {
+      "path": "designs/good_double_vector.sv",
+      "sha256": "b6cf9f9f90e3df31fc89e5d64120fcd7cbd969c9eef5c0052c7f7fc160993f18"
+    }
+  ],
+  "mutants": [
+    {
+      "id": "bug_fixed_priority",
+      "path": "mutants/bug_fixed_priority.sv",
+      "sha256": "a5d12200f265087fd8536b45c595286d89b0855cbd1961528374272100e6b6ff",
+      "family": "behavioral",
+      "origin": "parent:rr_arbiter4/candidates/bug_fixed_priority.sv",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "0010"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "14",
+              "hex": "e",
+              "bin": "1110"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "11",
+              "hex": "b",
+              "bin": "1011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0641
+    },
+    {
+      "id": "bug_pointer_reset_on_idle",
+      "path": "mutants/bug_pointer_reset_on_idle.sv",
+      "sha256": "fd8758aebbb203173f0c157c42f532096b4c7ee6733d8d4c278b0df4e3391f5b",
+      "family": "behavioral",
+      "origin": "parent:rr_arbiter4/candidates/bug_pointer_reset_on_idle.sv",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "5",
+              "hex": "5",
+              "bin": "0101"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "5",
+              "hex": "5",
+              "bin": "0101"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "0010"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0639
+    },
+    {
+      "id": "reset_priority_two",
+      "path": "mutants/reset_priority_two.sv",
+      "sha256": "f045407f596e7848d0225a481ecbd5190ae51c45a56b49f48539d1cfc2ef4efc",
+      "family": "reset",
+      "origin": "generated:rr_arbiter4/reset_priority_two",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "5",
+              "hex": "5",
+              "bin": "0101"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "13",
+              "hex": "d",
+              "bin": "1101"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "0011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "0011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0643
+    },
+    {
+      "id": "reset_grant_one",
+      "path": "mutants/reset_grant_one.sv",
+      "sha256": "5fad7d5fd27c3671e80a02c910d73e637dcae11d6457143b89a47342933b73cf",
+      "family": "reset",
+      "origin": "generated:rr_arbiter4/reset_grant_one",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "7",
+              "hex": "7",
+              "bin": "0111"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0646
+    },
+    {
+      "id": "pointer_plus_one",
+      "path": "mutants/pointer_plus_one.sv",
+      "sha256": "ce6f7889fee76c4cffc5d786c0dd0ccf5ce253d66d92f732367daf92f7772023",
+      "family": "off_by_one",
+      "origin": "generated:rr_arbiter4/pointer_plus_one",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "6",
+              "hex": "6",
+              "bin": "0110"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "6",
+              "hex": "6",
+              "bin": "0110"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "11",
+              "hex": "b",
+              "bin": "1011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "9",
+              "hex": "9",
+              "bin": "1001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0641
+    },
+    {
+      "id": "grant_index_plus_one",
+      "path": "mutants/grant_index_plus_one.sv",
+      "sha256": "5c2ac42f81157ca0392e96c1f304df88671b2b08133189b6db4eee81683f5e17",
+      "family": "index_swap",
+      "origin": "generated:rr_arbiter4/grant_index_plus_one",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "7",
+              "hex": "7",
+              "bin": "0111"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "9",
+              "hex": "9",
+              "bin": "1001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "11",
+              "hex": "b",
+              "bin": "1011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0641
+    },
+    {
+      "id": "hold_idle_grant",
+      "path": "mutants/hold_idle_grant.sv",
+      "sha256": "f77fd5a7031192a9c85ff31dce041012dd15e98734302b59f4c5022fc55a3139",
+      "family": "dropped_update",
+      "origin": "generated:rr_arbiter4/hold_idle_grant",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "9",
+              "hex": "9",
+              "bin": "1001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "11",
+              "hex": "b",
+              "bin": "1011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "0011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "5",
+              "hex": "5",
+              "bin": "0101"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "5",
+              "hex": "5",
+              "bin": "0101"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "6",
+              "hex": "6",
+              "bin": "0110"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0645
+    },
+    {
+      "id": "cursor_on_all_only",
+      "path": "mutants/cursor_on_all_only.sv",
+      "sha256": "4a6264d313e8f0801a1333f856f8ab653fe0713ac4bb649f4dc53eb8bd9e83be",
+      "family": "dropped_update",
+      "origin": "generated:rr_arbiter4/cursor_on_all_only",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "15",
+              "hex": "f",
+              "bin": "1111"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "2",
+              "hex": "2",
+              "bin": "0010"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "8",
+              "hex": "8",
+              "bin": "1000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "11",
+              "hex": "b",
+              "bin": "1011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1144
+    },
+    {
+      "id": "reverse_priority",
+      "path": "mutants/reverse_priority.sv",
+      "sha256": "16085319b25f2faeabe17b9bb6a5af82a32ad3eb73abaa553aa78717a3879508",
+      "family": "operator",
+      "origin": "generated:rr_arbiter4/reverse_priority",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "5",
+              "hex": "5",
+              "bin": "0101"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "14",
+              "hex": "e",
+              "bin": "1110"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.1144
+    },
+    {
+      "id": "skip_requester_three",
+      "path": "mutants/skip_requester_three.sv",
+      "sha256": "0d22d8c25b716c9f79b8e16ce813dc9c70c5d663c2651f3af1d91ad28862be64",
+      "family": "comparison",
+      "origin": "generated:rr_arbiter4/skip_requester_three",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "8",
+              "hex": "8",
+              "bin": "1000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "7",
+              "hex": "7",
+              "bin": "0111"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0643
+    },
+    {
+      "id": "all_requests_only",
+      "path": "mutants/all_requests_only.sv",
+      "sha256": "8daebb93dd181f3e597bf8e5dc197e8e646169bc0e43a248d0202915f10eb3ee",
+      "family": "comparison",
+      "origin": "generated:rr_arbiter4/all_requests_only",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "3",
+              "hex": "3",
+              "bin": "0011"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "9",
+              "hex": "9",
+              "bin": "1001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "15",
+              "hex": "f",
+              "bin": "1111"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0642
+    },
+    {
+      "id": "grant_two_bits",
+      "path": "mutants/grant_two_bits.sv",
+      "sha256": "dbf6437bcda9e3a4735e0c67f1bebf161e4b4c5a28f760646a8921057981eeb6",
+      "family": "operator",
+      "origin": "generated:rr_arbiter4/grant_two_bits",
+      "witness": [
+        {
+          "step": 1,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "6",
+              "hex": "6",
+              "bin": "0110"
+            },
+            "rst": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "1"
+            }
+          }
+        },
+        {
+          "step": 2,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "4",
+              "hex": "4",
+              "bin": "0100"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 3,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 4,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 5,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 6,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 7,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 8,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 9,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "1",
+              "hex": "1",
+              "bin": "0001"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 10,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 11,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 12,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        },
+        {
+          "step": 13,
+          "signals": {
+            "clk": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            },
+            "req": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0000"
+            },
+            "rst": {
+              "dec": "0",
+              "hex": "0",
+              "bin": "0"
+            }
+          }
+        }
+      ],
+      "qualification_s": 0.0644
+    }
+  ],
+  "hand_checker_sha256": "13dfafb4b83b1a65517f25eb88f146c639b5d3a7860f5235b05a833ff7805be2",
+  "qualification": {
+    "tool_versions": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "missing",
+      "cocotb": "missing"
+    },
+    "correct_design_checks": [
+      {
+        "path": "designs/good_double_vector.sv",
+        "status": "pass",
+        "seconds": 0.1142
+      }
+    ],
+    "pairwise_checks": [
+      {
+        "first": "bug_fixed_priority",
+        "second": "bug_pointer_reset_on_idle",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "reset_priority_two",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "reset_priority_two",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "reset_grant_one",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "reset_grant_one",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "reset_grant_one",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "pointer_plus_one",
+        "status": "different",
+        "seconds": 0.0641
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "pointer_plus_one",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "pointer_plus_one",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "pointer_plus_one",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "grant_index_plus_one",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "grant_index_plus_one",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "grant_index_plus_one",
+        "status": "different",
+        "seconds": 0.0641
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "grant_index_plus_one",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "grant_index_plus_one",
+        "status": "different",
+        "seconds": 0.0641
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "hold_idle_grant",
+        "status": "different",
+        "seconds": 0.064
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "hold_idle_grant",
+        "status": "different",
+        "seconds": 0.0641
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "hold_idle_grant",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "hold_idle_grant",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "hold_idle_grant",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "grant_index_plus_one",
+        "second": "hold_idle_grant",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.0647
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "grant_index_plus_one",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.1653
+      },
+      {
+        "first": "hold_idle_grant",
+        "second": "cursor_on_all_only",
+        "status": "different",
+        "seconds": 0.1148
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0647
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.1152
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0646
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0641
+      },
+      {
+        "first": "grant_index_plus_one",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "hold_idle_grant",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "cursor_on_all_only",
+        "second": "reverse_priority",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.1144
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.1142
+      },
+      {
+        "first": "grant_index_plus_one",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.1142
+      },
+      {
+        "first": "hold_idle_grant",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "cursor_on_all_only",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.1143
+      },
+      {
+        "first": "reverse_priority",
+        "second": "skip_requester_three",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0641
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "grant_index_plus_one",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.1145
+      },
+      {
+        "first": "hold_idle_grant",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.1163
+      },
+      {
+        "first": "cursor_on_all_only",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0645
+      },
+      {
+        "first": "reverse_priority",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0642
+      },
+      {
+        "first": "skip_requester_three",
+        "second": "all_requests_only",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0645
+      },
+      {
+        "first": "reset_priority_two",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "reset_grant_one",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "pointer_plus_one",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0643
+      },
+      {
+        "first": "grant_index_plus_one",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0646
+      },
+      {
+        "first": "hold_idle_grant",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0645
+      },
+      {
+        "first": "cursor_on_all_only",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.064
+      },
+      {
+        "first": "reverse_priority",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.1146
+      },
+      {
+        "first": "skip_requester_three",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.1147
+      },
+      {
+        "first": "all_requests_only",
+        "second": "grant_two_bits",
+        "status": "different",
+        "seconds": 0.0647
+      },
+      {
+        "first": "bug_fixed_priority",
+        "second": "idle_resets_priority",
+        "status": "different",
+        "seconds": 0.0644
+      },
+      {
+        "first": "bug_pointer_reset_on_idle",
+        "second": "idle_resets_priority",
+        "status": "pass",
+        "seconds": 0.1145
+      }
+    ],
+    "hand_checker_checks": [
+      {
+        "path": "designs/ref.sv",
+        "status": "pass",
+        "seconds": 0.5158
+      },
+      {
+        "path": "designs/good_double_vector.sv",
+        "status": "pass",
+        "seconds": 0.4659
+      },
+      {
+        "path": "mutants/bug_fixed_priority.sv",
+        "status": "different",
+        "seconds": 0.3158
+      },
+      {
+        "path": "mutants/bug_pointer_reset_on_idle.sv",
+        "status": "different",
+        "seconds": 0.3656
+      },
+      {
+        "path": "mutants/reset_priority_two.sv",
+        "status": "different",
+        "seconds": 0.3655
+      },
+      {
+        "path": "mutants/reset_grant_one.sv",
+        "status": "different",
+        "seconds": 0.4682
+      },
+      {
+        "path": "mutants/pointer_plus_one.sv",
+        "status": "different",
+        "seconds": 0.3684
+      },
+      {
+        "path": "mutants/grant_index_plus_one.sv",
+        "status": "different",
+        "seconds": 0.3685
+      },
+      {
+        "path": "mutants/hold_idle_grant.sv",
+        "status": "different",
+        "seconds": 0.3702
+      },
+      {
+        "path": "mutants/cursor_on_all_only.sv",
+        "status": "different",
+        "seconds": 0.3701
+      },
+      {
+        "path": "mutants/reverse_priority.sv",
+        "status": "different",
+        "seconds": 0.4212
+      },
+      {
+        "path": "mutants/skip_requester_three.sv",
+        "status": "different",
+        "seconds": 0.422
+      },
+      {
+        "path": "mutants/all_requests_only.sv",
+        "status": "different",
+        "seconds": 0.4723
+      },
+      {
+        "path": "mutants/grant_two_bits.sv",
+        "status": "different",
+        "seconds": 0.4723
+      }
+    ],
+    "excluded": [
+      {
+        "id": "idle_resets_priority",
+        "reason": "equivalent:bug_pointer_reset_on_idle"
+      }
+    ],
+    "seconds": 12.6915
+  }
+}
