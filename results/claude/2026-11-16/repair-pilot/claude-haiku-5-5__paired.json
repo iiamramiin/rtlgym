@@ -1,0 +1,196 @@
+{
+  "paired": {
+    "arms": [
+      "full",
+      "none"
+    ],
+    "episodes": 8,
+    "outcomes": {
+      "both": 7,
+      "only_full": 0,
+      "only_none": 1,
+      "neither": 0,
+      "errored": 0
+    },
+    "informative_episodes": 1,
+    "discordant_pairs": 1,
+    "mcnemar_exact_p": 1.0,
+    "by_verification": {
+      "formal": {
+        "episodes": 8,
+        "outcomes": {
+          "both": 7,
+          "only_full": 0,
+          "only_none": 1,
+          "neither": 0,
+          "errored": 0
+        },
+        "informative_episodes": 1,
+        "discordant_pairs": 1,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "by_kind": {
+      "repair": {
+        "episodes": 8,
+        "outcomes": {
+          "both": 7,
+          "only_full": 0,
+          "only_none": 1,
+          "neither": 0,
+          "errored": 0
+        },
+        "informative_episodes": 1,
+        "discordant_pairs": 1,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "shared_first": {
+      "act_s": 122.19,
+      "calls": 8,
+      "input_tokens": 24773,
+      "output_tokens": 31197,
+      "refusals": 0,
+      "truncated": 0
+    },
+    "rows": [
+      {
+        "task": "repair_popcount16",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "repair_rr_arbiter4",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.979,
+        "none_best": 0.979,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "repair_noc_router5",
+        "task_kind": "repair",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": true,
+        "full_best": 0.5,
+        "none_best": 0.84,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "only_none"
+      },
+      {
+        "task": "repair_axi4_burst_slave",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9701,
+        "none_best": 0.9701,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "repair_cache_controller",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "repair_axil_regs",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "repair_gearbox_16to12",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "repair_secded_ecc",
+        "task_kind": "repair",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      }
+    ]
+  },
+  "meta": {
+    "agent": "claude",
+    "model": "claude-haiku-5-5",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "repair_popcount16": true,
+      "repair_rr_arbiter4": true,
+      "repair_noc_router5": true,
+      "repair_axi4_burst_slave": true,
+      "repair_cache_controller": true,
+      "repair_axil_regs": true,
+      "repair_gearbox_16to12": true,
+      "repair_secded_ecc": true
+    },
+    "tasks": [
+      "repair_popcount16",
+      "repair_rr_arbiter4",
+      "repair_noc_router5",
+      "repair_axi4_burst_slave",
+      "repair_cache_controller",
+      "repair_axil_regs",
+      "repair_gearbox_16to12",
+      "repair_secded_ecc"
+    ],
+    "started_utc": "2026-11-17T05:17:07+00:00",
+    "wall_s": 377.01,
+    "git_commit": "96a03715d226380a7bff060730cd6a7db30ace10",
+    "python": "3.12.16",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    }
+  }
+}

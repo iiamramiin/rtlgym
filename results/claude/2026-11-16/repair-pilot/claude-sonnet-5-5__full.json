@@ -1,0 +1,840 @@
+{
+  "summary": {
+    "agent": "claude",
+    "model": "claude-sonnet-5-5",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "repair_popcount16": true,
+      "repair_rr_arbiter4": true,
+      "repair_noc_router5": true,
+      "repair_axi4_burst_slave": true,
+      "repair_cache_controller": true,
+      "repair_axil_regs": true,
+      "repair_gearbox_16to12": true,
+      "repair_secded_ecc": true
+    },
+    "tasks": [
+      "repair_popcount16",
+      "repair_rr_arbiter4",
+      "repair_noc_router5",
+      "repair_axi4_burst_slave",
+      "repair_cache_controller",
+      "repair_axil_regs",
+      "repair_gearbox_16to12",
+      "repair_secded_ecc"
+    ],
+    "started_utc": "2026-11-17T05:15:56+00:00",
+    "wall_s": 70.8,
+    "git_commit": "96a03715d226380a7bff060730cd6a7db30ace10",
+    "python": "3.12.16",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "paired": true,
+    "pair_arms": [
+      "full",
+      "none"
+    ],
+    "by_verification": {
+      "formal": {
+        "tasks": [
+          "repair_axi4_burst_slave",
+          "repair_axil_regs",
+          "repair_cache_controller",
+          "repair_gearbox_16to12",
+          "repair_noc_router5",
+          "repair_popcount16",
+          "repair_rr_arbiter4",
+          "repair_secded_ecc"
+        ],
+        "episodes": 8,
+        "errors": 0,
+        "pass@1_count": "8/8",
+        "solved_count": "8/8"
+      }
+    },
+    "by_kind": {
+      "repair": {
+        "tasks": [
+          "repair_axi4_burst_slave",
+          "repair_axil_regs",
+          "repair_cache_controller",
+          "repair_gearbox_16to12",
+          "repair_noc_router5",
+          "repair_popcount16",
+          "repair_rr_arbiter4",
+          "repair_secded_ecc"
+        ],
+        "episodes": 8,
+        "errors": 0,
+        "pass@1_count": "8/8",
+        "solved_count": "8/8",
+        "lines_changed": {
+          "attempts": 8,
+          "median": 4.0,
+          "accepted_attempts": 8,
+          "accepted_median": 4.0
+        }
+      }
+    },
+    "episodes": 8,
+    "errors": 0,
+    "pass@1": 1.0,
+    "pass@1_count": "8/8",
+    "pass@1_tests_only": 1.0,
+    "solved_within_turns": 1.0,
+    "solved_count": "8/8",
+    "test_escape_attempts": 0,
+    "inconclusive_attempts": 0,
+    "frontend_failure_attempts": 0,
+    "resource_failure_attempts": 0,
+    "mean_first_score": 0.966,
+    "mean_best_score": 0.966,
+    "mean_turns": 1.0,
+    "grading_s_p50": 0.936,
+    "grading_s_p95": 74.143,
+    "cache_hit_rate": 0.0,
+    "usage": {
+      "calls": 0,
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "refusals": 0,
+      "truncated": 0
+    },
+    "per_task": {
+      "repair_axi4_burst_slave": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 3,
+          "accepted_attempts": 1,
+          "accepted_median": 3
+        }
+      },
+      "repair_axil_regs": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 1,
+          "accepted_attempts": 1,
+          "accepted_median": 1
+        }
+      },
+      "repair_cache_controller": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 5,
+          "accepted_attempts": 1,
+          "accepted_median": 5
+        }
+      },
+      "repair_gearbox_16to12": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 5,
+          "accepted_attempts": 1,
+          "accepted_median": 5
+        }
+      },
+      "repair_noc_router5": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 50,
+          "accepted_attempts": 1,
+          "accepted_median": 50
+        }
+      },
+      "repair_popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 10,
+          "accepted_attempts": 1,
+          "accepted_median": 10
+        }
+      },
+      "repair_rr_arbiter4": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 3,
+          "accepted_attempts": 1,
+          "accepted_median": 3
+        }
+      },
+      "repair_secded_ecc": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "repair",
+        "lines_changed": {
+          "attempts": 1,
+          "median": 1,
+          "accepted_attempts": 1,
+          "accepted_median": 1
+        }
+      }
+    },
+    "arm_s": 0.0,
+    "shared_first_s": 78.43
+  },
+  "episodes": [
+    {
+      "task": "repair_popcount16",
+      "task_kind": "repair",
+      "starter_score": 0.6167,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.3533,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.3533,
+          "lines_changed": 10,
+          "tests": "3/3",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 64,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.009,
+            "formal": 0.118,
+            "lint": 0.067,
+            "synth": 0.218,
+            "sim": 0.671
+          },
+          "grade_s": 0.689,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n    logic [2:0] s0, s1, s2, s3;\n    logic [3:0] t0, t1;\n\n    always_comb begin\n        s0 = 3'(x[0])  + 3'(x[1])  + 3'(x[2])  + 3'(x[3]);\n        s1 = 3'(x[4])  + 3'(x[5])  + 3'(x[6])  + 3'(x[7]);\n        s2 = 3'(x[8])  + 3'(x[9])  + 3'(x[10]) + 3'(x[11]);\n        s3 = 3'(x[12]) + 3'(x[13]) + 3'(x[14]) + 3'(x[15]);\n        t0 = 4'(s0) + 4'(s1);\n        t1 = 4'(s2) + 4'(s3);\n        count = 5'(t0) + 5'(t1);\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 3/3 passed\nLint: clean\nFormal: equivalent to the reference for every input.\nSynthesis: 64 generic cells (0 flops, 0 latches), logic depth 14; reference: 64 cells, depth 14",
+          "tool_report": "Score: 0.970\nHidden tests: 3/3 passed\nLint: clean\nFormal: equivalent to the reference for every input.\nSynthesis: 64 generic cells (0 flops, 0 latches), logic depth 14; reference: 64 cells, depth 14"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 607,
+          "output_tokens": 506,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 3.38,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_rr_arbiter4",
+      "task_kind": "repair",
+      "starter_score": 0.57,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.4,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.4,
+          "lines_changed": 3,
+          "tests": "5/5",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 35,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.008,
+            "formal": 0.273,
+            "lint": 0.121,
+            "synth": 0.423,
+            "sim": 0.721
+          },
+          "grade_s": 0.735,
+          "cached": false,
+          "code": "module rr_arbiter4 (\n    input  logic       clk,\n    input  logic       rst,\n    input  logic [3:0] req,\n    output logic [3:0] gnt\n);\n    logic [1:0] last;\n    logic [1:0] pick;\n    logic       any;\n    always_comb begin\n        pick = last;\n        any  = 1'b0;\n        for (int k = 4; k >= 1; k--) begin\n            if (req[2'(last + 2'(k))]) begin\n                pick = 2'(last + 2'(k));\n                any  = 1'b1;\n            end\n        end\n    end\n    always_ff @(posedge clk) begin\n        if (rst) begin\n            gnt  <= '0;\n            last <= 2'd3;\n        end else if (!any) begin\n            gnt  <= '0;\n        end else begin\n            gnt  <= 4'b0001 << pick;\n            last <= pick;\n        end\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 12 cycles after reset.\nSynthesis: 35 generic cells (6 flops, 0 latches), logic depth 9; reference: 35 cells, depth 9",
+          "tool_report": "Score: 0.970\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 12 cycles after reset.\nSynthesis: 35 generic cells (6 flops, 0 latches), logic depth 9; reference: 35 cells, depth 9"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 1077,
+          "output_tokens": 489,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 3.73,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_noc_router5",
+      "task_kind": "repair",
+      "starter_score": 0.43,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.941,
+      "best_score": 0.941,
+      "return": 0.511,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.941,
+          "reward": 0.511,
+          "lines_changed": 50,
+          "tests": "5/5",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "sv2v",
+          "formal_frontend": "sv2v",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 1279,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.091,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.016,
+            "formal": 50.408,
+            "lint": 0.117,
+            "synth": 3.853,
+            "sim": 0.768
+          },
+          "grade_s": 50.431,
+          "cached": false,
+          "code": "module noc_router5 #(\n    parameter logic [1:0] X = 2'd1,\n    parameter logic [1:0] Y = 2'd1,\n    parameter int PAYLOAD_W = 8\n) (\n    input  logic                       clk,\n    input  logic                       rst,\n    input  logic [4:0]                 in_valid,\n    output logic [4:0]                 in_ready,\n    input  logic [5*(4+PAYLOAD_W)-1:0]  in_flit,\n    output logic [4:0]                 out_valid,\n    input  logic [4:0]                 out_ready,\n    output logic [5*(4+PAYLOAD_W)-1:0]  out_flit\n);\n    localparam int FLIT_W = 4 + PAYLOAD_W;\n    localparam logic [2:0] NORTH = 3'd0;\n    localparam logic [2:0] SOUTH = 3'd1;\n    localparam logic [2:0] EAST  = 3'd2;\n    localparam logic [2:0] WEST  = 3'd3;\n    localparam logic [2:0] LOCAL_PORT = 3'd4;\n\n    logic [2:0] route [5];\n    logic [4:0] accepted [5];\n\n    for (genvar src = 0; src < 5; src++) begin : g_route\n        wire [1:0] dest_x = in_flit[src*FLIT_W + PAYLOAD_W+2 +: 2];\n        wire [1:0] dest_y = in_flit[src*FLIT_W + PAYLOAD_W +: 2];\n        assign route[src] = dest_x > X ? EAST :\n                            dest_x < X ? WEST :\n                            dest_y > Y ? NORTH :\n                            dest_y < Y ? SOUTH : LOCAL_PORT;\n        assign in_ready[src] = accepted[0][src] | accepted[1][src] | accepted[2][src] |\n                               accepted[3][src] | accepted[4][src];\n    end\n\n    for (genvar dst = 0; dst < 5; dst++) begin : g_output\n        logic occupied;\n        logic [FLIT_W-1:0] data;\n        logic [2:0] cursor;\n        logic [2:0] slot_succ;\n        logic [4:0] requests, grant;\n        logic [FLIT_W-1:0] selected_flit;\n        logic [2:0] gsrc;\n        logic [2:0] start;\n        logic can_accept;\n        logic drain;\n\n        assign drain = occupied && out_ready[dst];\n        assign can_accept = !rst && (!occupied || out_ready[dst]);\n        assign start = occupied ? slot_succ : cursor;\n\n        assign out_valid[dst] = occupied;\n        assign out_flit[dst*FLIT_W +: FLIT_W] = occupied ? data : '0;\n        assign accepted[dst] = grant;\n\n        for (genvar src = 0; src < 5; src++) begin : g_req\n            assign requests[src] = in_valid[src] && route[src] == 3'(dst);\n        end\n\n        always_comb begin\n            int k;\n            logic found;\n            grant = '0;\n            gsrc = 3'd0;\n            found = 1'b0;\n            for (int i = 0; i < 5; i++) begin\n                k = int'(start) + i;\n                if (k >= 5) k = k - 5;\n                if (!found && can_accept && requests[k]) begin\n                    found = 1'b1;\n                    grant[k] = 1'b1;\n                    gsrc = 3'(k);\n                end\n            end\n            selected_flit = '0;\n            for (int s = 0; s < 5; s++) begin\n                selected_flit |= in_flit[s*FLIT_W +: FLIT_W] & {FLIT_W{grant[s]}};\n            end\n        end\n\n        always_ff @(posedge clk) begin\n            if (rst) begin\n                occupied  <= 1'b0;\n                cursor    <= 3'd0;\n                slot_succ <= 3'd0;\n                data      <= '0;\n            end else begin\n                if (drain) cursor <= slot_succ;\n                if (|grant) begin\n                    occupied  <= 1'b1;\n                    data      <= selected_flit;\n                    slot_succ <= (gsrc == 3'd4) ? 3'd0 : gsrc + 3'd1;\n                end else if (drain) begin\n                    occupied <= 1'b0;\n                end\n            end\n        end\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.941\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 8 cycles after reset (checked with PAYLOAD_W=1, X=1, Y=1).\nSynthesis: 1279 generic cells (95 flops, 0 latches), logic depth 20; reference: 893 cells, depth 18",
+          "tool_report": "Score: 0.941\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 8 cycles after reset (checked with PAYLOAD_W=1, X=1, Y=1).\nSynthesis: 1279 generic cells (95 flops, 0 latches), logic depth 20; reference: 893 cells, depth 18"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 2926,
+          "output_tokens": 2753,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 17.56,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_axi4_burst_slave",
+      "task_kind": "repair",
+      "starter_score": 0.2667,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.7033,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.7033,
+          "lines_changed": 3,
+          "tests": "6/6",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 4999,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.008,
+            "formal": 7.307,
+            "lint": 0.07,
+            "synth": 3.191,
+            "sim": 1.022
+          },
+          "grade_s": 7.319,
+          "cached": false,
+          "code": "module axi4_burst_slave #(\n    parameter int ADDR_W = 8,\n    parameter int ID_W   = 2,\n    parameter int LEN_W  = 8\n) (\n    input  logic              clk,\n    input  logic              rst,\n\n    input  logic [ID_W-1:0]   s_axi_awid,\n    input  logic [ADDR_W-1:0] s_axi_awaddr,\n    input  logic [LEN_W-1:0]  s_axi_awlen,\n    input  logic [2:0]        s_axi_awsize,\n    input  logic [1:0]        s_axi_awburst,\n    input  logic              s_axi_awlock,\n    input  logic [3:0]        s_axi_awcache,\n    input  logic [2:0]        s_axi_awprot,\n    input  logic [3:0]        s_axi_awqos,\n    input  logic [3:0]        s_axi_awregion,\n    input  logic              s_axi_awvalid,\n    output logic              s_axi_awready,\n\n    input  logic [31:0]       s_axi_wdata,\n    input  logic [3:0]        s_axi_wstrb,\n    input  logic              s_axi_wlast,\n    input  logic              s_axi_wvalid,\n    output logic              s_axi_wready,\n\n    output logic [ID_W-1:0]   s_axi_bid,\n    output logic [1:0]        s_axi_bresp,\n    output logic              s_axi_bvalid,\n    input  logic              s_axi_bready,\n\n    input  logic [ID_W-1:0]   s_axi_arid,\n    input  logic [ADDR_W-1:0] s_axi_araddr,\n    input  logic [LEN_W-1:0]  s_axi_arlen,\n    input  logic [2:0]        s_axi_arsize,\n    input  logic [1:0]        s_axi_arburst,\n    input  logic              s_axi_arlock,\n    input  logic [3:0]        s_axi_arcache,\n    input  logic [2:0]        s_axi_arprot,\n    input  logic [3:0]        s_axi_arqos,\n    input  logic [3:0]        s_axi_arregion,\n    input  logic              s_axi_arvalid,\n    output logic              s_axi_arready,\n\n    output logic [ID_W-1:0]   s_axi_rid,\n    output logic [31:0]       s_axi_rdata,\n    output logic [1:0]        s_axi_rresp,\n    output logic              s_axi_rlast,\n    output logic              s_axi_rvalid,\n    input  logic              s_axi_rready\n);\n    localparam int WORDS = 1 << (ADDR_W - 2);\n    localparam int RANGE_W = 1 + ((ADDR_W > LEN_W + 2) ? ADDR_W : LEN_W + 2);\n    localparam logic [1:0] OKAY = 2'b00, SLVERR = 2'b10;\n\n    logic unused_attrs;\n    assign unused_attrs = ^{s_axi_awcache, s_axi_awprot, s_axi_awqos, s_axi_awregion,\n                            s_axi_arcache, s_axi_arprot, s_axi_arqos, s_axi_arregion};\n\n    function automatic logic bad_burst(\n        input logic [ADDR_W-1:0] addr,\n        input logic [LEN_W-1:0] len,\n        input logic [2:0] size,\n        input logic [1:0] burst,\n        input logic lock\n    );\n        logic [RANGE_W-1:0] last_addr;\n        last_addr = RANGE_W'(addr) + (RANGE_W'(len) << 2);\n        bad_burst = addr[1:0] != 2'b00 || size != 3'd2 || burst != 2'b01 || lock\n                    || (last_addr >> ADDR_W) != '0;\n    endfunction\n\n    logic [31:0] memory [WORDS];\n    logic write_active, write_bad, last_bad;\n    logic [ID_W-1:0] write_id;\n    logic [LEN_W-1:0] write_rem, read_rem;\n    logic [ADDR_W-3:0] write_word, next_read_word;\n    logic aw_fire, w_fire, ar_fire, r_fire;\n    logic aw_bad, ar_bad;\n    assign aw_fire = s_axi_awvalid && s_axi_awready;\n    assign w_fire = s_axi_wvalid && s_axi_wready;\n    assign ar_fire = s_axi_arvalid && s_axi_arready;\n    assign r_fire = s_axi_rvalid && s_axi_rready;\n    assign aw_bad = bad_burst(s_axi_awaddr, s_axi_awlen, s_axi_awsize, s_axi_awburst, s_axi_awlock);\n    assign ar_bad = bad_burst(s_axi_araddr, s_axi_arlen, s_axi_arsize, s_axi_arburst, s_axi_arlock);\n    assign s_axi_arready = !rst && !s_axi_rvalid;\n\n    assign s_axi_awready = !rst && !write_active && !s_axi_bvalid;\n    assign s_axi_wready = !rst && write_active;\n    assign last_bad = s_axi_wlast != (write_rem == '0);\n\n\n    always_ff @(posedge clk) begin\n        if (rst) begin\n            write_active <= 1'b0;\n            write_bad <= 1'b0;\n            write_id <= '0;\n            write_rem <= '0;\n            write_word <= '0;\n            s_axi_bvalid <= 1'b0;\n            s_axi_bid <= '0;\n            for (int word_idx = 0; word_idx < WORDS; word_idx++)\n                memory[word_idx] <= '0;\n        end else begin\n            if (s_axi_bvalid && s_axi_bready)\n                s_axi_bvalid <= 1'b0;\n            if (aw_fire) begin\n                write_active <= 1'b1;\n                write_bad <= aw_bad;\n                write_id <= s_axi_awid;\n                write_rem <= s_axi_awlen;\n                write_word <= s_axi_awaddr[ADDR_W-1:2];\n            end\n            if (w_fire) begin\n                if (!write_bad) begin\n                    for (int lane = 0; lane < 4; lane++) begin\n                        if (s_axi_wstrb[lane])\n                            memory[write_word][8*lane +: 8] <= s_axi_wdata[8*lane +: 8];\n                    end\n                end\n                if (write_rem == '0) begin\n                    write_active <= 1'b0;\n                    s_axi_bvalid <= 1'b1;\n                    s_axi_bid <= write_id;\n                end else begin\n                    write_rem <= write_rem - 1'b1;\n                    write_word <= write_word + 1'b1;\n                end\n            end\n        end\n    end\n\n\n    logic bad_last_seen;\n    always_ff @(posedge clk) begin\n        if (rst) begin\n            bad_last_seen <= 1'b0;\n            s_axi_bresp <= OKAY;\n        end else begin\n            if (aw_fire)\n                bad_last_seen <= 1'b0;\n            if (w_fire) begin\n                bad_last_seen <= bad_last_seen || last_bad;\n                if (write_rem == '0)\n                    s_axi_bresp <= (write_bad || bad_last_seen || last_bad) ? SLVERR : OKAY;\n            end\n        end\n    end\n\n    always_ff @(posedge clk) begin\n        if (rst) begin\n            s_axi_rvalid <= 1'b0;\n            s_axi_rid <= '0;\n            s_axi_rdata <= '0;\n            s_axi_rlast <= 1'b0;\n            s_axi_rresp <= OKAY;\n            read_rem <= '0;\n            next_read_word <= '0;\n        end else if (ar_fire) begin\n            s_axi_rvalid <= 1'b1;\n            s_axi_rid <= s_axi_arid;\n            s_axi_rresp <= ar_bad ? SLVERR : OKAY;\n            s_axi_rdata <= ar_bad ? 32'b0 : memory[s_axi_araddr[ADDR_W-1:2]];\n            s_axi_rlast <= s_axi_arlen == '0;\n            read_rem <= s_axi_arlen;\n            next_read_word <= s_axi_araddr[ADDR_W-1:2] + 1'b1;\n        end else if (r_fire) begin\n            if (s_axi_rlast) begin\n                s_axi_rvalid <= 1'b0;\n            end else begin\n                read_rem <= read_rem - 1'b1;\n                next_read_word <= next_read_word + 1'b1;\n                s_axi_rdata <= (s_axi_rresp == OKAY) ? memory[next_read_word] : 32'b0;\n                s_axi_rlast <= read_rem == LEN_W'(1);\n            end\n        end\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 6/6 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 9 cycles after reset (checked with ADDR_W=3, ID_W=1, LEN_W=2).\nSynthesis: 4999 generic cells (2122 flops, 0 latches), logic depth 19; reference: 4999 cells, depth 19",
+          "tool_report": "Score: 0.970\nHidden tests: 6/6 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 9 cycles after reset (checked with ADDR_W=3, ID_W=1, LEN_W=2).\nSynthesis: 4999 generic cells (2122 flops, 0 latches), logic depth 19; reference: 4999 cells, depth 19"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 6063,
+          "output_tokens": 3816,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 20.58,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_cache_controller",
+      "task_kind": "repair",
+      "starter_score": 0.6167,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.3533,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.3533,
+          "lines_changed": 5,
+          "tests": "6/6",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 737,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.008,
+            "formal": 0.618,
+            "lint": 0.068,
+            "synth": 0.668,
+            "sim": 0.669
+          },
+          "grade_s": 0.681,
+          "cached": false,
+          "code": "module cache_controller #(\n    parameter int DATA_W = 32,\n    parameter int TAG_W = 5,\n    parameter int INDEX_W = 2\n) (\n    input  logic                     clk,\n    input  logic                     rst,\n    input  logic                     inv_valid,\n    output logic                     inv_ready,\n    input  logic                     cpu_req_valid,\n    output logic                     cpu_req_ready,\n    input  logic [TAG_W+INDEX_W:0]   cpu_req_addr,\n    output logic                     cpu_rsp_valid,\n    input  logic                     cpu_rsp_ready,\n    output logic [DATA_W-1:0]        cpu_rsp_data,\n    output logic                     mem_req_valid,\n    input  logic                     mem_req_ready,\n    output logic [TAG_W+INDEX_W-1:0] mem_req_addr,\n    input  logic                     mem_rsp_valid,\n    output logic                     mem_rsp_ready,\n    input  logic [2*DATA_W-1:0]      mem_rsp_data\n);\n    localparam int LINES = 1 << INDEX_W;\n    typedef enum logic [1:0] { IDLE, SEND_REQUEST, WAIT_REFILL, RESPOND } phase_t;\n    phase_t phase;\n\n    logic [LINES-1:0] valid;\n    logic [2*DATA_W-1:0] lines [LINES];\n    logic [TAG_W-1:0] tags [LINES];\n    logic [TAG_W+INDEX_W-1:0] pending_line;\n    logic pending_offset;\n    logic [DATA_W-1:0] response;\n\n    wire [INDEX_W-1:0] request_index = cpu_req_addr[INDEX_W:1];\n    wire [TAG_W-1:0] request_tag = cpu_req_addr[TAG_W+INDEX_W:INDEX_W+1];\n    wire [INDEX_W-1:0] pending_index = pending_line[INDEX_W-1:0];\n    wire [TAG_W-1:0] pending_tag = pending_line[TAG_W+INDEX_W-1:INDEX_W];\n    wire hit = valid[request_index] && (tags[request_index] == request_tag);\n    wire request_offset = cpu_req_addr[0];\n    wire [2*DATA_W-1:0] hit_line = lines[request_index];\n\n    assign inv_ready = !rst && phase == IDLE;\n    assign cpu_req_ready = inv_ready && !inv_valid;\n    assign cpu_rsp_valid = !rst && phase == RESPOND;\n    assign cpu_rsp_data = cpu_rsp_valid ? response : '0;\n    assign mem_req_valid = !rst && phase == SEND_REQUEST;\n    assign mem_req_addr = mem_req_valid ? pending_line : '0;\n    assign mem_rsp_ready = !rst && phase == WAIT_REFILL;\n\n    always_ff @(posedge clk) begin\n        if (rst) begin\n            phase <= IDLE;\n            valid <= '0;\n            pending_line <= '0;\n            pending_offset <= 1'b0;\n            response <= '0;\n        end else begin\n            case (phase)\n                IDLE: begin\n                    if (inv_valid) begin\n                        valid <= '0;\n                    end else if (cpu_req_valid) begin\n                        if (hit) begin\n                            response <= request_offset ? hit_line[2*DATA_W-1:DATA_W] : hit_line[DATA_W-1:0];\n                            phase <= RESPOND;\n                        end else begin\n                            pending_line <= cpu_req_addr[TAG_W+INDEX_W:1];\n                            pending_offset <= request_offset;\n                            phase <= SEND_REQUEST;\n                        end\n                    end\n                end\n                SEND_REQUEST: if (mem_req_ready) phase <= WAIT_REFILL;\n                WAIT_REFILL: if (mem_rsp_valid) begin\n                    valid[pending_index] <= 1'b1;\n                    tags[pending_index] <= pending_tag;\n                    lines[pending_index] <= mem_rsp_data;\n                    response <= pending_offset ? mem_rsp_data[2*DATA_W-1:DATA_W] : mem_rsp_data[DATA_W-1:0];\n                    phase <= RESPOND;\n                end\n                RESPOND: if (cpu_rsp_ready) phase <= IDLE;\n                default: phase <= IDLE;\n            endcase\n        end\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 6/6 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 10 cycles after reset (checked with DATA_W=2, TAG_W=2, INDEX_W=1).\nSynthesis: 737 generic cells (324 flops, 0 latches), logic depth 11; reference: 737 cells, depth 11",
+          "tool_report": "Score: 0.970\nHidden tests: 6/6 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 10 cycles after reset (checked with DATA_W=2, TAG_W=2, INDEX_W=1).\nSynthesis: 737 generic cells (324 flops, 0 latches), logic depth 11; reference: 737 cells, depth 11"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 3261,
+          "output_tokens": 1837,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 10.01,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_axil_regs",
+      "task_kind": "repair",
+      "starter_score": 0.75,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.22,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.22,
+          "lines_changed": 1,
+          "tests": "6/6",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 623,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.008,
+            "formal": 2.984,
+            "lint": 0.066,
+            "synth": 0.523,
+            "sim": 0.825
+          },
+          "grade_s": 2.997,
+          "cached": false,
+          "code": "module axil_regs (\n    input  logic        clk,\n    input  logic        rst,\n    input  logic [31:0] status_in,\n    input  logic [31:0] irq_set,\n\n    input  logic [3:0]  s_axi_awaddr,\n    input  logic [2:0]  s_axi_awprot,\n    input  logic        s_axi_awvalid,\n    output logic        s_axi_awready,\n\n    input  logic [31:0] s_axi_wdata,\n    input  logic [3:0]  s_axi_wstrb,\n    input  logic        s_axi_wvalid,\n    output logic        s_axi_wready,\n\n    output logic [1:0]  s_axi_bresp,\n    output logic        s_axi_bvalid,\n    input  logic        s_axi_bready,\n\n    input  logic [3:0]  s_axi_araddr,\n    input  logic [2:0]  s_axi_arprot,\n    input  logic        s_axi_arvalid,\n    output logic        s_axi_arready,\n\n    output logic [31:0] s_axi_rdata,\n    output logic [1:0]  s_axi_rresp,\n    output logic        s_axi_rvalid,\n    input  logic        s_axi_rready\n);\n    localparam logic [1:0] OKAY = 2'b00;\n    localparam logic [1:0] SLVERR = 2'b10;\n\n    logic [31:0] ctrl, scratch, irq;\n    logic have_aw, have_w, commit_write;\n    logic [3:0] addr_q, strb_q;\n    logic [31:0] data_q, byte_en;\n    logic unused_prot;\n\n    assign unused_prot = ^{s_axi_awprot, s_axi_arprot};\n    assign s_axi_awready = !rst && !have_aw && !s_axi_bvalid;\n    assign s_axi_wready = !rst && !have_w && !s_axi_bvalid;\n    assign s_axi_arready = !rst && !s_axi_rvalid;\n    assign commit_write = have_aw && have_w;\n\n    for (genvar lane = 0; lane < 4; lane++) begin : gen_byte_en\n        assign byte_en[8*lane +: 8] = {8{strb_q[lane]}};\n    end\n\n    always_ff @(posedge clk) begin\n        if (rst) begin\n            ctrl <= '0;\n            scratch <= '0;\n            irq <= '0;\n            have_aw <= 1'b0;\n            have_w <= 1'b0;\n            addr_q <= '0;\n            data_q <= '0;\n            strb_q <= '0;\n            s_axi_bresp <= OKAY;\n            s_axi_bvalid <= 1'b0;\n            s_axi_rdata <= '0;\n            s_axi_rresp <= OKAY;\n            s_axi_rvalid <= 1'b0;\n        end else begin\n            irq <= irq | irq_set;\n\n            if (s_axi_awvalid && s_axi_awready) begin\n                have_aw <= 1'b1;\n                addr_q <= s_axi_awaddr;\n            end\n            if (s_axi_wvalid && s_axi_wready) begin\n                have_w <= 1'b1;\n                data_q <= s_axi_wdata;\n                strb_q <= s_axi_wstrb;\n            end\n\n            if (s_axi_bvalid && s_axi_bready)\n                s_axi_bvalid <= 1'b0;\n\n            if (commit_write) begin\n                have_aw <= 1'b0;\n                have_w <= 1'b0;\n                s_axi_bvalid <= 1'b1;\n                s_axi_bresp <= OKAY;\n                case (addr_q)\n                    4'h0: ctrl <= (ctrl & ~byte_en) | (data_q & byte_en);\n                    4'h8: scratch <= (scratch & ~byte_en) | (data_q & byte_en);\n                    4'hc: irq <= (irq & ~(data_q & byte_en)) | irq_set;\n                    default: s_axi_bresp <= SLVERR;\n                endcase\n            end\n\n            if (s_axi_rvalid && s_axi_rready)\n                s_axi_rvalid <= 1'b0;\n\n            if (s_axi_arvalid && s_axi_arready) begin\n                s_axi_rvalid <= 1'b1;\n                s_axi_rresp <= OKAY;\n                case (s_axi_araddr)\n                    4'h0: s_axi_rdata <= ctrl;\n                    4'h4: s_axi_rdata <= status_in;\n                    4'h8: s_axi_rdata <= scratch;\n                    4'hc: s_axi_rdata <= irq;\n                    default: begin\n                        s_axi_rdata <= '0;\n                        s_axi_rresp <= SLVERR;\n                    end\n                endcase\n            end\n        end\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 6/6 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 8 cycles after reset.\nSynthesis: 623 generic cells (174 flops, 0 latches), logic depth 6; reference: 623 cells, depth 6",
+          "tool_report": "Score: 0.970\nHidden tests: 6/6 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 8 cycles after reset.\nSynthesis: 623 generic cells (174 flops, 0 latches), logic depth 6; reference: 623 cells, depth 6"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 5776,
+          "output_tokens": 2001,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 10.26,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_gearbox_16to12",
+      "task_kind": "repair",
+      "starter_score": 0.75,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.22,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.22,
+          "lines_changed": 5,
+          "tests": "5/5",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 246,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.008,
+            "formal": 0.225,
+            "lint": 0.117,
+            "synth": 0.322,
+            "sim": 0.517
+          },
+          "grade_s": 0.53,
+          "cached": false,
+          "code": "module gearbox_16to12 #(\n    parameter integer UNIT_W = 4\n) (\n    input  logic                clk,\n    input  logic                rst,\n    input  logic                in_valid,\n    output logic                in_ready,\n    input  logic [4*UNIT_W-1:0] in_data,\n    output logic                out_valid,\n    input  logic                out_ready,\n    output logic [3*UNIT_W-1:0] out_data\n);\n    localparam integer CAPACITY = 8 * UNIT_W;\n    logic [3:0] count, after_pop;\n    logic push, pop;\n\n    assign out_valid = count >= 4'd3;\n    assign pop = out_valid && out_ready;\n    assign after_pop = pop ? count - 4'd3 : count;\n    assign in_ready = !rst && after_pop <= 4'd4;\n    assign push = in_valid && in_ready;\n\n    always_ff @(posedge clk) begin\n        if (rst)\n            count <= '0;\n        else\n            count <= after_pop + (push ? 4'd4 : 4'd0);\n    end\n\n    logic [CAPACITY-1:0] pending, remaining;\n    assign out_data = out_valid ? pending[3*UNIT_W-1:0] : '0;\n    assign remaining = pop ? pending >> (3*UNIT_W) : pending;\n\n    always_ff @(posedge clk) begin\n        if (rst)\n            pending <= '0;\n        else if (push)\n            pending <= remaining | (CAPACITY'(in_data) << (after_pop * UNIT_W));\n        else\n            pending <= remaining;\n    end\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 8 cycles after reset (checked with UNIT_W=1).\nSynthesis: 246 generic cells (36 flops, 0 latches), logic depth 14; reference: 246 cells, depth 14",
+          "tool_report": "Score: 0.970\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input sequence up to 8 cycles after reset (checked with UNIT_W=1).\nSynthesis: 246 generic cells (36 flops, 0 latches), logic depth 14; reference: 246 cells, depth 14"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 2479,
+          "output_tokens": 867,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 5.2,
+        "error": null
+      }
+    },
+    {
+      "task": "repair_secded_ecc",
+      "task_kind": "repair",
+      "starter_score": 0.75,
+      "error": null,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.97,
+      "best_score": 0.97,
+      "return": 0.22,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.97,
+          "reward": 0.22,
+          "lines_changed": 1,
+          "tests": "5/5",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "synth_frontend": "sv2v",
+          "formal_frontend": "sv2v",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 151,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.12,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.009,
+            "formal": 0.705,
+            "lint": 0.117,
+            "synth": 1.114,
+            "sim": 1.077
+          },
+          "grade_s": 1.138,
+          "cached": false,
+          "code": "module secded_ecc #(\n    parameter integer DATA_W = 16,\n    localparam integer PARITY_W = (DATA_W <= 4) ? 3 : (DATA_W <= 11) ? 4\n                                 : (DATA_W <= 26) ? 5 : 6\n) (\n    input  logic [DATA_W-1:0]        enc_data,\n    output logic [DATA_W+PARITY_W:0] enc_code,\n    input  logic [DATA_W+PARITY_W:0] dec_code,\n    output logic [DATA_W-1:0]        dec_data,\n    output logic                     corrected,\n    output logic                     uncorrectable\n);\n    localparam integer H = DATA_W + PARITY_W;\n\n\n    function automatic logic [PARITY_W-1:0] syndrome(input logic [H-1:0] bits);\n        logic [PARITY_W-1:0] value;\n        begin\n            value = '0;\n            for (integer pos = 1; pos <= H; pos = pos + 1)\n                value = value ^ (PARITY_W'(pos) & {PARITY_W{bits[pos-1]}});\n            syndrome = value;\n        end\n    endfunction\n\n    function automatic logic [H:0] encode(input logic [DATA_W-1:0] data);\n        logic [H-1:0] body;\n        logic [PARITY_W-1:0] checks;\n        integer i;\n        begin\n            body = '0;\n            i = 0;\n            for (integer pos = 1; pos <= H; pos = pos + 1) begin\n                if ((pos & (pos-1)) != 0) begin\n                    body[pos-1] = data[i];\n                    i = i + 1;\n                end\n            end\n            checks = syndrome(body);\n            for (integer k = 0; k < PARITY_W; k = k + 1)\n                body[(1 << k)-1] = checks[k];\n            encode = {^body, body};\n        end\n    endfunction\n\n    function automatic logic [DATA_W-1:0] decode_data(\n        input logic [H-1:0] body,\n        input logic [PARITY_W-1:0] flip_position\n    );\n        integer i;\n        begin\n            i = 0;\n            for (integer pos = 1; pos <= H; pos = pos + 1) begin\n                if ((pos & (pos-1)) != 0) begin\n                    decode_data[i] = body[pos-1] ^ (flip_position == PARITY_W'(pos));\n                    i = i + 1;\n                end\n            end\n        end\n    endfunction\n\n    logic [PARITY_W-1:0] syn;\n    logic odd;\n    logic in_range;\n\n    assign enc_code = encode(enc_data);\n    assign syn = syndrome(dec_code[H-1:0]);\n    assign odd = ^dec_code;\n\n    assign in_range = int'(syn) <= H;\n    assign corrected = odd && in_range;\n    assign uncorrectable = (odd && !in_range) || (!odd && (syn != '0));\n    assign dec_data = decode_data(dec_code[H-1:0], corrected ? syn : '0);\nendmodule\n",
+          "feedback_shown": "Score: 0.970\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input (checked with DATA_W=5).\nSynthesis: 151 generic cells (0 flops, 0 latches), logic depth 18; reference: 151 cells, depth 18",
+          "tool_report": "Score: 0.970\nHidden tests: 5/5 passed\nLint: clean\nFormal: equivalent to the reference for every input (checked with DATA_W=5).\nSynthesis: 151 generic cells (0 flops, 0 latches), logic depth 18; reference: 151 cells, depth 18"
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 2584,
+          "output_tokens": 1406,
+          "refusals": 0,
+          "truncated": 0
+        },
+        "act_s": 7.71,
+        "error": null
+      }
+    }
+  ]
+}

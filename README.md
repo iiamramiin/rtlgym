@@ -66,12 +66,12 @@ while True:
   (tests and synthesis), or a simulation that ended before every test reported, is
   **inconclusive**: not accepted, and never cached. The same acceptance rule ends
   episodes, defines solve rates, and gates the area/depth bonus.
-- Synthesis and formal use Yosys directly when it reads the source. If its parser
-  rejects the source, they retry with sv2v v0.0.13, pinned by archive checksum. This
-  keeps the existing flow for supported RTL and recovers constructs such as typed
-  casts and function returns. A remaining parse failure is reported separately
-  from a synthesis failure, in the tool report and the run summary. The original
-  source still goes to Icarus and Verilator.
+- Icarus compiles the submitted source first. If elaboration fails, the grader can
+  retry with sv2v v0.0.13, pinned by archive checksum. A successful retry supplies
+  the RTL for simulation and is recorded as an Icarus front-end fallback. Native
+  multiple-driver diagnostics still fail the compile gate.
+  Verilator lint uses the submission. Yosys synthesis and formal start with the
+  submission and have their own sv2v retry for parser errors.
 - A synthesis or formal timeout, allocation failure, or limit kill after parsing
   is reported as a resource failure. An unresolved resource failure on an attempt
   that passes every hidden test is inconclusive and is graded again if resubmitted.
@@ -278,7 +278,7 @@ elsewhere in the reply. Testbenches and prose are left out.
 
 **On GitHub (no local setup):** add the repository secret `ANTHROPIC_API_KEY`
 (Settings → Secrets and variables → Actions), then open Actions → eval → Run workflow.
-Inputs: models (comma-separated), tasks (`all`, or a comma-separated list for a cheap
+Inputs: models (comma-separated), tasks (`all`, `design`, `repair`, or a comma-separated list for a cheap
 smoke run), episodes per task, attempts per episode, paired (on by default), feedback
 arms (used only when paired is off), effort, and the number of parallel episodes. The run
 prints the most API calls it can make before it starts, then publishes a summary on the
@@ -457,6 +457,28 @@ Yosys's wide remainder expansion before ABC. The grader keeps the memory cap
 and can retry with checked modulo-five mapping, with area and depth unavailable
 on that path. The [offline router regrade](results/claude/2026-11-16/router-regrade.md)
 lists every saved attempt before and after the fixes.
+
+### November 16 repair pilot
+
+The pilot sampled eight repair tasks once per model at `96a0371`, with a shared
+first submission followed by up to two more attempts in each arm. The runs
+started on November 16 Pacific time, November 17 UTC.
+[Archived repair pilot](results/claude/2026-11-16/repair-pilot/summary.md)
+
+| Model | Accepted first, both arms | Accepted within 3, full feedback | Accepted within 3, plain retries |
+|---|---:|---:|---:|
+| Sonnet 5.5 | 8/8 | 8/8 | 8/8 |
+| Haiku 5.5 | 7/8 | 7/8 | 8/8 |
+
+Fifteen of sixteen shared first submissions were accepted. The only informative
+episode was Haiku's router repair. Its first submission and first full-feedback
+retry stopped at Icarus elaboration. Both now compile with sv2v and pass all
+five tests, then hit synthesis and formal time limits. The third full-feedback
+submission also hit tool limits, and the plain-retry arm accepted its second
+submission. The pilot has one tool-limited discordant pair.
+
+The [offline Icarus regrade](results/claude/2026-11-16/icarus-regrade.md) lists the
+saved submissions and the revised paired outcomes.
 
 ## Tasks
 
