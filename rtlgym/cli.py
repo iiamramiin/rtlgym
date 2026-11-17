@@ -26,14 +26,14 @@ from .task import DEFAULT_TASKS_ROOT, list_tasks, load_task
 from .tools import tool_versions
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-_TASKS_HELP = "all, design, repair, or comma-separated task IDs"
+_TASKS_HELP = "all, design, repair, verify, or comma-separated task IDs"
 
 
 def _tasks_arg(value: str, root: Path) -> list[str]:
     all_ids = list_tasks(root)
     if value == "all":
         return all_ids
-    if value in ("design", "repair"):
+    if value in ("design", "repair", "verify"):
         ids = [tid for tid in all_ids if load_task(tid, root).kind == value]
     else:
         ids = [t.strip() for t in value.split(",") if t.strip()]
@@ -74,18 +74,22 @@ def cmd_list(args) -> int:
     for tid in _tasks_arg(args.tasks, args.tasks_root):
         t = load_task(tid, args.tasks_root)
         fv = f"formal depth {t.formal.get('depth')}" if t.has_formal else "no formal"
-        repair = f" (repair of {t.parent_id})" if t.kind == "repair" else ""
-        print(f"{tid:20s} {t.difficulty:8s} {fv:16s} {', '.join(t.tags)}{repair}")
+        relation = f" ({t.kind} of {t.parent_id})" if t.kind in ("repair", "verify") else ""
+        print(f"{tid:20s} {t.difficulty:8s} {fv:16s} {', '.join(t.tags)}{relation}")
     return 0
 
 
 def cmd_score(args) -> int:
     task = load_task(args.task, args.tasks_root)
+    if task.kind == "verify" and args.no_formal:
+        sys.exit("verification tasks require their formal checker run")
     code = Path(args.file).read_text()
     res = evaluate(task, code, use_cache=not args.no_cache, use_formal=not args.no_formal)
     print(format_feedback(res, "full"))
     print(json.dumps({"score": res.score, "breakdown": res.breakdown,
-                      "formal": res.formal_status, "timings_s": res.timings_s}, indent=2))
+                      "formal": res.formal_status, "timings_s": res.timings_s,
+                      **({"verification": res.verification}
+                         if getattr(res, "verification", None) else {})}, indent=2))
     return 0
 
 
@@ -96,6 +100,8 @@ def cmd_baselines(args) -> int:
     jobs = []
     for tid in _tasks_arg(args.tasks, args.tasks_root):
         task = load_task(tid, args.tasks_root)
+        if task.kind == "verify" and args.no_formal:
+            sys.exit("verification tasks require their formal checker run")
         for path in [task.ref_path, *task.candidates()]:
             jobs.append((task, path))
     t0 = time.monotonic()
@@ -117,7 +123,8 @@ def cmd_baselines(args) -> int:
                      "cells": r.cells, "ref_cells": r.ref_cells, "depth": r.depth,
                      "violations": r.violations, "breakdown": r.breakdown,
                      "task_kind": task.kind, "accepted": r.accepted,
-                     "is_starter": path == task.start_path})
+                     "is_starter": path == task.start_path,
+                     **({"verification": r.verification} if getattr(r, "verification", None) else {})})
     print(f"{'task':18s} {'candidate':30s} {'score':>6s} {'tests':>6s} {'formal':>8s} "
           f"{'cells':>6s} {'ref':>5s} {'warn':>4s}  note")
     for row in rows:
@@ -137,6 +144,13 @@ def cmd_baselines(args) -> int:
             note = "sv2v simulation fallback" + (f"; {note}" if note else "")
         if row["is_starter"]:
             note = f"repair starter; {note}" if note else "repair starter"
+        if row.get("verification"):
+            verification = row["verification"]
+            note = (f"checker {verification['status']}, "
+                    f"caught {verification.get('caught', 0)}/{verification.get('mutants_total', 0)} mutants, "
+                    f"{verification.get('assertions', 0)} assertions, "
+                    f"{verification.get('state_bits', 0)} state bits, "
+                    f"{verification.get('checker_bytes', 0)} bytes")
         print(f"{row['task']:18s} {row['candidate']:30s} {row['score']:6.3f} {row['tests']:>6s} "
               f"{row['formal']:>8s} {str(row['cells']):>6s} {str(row['ref_cells']):>5s} "
               f"{row['lint_warn']:4d}  {note}")
@@ -148,6 +162,7 @@ def cmd_baselines(args) -> int:
 
 def _turn_record(r, reward: float, info: dict) -> dict:
     return {"turn": info["turn"], "score": r.score, "reward": round(reward, 4),
+            **({"verification": r.verification} if getattr(r, "verification", None) else {}),
             **({"lines_changed": info["lines_changed"]} if "lines_changed" in info else {}),
             "tests": f"{r.tests_passed}/{r.tests_total}",
             "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
@@ -197,6 +212,8 @@ def _episode_record(task_id: str, env: RTLEnv, turns: list, ret: float, error: s
     return {
         "task": task_id,
         "task_kind": state.task.kind if state else "design",
+        **({"verification": last.verification}
+           if last is not None and getattr(last, "verification", None) else {}),
         **({"starter_score": state.starter_score} if state and state.starter_code is not None else {}),
         "error": error,
         "turns": len(turns),
@@ -308,6 +325,41 @@ def _acceptance_counts(results: list[dict]) -> dict:
     }
 
 
+def _verification_counts(results: list[dict]) -> dict:
+    details = [row.get("verification") for row in results]
+    measured = [value for value in details if value]
+    caught = sum(value.get("caught", 0) for value in measured)
+    total = sum(value.get("mutants_total", 0) for value in measured)
+    families: dict[str, dict] = {}
+    for value in measured:
+        for name, counts in value.get("families", {}).items():
+            aggregate = families.setdefault(name, {"total": 0, "caught": 0})
+            for key in aggregate:
+                aggregate[key] += counts[key]
+    scores = [row["trajectory"][-1]["score"] if row.get("trajectory") and not row.get("error") else 0.0
+              for row in results]
+    return {
+        "episodes": len(results),
+        "graded_episodes": len(measured),
+        "false_alarm_episodes": sum(value.get("status") == "false_alarm" for value in measured),
+        "invalid_episodes": sum(value.get("status") == "invalid" for value in measured),
+        "inconclusive_episodes": sum(value.get("status") == "inconclusive" for value in measured),
+        "caught": caught,
+        "mutants_total": total,
+        "mutation_rate": round(caught / total, 4) if total else None,
+        "mean_score": round(statistics.mean(scores), 4) if scores else None,
+        "mean_weighted_caught": round(sum(value.get("weighted_caught", 0.0)
+                                         for value in measured) / len(results), 4) if results else None,
+        "mean_assertions": round(statistics.mean(value.get("assertions", 0) for value in measured), 2)
+                           if measured else None,
+        "mean_state_bits": round(statistics.mean(value.get("state_bits", 0) for value in measured), 2)
+                           if measured else None,
+        "mean_checker_bytes": round(statistics.mean(value.get("checker_bytes", 0) for value in measured), 2)
+                              if measured else None,
+        "families": families,
+    }
+
+
 def summarize(results: list[dict], meta: dict) -> dict:
     """Rates over ALL episodes: an episode that errored (e.g., a timeout) counts as
     unsolved, with the scores it reached before the error (0 if it never got a
@@ -347,12 +399,19 @@ def summarize(results: list[dict], meta: dict) -> dict:
         if kind == "repair":
             per_task[tid]["task_kind"] = kind
             per_task[tid]["lines_changed"] = _repair_edits([t for r in rs for t in r["trajectory"]])
+        elif kind == "verify":
+            per_task[tid]["task_kind"] = kind
+            per_task[tid]["verification"] = _verification_counts(rs)
     by_verification = {mode: _acceptance_counts(group)
                        for mode, group in _by_verification(results, formal_by_task).items()}
     by_kind = {kind: _acceptance_counts(group) for kind, group in _by_kind(results).items()}
     if "repair" in by_kind:
         by_kind["repair"]["lines_changed"] = _repair_edits(
             [t for r in results if r.get("task_kind") == "repair" for t in r["trajectory"]]
+        )
+    if "verify" in by_kind:
+        by_kind["verify"]["verification"] = _verification_counts(
+            [row for row in results if row.get("task_kind") == "verify"]
         )
     return {
         **meta,
@@ -476,6 +535,8 @@ def cmd_run(args) -> int:
     if args.seed is not None and args.agent != "ollama":
         sys.exit("--seed applies to --agent ollama only")
     ids = _tasks_arg(args.tasks, args.tasks_root)
+    if args.no_formal and any(load_task(tid, args.tasks_root).kind == "verify" for tid in ids):
+        sys.exit("verification tasks require their formal checker run")
     formal_by_task = {tid: not args.no_formal and load_task(tid, args.tasks_root).has_formal for tid in ids}
     episodes = [tid for tid in ids for _ in range(args.samples)]
 
@@ -625,6 +686,35 @@ def _arm(s: dict) -> str:
     return f"{name} ({', '.join(parts)})"
 
 
+def _print_verify_results(runs: list[dict]) -> None:
+    if not any("verify" in summary.get("by_kind", {}) for summary in runs):
+        return
+    print("\n### Verification checker results\n")
+    print("| Arm | Episodes (graded) | False alarms | Invalid | Inconclusive | "
+          "Mutants caught | Mean family coverage | Mean reward |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|")
+    for summary in runs:
+        group = summary.get("by_kind", {}).get("verify")
+        if group is None:
+            continue
+        counts = group["verification"]
+        print(f"| {_arm(summary)} | {counts['episodes']} ({counts['graded_episodes']}) | "
+              f"{counts['false_alarm_episodes']} | {counts['invalid_episodes']} | "
+              f"{counts['inconclusive_episodes']} | {counts['caught']}/{counts['mutants_total']} | "
+              f"{_pct(counts['mean_weighted_caught'])} | {counts['mean_score']} |")
+    print("\nEach episode contributes its final checker. Mutant counts are checks across episodes. "
+          "Family coverage weights mutation families equally. False alarms, invalid checkers, "
+          "inconclusive grades and episodes with errors earn zero reward.")
+    print("\n| Arm | Mean assertions | Mean state bits | Mean source bytes |")
+    print("|---|---:|---:|---:|")
+    for summary in runs:
+        group = summary.get("by_kind", {}).get("verify")
+        if group is not None:
+            counts = group["verification"]
+            print(f"| {_arm(summary)} | {counts.get('mean_assertions', 'n/a')} | "
+                  f"{counts.get('mean_state_bits', 'n/a')} | {counts.get('mean_checker_bytes', 'n/a')} |")
+
+
 def cmd_report(args) -> int:
     """Turn one or more `run --out` files into Markdown tables."""
     data = [json.loads(Path(f).read_text()) for f in args.files]
@@ -640,6 +730,7 @@ def cmd_report(args) -> int:
               f"{_count(s['solved_within_turns'], n)} (N={s['max_turns']}) | "
               f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
               f"{s['mean_turns']} | {_grading(s)} |")
+    _print_verify_results(runs)
     if any(s.get("by_verification") for s in runs):
         print("\n### Acceptance by verification mode\n")
         print("| Arm | Verification | Episodes (errors) | First attempt | Within turn budget |")
@@ -670,10 +761,16 @@ def cmd_report(args) -> int:
     if len(turns) > 1:
         print(f"Note: the runs use different turn budgets ({turns}); compare rates with care.")
     first = runs[0]
-    print(f"Per-task cells: accepted on the first attempt → accepted within the turn budget. "
-          f"Accepted means every hidden test passed, the design synthesized without latches, "
-          f"and the formal check passed where enabled. Commit {first['git_commit'][:7]}; "
-          f"{first['tools'].get('yosys', '')}.")
+    if any("verify" in summary.get("by_kind", {}) for summary in runs):
+        print("Per-task cells: accepted on the first attempt → accepted within the turn budget. "
+              "A verification checker is accepted after passing the good-design checks and "
+              "catching every included mutant. "
+              f"Commit {first['git_commit'][:7]}; {first['tools'].get('yosys', '')}.")
+    else:
+        print(f"Per-task cells: accepted on the first attempt → accepted within the turn budget. "
+              f"Accepted means every hidden test passed, the design synthesized without latches, "
+              f"and the formal check passed where enabled. Commit {first['git_commit'][:7]}; "
+              f"{first['tools'].get('yosys', '')}.")
     return 0
 
 

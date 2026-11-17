@@ -129,6 +129,38 @@ def _report_pairs_by_kind(out: list[str], pairs: list[tuple[str, dict]]) -> None
                        f"{count.get('neither', 0)} | {count.get('errored', 0)} |")
 
 
+def _report_verify(out: list[str], arms: list[dict]) -> None:
+    if not any("verify" in arm.get("by_kind", {}) for arm in arms):
+        return
+    out.append("\n### Verification checker results\n")
+    out.append("| Model | Feedback | Episodes (graded) | False alarms | Invalid | Inconclusive | "
+               "Mutants caught | Mean family coverage | Mean reward |")
+    out.append("|---|---|---:|---:|---:|---:|---:|---:|---:|")
+    for arm in arms:
+        group = arm.get("by_kind", {}).get("verify")
+        if group is None:
+            continue
+        counts = group["verification"]
+        coverage = counts["mean_weighted_caught"]
+        coverage = f"{coverage:.1%}" if coverage is not None else "n/a"
+        out.append(f"| {_name(arm)} | {arm['feedback']} | {counts['episodes']} "
+                   f"({counts['graded_episodes']}) | {counts['false_alarm_episodes']} | "
+                   f"{counts['invalid_episodes']} | {counts['inconclusive_episodes']} | "
+                   f"{counts['caught']}/{counts['mutants_total']} | {coverage} | {counts['mean_score']} |")
+    out.append("\nEach episode contributes its final checker. Mutant counts are checks across "
+               "episodes. Family coverage weights mutation families equally. False alarms, "
+               "invalid checkers, inconclusive grades and episodes with errors earn zero reward.")
+    out.append("\n| Model | Feedback | Mean assertions | Mean state bits | Mean source bytes |")
+    out.append("|---|---|---:|---:|---:|")
+    for arm in arms:
+        group = arm.get("by_kind", {}).get("verify")
+        if group is not None:
+            counts = group["verification"]
+            out.append(f"| {_name(arm)} | {arm['feedback']} | {counts.get('mean_assertions', 'n/a')} | "
+                       f"{counts.get('mean_state_bits', 'n/a')} | "
+                       f"{counts.get('mean_checker_bytes', 'n/a')} |")
+
+
 def report(folder: str) -> str:
     arm_files, pairs = _load(Path(folder))
     arms = [summary for summary, _ in arm_files]
@@ -167,6 +199,7 @@ def report(folder: str) -> str:
             out.append(f"| {_name(s)} | {s['feedback']} | {s.get(fallback_key, 'n/a')} |")
 
     _report_arms_by_kind(out, arm_files)
+    _report_verify(out, arms)
 
     # Tokens per model: every arm's own calls, plus the shared first calls of pairs.
     totals: dict[str, dict] = {}

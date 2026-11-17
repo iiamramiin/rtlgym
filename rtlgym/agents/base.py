@@ -8,6 +8,10 @@ from abc import ABC, abstractmethod
 
 
 def first_prompt(obs: dict) -> str:
+    if obs.get("task_kind") == "verify":
+        return (f"Write verification assertions in module `{obs['top']}`. "
+                "Return the complete checker module.\n\n"
+                f"## Specification\n\n{obs['spec']}")
     if "starter_code" in obs:
         return (f"Repair module `{obs['top']}`. Return the complete corrected module.\n\n"
                 f"## Specification\n\n{obs['spec']}\n\n"

@@ -23,6 +23,9 @@ class ReplayAgent(Agent):
 
     def begin_episode(self, obs: dict) -> None:
         task = load_task(obs["task_id"], self.tasks_root)
+        if task.kind == "verify" and not task.demo_trajectory:
+            self._queue = [task.ref_path]
+            return
         names = task.demo_trajectory or tuple(p.name for p in task.candidates())
         self._queue = [task.candidates_dir / n for n in names]
         if not self._queue:
