@@ -1,5 +1,6 @@
 """The Ollama agent is tested against a small fake Ollama server, so no model,
 GPU, or Ollama install is needed."""
+import hashlib
 import json
 import threading
 import time
@@ -9,7 +10,7 @@ from types import SimpleNamespace
 import pytest
 
 from rtlgym.agents import make_agent
-from rtlgym.agents.claude import SYSTEM_PROMPT, ClaudeAgent
+from rtlgym.agents.claude import SYSTEM_PROMPT, VERIFY_SYSTEM_PROMPT, ClaudeAgent
 from rtlgym.agents.ollama import (
     DEFAULT_MAX_TOKENS,
     NO_ANSWER,
@@ -329,3 +330,40 @@ def test_cli_rejects_bad_combinations():
         main(["run", "--agent", "ollama", "--model", "m", "--effort", "low"])
     with pytest.raises(SystemExit, match="ollama only"):
         main(["run", "--agent", "replay", "--seed", "1"])
+
+
+@pytest.mark.parametrize("task_kind", [None, "design", "repair", "verify"])
+def test_system_prompt_matches_task_kind_across_retries_and_forks(server, task_kind):
+    srv = server([chat(GOOD) for _ in range(3)])
+    agent = OllamaAgent(model="m", host=srv.url)
+    obs = {**OBS, "top": "rtl_checker"}
+    if task_kind is not None:
+        obs["task_kind"] = task_kind
+    if task_kind == "repair":
+        obs.update(starter_code=GOOD, starter_feedback="Broken")
+    agent.begin_episode(obs)
+    agent.act(obs)
+    retry = {**OBS, "feedback": "Fix the checker", "turns_left": 2}
+    agent.act(retry)
+    agent.fork().act({**retry, "feedback": "", "turns_left": 1})
+    expected = VERIFY_SYSTEM_PROMPT if task_kind == "verify" else SYSTEM_PROMPT
+    assert all(request["messages"][0] == {"role": "system", "content": expected}
+               for request in srv.requests)
+    if task_kind != "verify":
+        assert hashlib.sha256(expected.encode()).hexdigest() == (
+            "d19ee989e4d29b8e6fdef1a7fdcf691324d0bf784cb7011723dc975850fe8269"
+        )
+
+
+def test_direct_verify_act_and_episode_reset_select_fresh_system_prompt(server):
+    srv = server([chat(GOOD) for _ in range(4)])
+    agent = OllamaAgent(model="m", host=srv.url)
+    agent.act({**OBS, "task_kind": "verify"})
+    for kind in ("design", "repair", "verify"):
+        current = {**OBS, "task_kind": kind}
+        agent.begin_episode(current)
+        agent.act(current)
+    assert [request["messages"][0]["content"] for request in srv.requests] == [
+        VERIFY_SYSTEM_PROMPT, SYSTEM_PROMPT, SYSTEM_PROMPT, VERIFY_SYSTEM_PROMPT,
+    ]
+    assert all(len(request["messages"]) == 2 for request in srv.requests)

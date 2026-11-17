@@ -1,7 +1,10 @@
 """The Claude agent is tested with a fake client, so no API key or network is needed."""
+import hashlib
 from types import SimpleNamespace
 
-from rtlgym.agents.claude import ClaudeAgent
+import pytest
+
+from rtlgym.agents.claude import SYSTEM_PROMPT, VERIFY_SYSTEM_PROMPT, ClaudeAgent
 
 
 def block(kind, text=""):
@@ -97,3 +100,38 @@ def test_retry_prompt_without_feedback_has_no_diagnostics():
     agent.act(dict(obs, turns_left=1))
     retry = fake.calls[1]["messages"][-1]["content"]
     assert "not accepted" in retry and "Tool feedback" not in retry
+
+
+@pytest.mark.parametrize("task_kind", [None, "design", "repair", "verify"])
+def test_system_prompt_matches_task_kind_across_retries_and_forks(task_kind):
+    agent, fake = make([([block("text", "module rtl_checker; endmodule")], "end_turn") for _ in range(3)])
+    obs = {"top": "rtl_checker", "spec": "SPEC", "feedback": "", "turns_left": 3}
+    if task_kind is not None:
+        obs["task_kind"] = task_kind
+    if task_kind == "repair":
+        obs.update(starter_code="module rtl_checker; endmodule", starter_feedback="Broken")
+    agent.begin_episode(obs)
+    agent.act(obs)
+    retry = {"top": "rtl_checker", "spec": "SPEC", "feedback": "Fix the checker", "turns_left": 2}
+    agent.act(retry)
+    agent.fork().act({**retry, "feedback": "", "turns_left": 1})
+    expected = VERIFY_SYSTEM_PROMPT if task_kind == "verify" else SYSTEM_PROMPT
+    assert all(call["system"] == expected for call in fake.calls)
+    if task_kind != "verify":
+        assert hashlib.sha256(expected.encode()).hexdigest() == (
+            "d19ee989e4d29b8e6fdef1a7fdcf691324d0bf784cb7011723dc975850fe8269"
+        )
+
+
+def test_direct_verify_act_and_episode_reset_select_fresh_system_prompt():
+    agent, fake = make([([block("text", "module rtl_checker; endmodule")], "end_turn") for _ in range(4)])
+    obs = {"top": "rtl_checker", "spec": "SPEC", "feedback": "", "turns_left": 1}
+    agent.act({**obs, "task_kind": "verify"})
+    for kind in ("design", "repair", "verify"):
+        current = {**obs, "task_kind": kind}
+        agent.begin_episode(current)
+        agent.act(current)
+    assert [call["system"] for call in fake.calls] == [
+        VERIFY_SYSTEM_PROMPT, SYSTEM_PROMPT, SYSTEM_PROMPT, VERIFY_SYSTEM_PROMPT,
+    ]
+    assert all(len(call["messages"]) == 1 for call in fake.calls)

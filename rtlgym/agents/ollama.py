@@ -35,7 +35,7 @@ import urllib.request
 from .base import Agent, first_prompt
 
 # Same system prompt as the Claude agent, so the two are compared on equal terms.
-from .claude import SYSTEM_PROMPT
+from .claude import SYSTEM_PROMPT, system_prompt_for_task
 
 DEFAULT_HOST = "http://localhost:11434"
 DEFAULT_TIMEOUT_S = 1800.0
@@ -139,6 +139,7 @@ class OllamaAgent(Agent):
         self._capabilities: list[str] | None = None
         self.think_ignored = False
         self.messages: list[dict] = []
+        self.system_prompt = SYSTEM_PROMPT
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0,
                       "refusals": 0, "truncated": 0, "ctx_truncated": 0,
                       "generate_s": 0.0, "eval_s": 0.0}
@@ -146,10 +147,12 @@ class OllamaAgent(Agent):
     # ----------------------------------------------------------- the episode
     def begin_episode(self, obs: dict) -> None:
         self.messages = []
+        self.system_prompt = system_prompt_for_task(obs)
 
     def act(self, obs: dict) -> str:
         # The same user messages as the Claude agent (see agents/claude.py).
         if not self.messages:
+            self.system_prompt = system_prompt_for_task(obs)
             content = first_prompt(obs)
         elif obs["feedback"]:
             content = ("Tool feedback on your last submission:\n\n```\n" + obs["feedback"]
@@ -200,7 +203,7 @@ class OllamaAgent(Agent):
     def _call(self) -> dict:
         payload: dict = {
             "model": self.model,
-            "messages": [{"role": "system", "content": SYSTEM_PROMPT}, *self.messages],
+            "messages": [{"role": "system", "content": self.system_prompt}, *self.messages],
             "stream": False,
             "options": self.options,
         }

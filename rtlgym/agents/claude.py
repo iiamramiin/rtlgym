@@ -28,7 +28,18 @@ Rules:
 - Prefer clean, lint-free code and small area once the design is correct.
 When you get tool feedback, fix the reported problems and return the complete corrected module."""
 
+VERIFY_SYSTEM_PROMPT = """You are a design verification engineer.
+Return one rtl_checker module in one ```systemverilog code block.
+All ports must be inputs.
+Use immediate assertions and monitor state only, following the task's rules.
+Do not use system tasks.
+When you get tool feedback, fix the problems and return the complete module."""
+
 DEFAULT_MODEL = "claude-sonnet-5-5"
+
+
+def system_prompt_for_task(obs: dict) -> str:
+    return VERIFY_SYSTEM_PROMPT if obs.get("task_kind") == "verify" else SYSTEM_PROMPT
 
 
 class ClaudeAgent(Agent):
@@ -48,14 +59,17 @@ class ClaudeAgent(Agent):
         self.max_tokens = max_tokens
         self.effort = effort
         self.messages: list[dict] = []
+        self.system_prompt = SYSTEM_PROMPT
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0,
                       "refusals": 0, "truncated": 0}
 
     def begin_episode(self, obs: dict) -> None:
         self.messages = []
+        self.system_prompt = system_prompt_for_task(obs)
 
     def act(self, obs: dict) -> str:
         if not self.messages:
+            self.system_prompt = system_prompt_for_task(obs)
             content = first_prompt(obs)
         elif obs["feedback"]:
             content = ("Tool feedback on your last submission:\n\n```\n" + obs["feedback"]
@@ -77,7 +91,7 @@ class ClaudeAgent(Agent):
         kwargs = {
             "model": self.model,
             "max_tokens": self.max_tokens,
-            "system": SYSTEM_PROMPT,
+            "system": self.system_prompt,
             "messages": list(self.messages),
         }
         if self.effort:
