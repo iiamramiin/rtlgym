@@ -349,6 +349,13 @@ def qualify(root: Path, config: dict, work: Path) -> dict:
             raise ValueError(f"hand checker {entry['path']}: got {status}, "
                              f"expected {expected_status}\n{log[-1000:]}")
         hand_checks.append({"path": entry["path"], "status": status, "seconds": round(seconds, 4)})
+    admitted = {entry["id"] for entry, _ in unique}
+    for entry in config["mutants"]:
+        if entry["id"] not in admitted:
+            path = (root / entry["path"]).resolve()
+            if path.parent != (root / "mutants").resolve():
+                raise ValueError("excluded mutant is outside its task directory")
+            path.unlink()
     config["mutants"] = [entry for entry, _ in unique]
     config["hand_checker_sha256"] = digest(checker)
     config["qualification"] = {"tool_versions": tool_versions(), "correct_design_checks": correct_checks,

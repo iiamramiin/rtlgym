@@ -129,6 +129,7 @@ def test_manifest_records_generated_mutants_and_fifo_freedom():
         task = load_task(task_id)
         manifest = json.loads((task.root / "mutants.json").read_text())
         assert len(manifest["mutants"]) >= 10
+        assert len(list((task.root / "mutants").glob("*.sv"))) == len(manifest["mutants"])
         assert any(m["origin"].startswith("generated:") for m in manifest["mutants"])
         assert manifest["qualification"]["excluded"] is not None
     fifo = load_task("verify_fifo_sync")

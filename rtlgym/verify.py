@@ -66,6 +66,10 @@ def load_manifest(task: Task) -> dict:
     entries = [data["reference"], *data["correct_designs"], *data["mutants"]]
     for entry in entries:
         _artifact(root, entry)
+    hand_checker_hash = data.get("hand_checker_sha256")
+    if (hand_checker_hash is not None
+            and hashlib.sha256(task.ref_path.read_bytes()).hexdigest() != hand_checker_hash):
+        raise ValueError("hand-written checker changed since corpus qualification")
     mutants = data["mutants"]
     if (len({m["id"] for m in mutants}) != len(mutants)
             or len({m["sha256"] for m in mutants}) != len(mutants)):
