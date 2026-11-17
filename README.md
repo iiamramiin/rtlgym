@@ -37,7 +37,7 @@ bash scripts/setup_sv2v.sh
 export PATH="$HOME/.local/bin:$PATH"
 pip install -e ".[dev]"
 
-python -m rtlgym list                                   # 26 tasks
+python -m rtlgym list                                   # 29 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
@@ -135,6 +135,69 @@ Keep formal enabled for the three formal-only tasks. Their hidden tests already
 pass on the starter, so a simulation-only run loses the bug signal. The parent
 proof can be bounded and use reduced parameters. All eight starters and their
 fixes are public fixtures.
+
+## Verification tasks
+
+A verification task gives the model a behavior specification, concrete port
+widths, and a sampling contract. The model returns one `rtl_checker` module.
+Every DUT signal is an input to the checker. The harness drives the DUT.
+
+| Task | Profile | Qualified mutants |
+|---|---|---:|
+| `verify_popcount16` | Combinational, all 16-bit inputs | 11 |
+| `verify_rr_arbiter4` | 12 transitions after the published reset schedule | 12 |
+| `verify_fifo_sync` | W=2, DEPTH=4, 12 transitions | 14 |
+
+The sequential profiles add a final observation to check the last transition.
+A rising-edge immediate assertion observes the outputs from the preceding
+transition. Monitor registers must have explicit reset assignments. DUT state
+before reset remains unrestricted.
+
+The verification FIFO specifies `dout` only immediately after a successful
+read. It allows arbitrary data during idle cycles. Its correct implementations
+include retained data, zero idle data, and exposed idle storage. The false-alarm
+gate checks every supplied correct implementation.
+
+Bounded formal decides both gates. An assertion failure on the reference or any
+`good_*` implementation gives zero reward. Otherwise the reward is the mean
+fraction of mutants caught within each represented mutation family. A catch
+requires a bounded assertion counterexample. An unresolved proof gives zero
+reward, stays inconclusive, and is never cached. Acceptance requires every
+admitted mutant to be caught. Simulation runs first on trusted deterministic
+stimulus and records diagnostic failure signals and traces. Its verdict has
+no effect on the formal mutation score.
+
+Verilator XML supplies the checker syntax tree. The grader regenerates a small
+native language of expressions, immediate assertions, pure functions, statically
+bounded loops, and reset monitor registers. It rejects input drives, extra
+instances, hierarchical access, assumptions, foreign calls, timing controls,
+and user system tasks. A lexical gate blocks includes and preprocessing before
+the compiler can read other files. These checks complement the existing process
+resource limits. The execution environment still has the isolation limitations
+described under tool latency.
+
+Checkers use the native parser path. The regular sv2v conversion removes
+assertions by default, so it is disabled for this task kind. Trusted simulation
+instrumentation exposes failure signals because Icarus can exit successfully
+after an assertion fails.
+
+Each task has a frozen `mutants.json` with source hashes, mutation families,
+operators, distinguishing traces, and qualification results. It includes existing
+bugs and deterministic generated variants. Qualification checks compilation,
+the port interface, a bounded difference from the reference, and pairwise
+behavioral deduplication. The hand-written checker catches every admitted mutant.
+To regenerate and requalify the corpus locally:
+
+```bash
+python -m scripts.generate_verify_mutants
+python -m rtlgym baselines --tasks verify --no-cache --workers 4
+python -m rtlgym run --agent replay --tasks verify --max-turns 1 --out verify.json
+```
+
+Feedback gives the caught count and a false-alarm port trace, without mutant
+identities. Results include assertion count, declared state bits, source bytes,
+family coverage and grading time. The corpus is public, and all guarantees are
+limited to its published parameters, bounds, reset schedule and assumptions.
 
 ## Formal equivalence checking
 
@@ -278,7 +341,7 @@ elsewhere in the reply. Testbenches and prose are left out.
 
 **On GitHub (no local setup):** add the repository secret `ANTHROPIC_API_KEY`
 (Settings → Secrets and variables → Actions), then open Actions → eval → Run workflow.
-Inputs: models (comma-separated), tasks (`all`, `design`, `repair`, or a comma-separated list for a cheap
+Inputs: models (comma-separated), tasks (`all`, `design`, `repair`, `verify`, or a comma-separated list for a cheap
 smoke run), episodes per task, attempts per episode, paired (on by default), feedback
 arms (used only when paired is off), effort, and the number of parallel episodes. The run
 prints the most API calls it can make before it starts, then publishes a summary on the
@@ -553,7 +616,7 @@ rtlgym/
   simworker.py    child process that runs one cocotb testbench
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
-tasks/            18 design tasks and 8 repair variants
+tasks/            18 design tasks, 8 repair variants and 3 verification tasks
 tests/            Tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
