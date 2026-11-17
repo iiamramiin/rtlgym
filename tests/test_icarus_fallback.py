@@ -85,7 +85,7 @@ def test_task_group_selectors_preserve_explicit_selection():
     repair = _tasks_arg("repair", DEFAULT_TASKS_ROOT)
     assert len(design) == 18 and len(repair) == 8
     assert set(design).isdisjoint(repair)
-    assert set(design + repair) == set(_tasks_arg("all", DEFAULT_TASKS_ROOT))
+    assert set(design + repair).issubset(_tasks_arg("all", DEFAULT_TASKS_ROOT))
     assert _tasks_arg("repair_popcount16,popcount16", DEFAULT_TASKS_ROOT) == [
         "repair_popcount16", "popcount16",
     ]

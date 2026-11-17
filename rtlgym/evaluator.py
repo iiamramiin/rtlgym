@@ -87,6 +87,7 @@ class EvalResult:
     resource_failures: dict[str, str] = field(default_factory=dict)
     ppa_unavailable: str | None = None
     unchanged_starter: bool = False
+    verification: dict | None = None
 
     @property
     def pass_rate(self) -> float:
@@ -105,6 +106,8 @@ class EvalResult:
     def inconclusive(self) -> bool:
         """The grader could not decide: a timeout, an incomplete simulation, or a
         resource stop or formal error on a design that otherwise looks correct."""
+        if self.verification is not None:
+            return self.verification["status"] == "inconclusive"
         if not self.compile_ok:
             return False
         return (self.sim_timed_out or not self.sim_complete
@@ -116,6 +119,9 @@ class EvalResult:
     def accepted(self) -> bool:
         """The single acceptance predicate: termination, solve rates, and the
         area/depth bonus all use it."""
+        if self.verification is not None:
+            return (self.verification["status"] == "pass"
+                    and self.verification["caught"] == self.verification["mutants_total"])
         return (self.all_tests_pass and self.sim_complete and self.synth_ok
                 and not self.latches and not self.interface_errors and not self.resource_failures
                 and self.formal_status in ("pass", "disabled") and not self.unchanged_starter)
@@ -163,6 +169,11 @@ def _cache_key(task: Task, code: str, weights: RewardWeights, use_formal: bool) 
 def evaluate(task: Task, code: str, weights: RewardWeights | None = None,
              use_cache: bool = True, keep_dir: Path | None = None,
              use_formal: bool = True) -> EvalResult:
+    if task.kind == "verify":
+        if not use_formal:
+            raise ValueError("verification tasks require bounded formal checks")
+        from .verify import evaluate_checker
+        return evaluate_checker(task, code, use_cache=use_cache, keep_dir=keep_dir)
     tools.require_tools()
     weights = weights or RewardWeights()
     sha = hashlib.sha256(code.encode()).hexdigest()[:12]

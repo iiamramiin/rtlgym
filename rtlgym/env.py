@@ -106,7 +106,11 @@ class RTLEnv:
         st = self.state
         if st.done:
             raise RuntimeError("the episode is over; call reset() to start a new one")
-        code = extract_code(action, st.task.top)
+        if st.task.kind == "verify":
+            from .verify import extract_checker
+            code = extract_checker(action)
+        else:
+            code = extract_code(action, st.task.top)
         t0 = time.monotonic()
         res = evaluate(st.task, code, self.weights, use_cache=self.use_cache,
                        use_formal=self.use_formal)
@@ -157,6 +161,8 @@ class RTLEnv:
             "turns_left": self.max_turns - st.turn,
             "feedback": feedback,
         }
+        if st.task.kind == "verify":
+            obs["task_kind"] = "verify"
         if st.starter_code is not None and st.turn == 0:
             obs.update(starter_code=st.starter_code, starter_feedback=st.starter_feedback)
         return obs
@@ -226,6 +232,21 @@ def _starter_feedback(r: EvalResult) -> str:
 def format_feedback(r: EvalResult, level: str = "full") -> str:
     if level == "none":
         return ""
+    if r.verification is not None:
+        detail = r.verification
+        status = detail["status"]
+        if status == "invalid":
+            return "Checker rejected.\n" + "\n".join(r.violations)
+        lines = [f"Mutants caught: {detail['caught']}/{detail['mutants_total']}"]
+        if status == "false_alarm":
+            lines.append("A correct implementation violates the checker.")
+            if level == "full" and detail["false_alarm_trace"]:
+                lines.append(detail["false_alarm_trace"])
+        elif status == "inconclusive":
+            lines.append("The bounded checks did not all resolve. No reward.")
+        else:
+            lines.append(f"Weighted mutation score: {r.score:.3f}")
+        return "\n".join(lines)
     lines = [f"Score: {r.score:.3f}"]
     if r.unchanged_starter:
         lines.append("The starting RTL is unchanged.")

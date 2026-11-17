@@ -46,6 +46,17 @@ class Task:
     parent_id: str | None = None
     start_path: Path | None = None
     _grading_root: Path | None = field(default=None, repr=False)
+    verify: dict = field(default_factory=dict)
+    dut_root: Path | None = field(default=None, repr=False)
+    dut_top: str | None = None
+
+    @property
+    def verification_root(self) -> Path:
+        return self.root
+
+    @property
+    def dut_ref_path(self) -> Path:
+        return (self.dut_root or self._sources_root) / "ref.sv"
 
     @property
     def start_code(self) -> str | None:
@@ -57,6 +68,8 @@ class Task:
 
     @property
     def has_formal(self) -> bool:
+        if self.kind == "verify":
+            return True
         return bool(self.formal) and self.formal.get("enabled", True)
 
     @property
@@ -80,6 +93,13 @@ class Task:
         """Hash of everything that affects grading, used as part of the cache key."""
         h = hashlib.sha256()
         paths = [self._sources_root / "task.toml", self.ref_path, self.test_path]
+        if self.kind == "verify":
+            suffixes = {".sv", ".v", ".json", ".toml", ".md"}
+            paths = sorted(path for path in self.root.rglob("*") if path.is_file()
+                           and path.suffix in suffixes)
+            if self.dut_root is not None:
+                paths.extend(sorted(path for path in self.dut_root.rglob("*") if path.is_file()
+                                    and path.suffix in suffixes))
         if self.start_path is not None:
             paths.extend((self.root / "task.toml", self.start_path))
         for path in paths:
@@ -161,6 +181,42 @@ def _repair_task(task_id: str, root: Path, meta: dict, tasks_root: Path) -> Task
                    start_path=path, _grading_root=parent.root, demo_trajectory=tuple(trajectory))
 
 
+def _verify_task(task_id: str, root: Path, meta: dict, tasks_root: Path) -> Task:
+    if meta.get("id", task_id) != task_id:
+        raise ValueError(f"verify task '{task_id}' must use its directory name as its ID")
+    parent_id = meta.get("parent")
+    if not _is_basename(parent_id) or parent_id == task_id:
+        raise ValueError(f"verify task '{task_id}' must name a separate design parent")
+    parent_root, parent_meta = _manifest(parent_id, tasks_root)
+    if parent_meta.get("kind", "design") != "design":
+        raise ValueError(f"verify task '{task_id}' needs a design parent, got '{parent_id}'")
+    parent = _design_task(parent_id, parent_root, parent_meta)
+    verify = meta.get("verification")
+    if not isinstance(verify, dict) or not verify:
+        raise ValueError(f"verify task '{task_id}' needs [verification] settings")
+    manifest = verify.get("manifest", "mutants.json")
+    if not _is_basename(manifest) or (root / manifest).resolve().parent != root.resolve():
+        raise ValueError(f"verify task '{task_id}' has an invalid mutant manifest")
+    if not (root / manifest).is_file():
+        raise ValueError(f"verify task '{task_id}' is missing mutant manifest '{manifest}'")
+    if meta.get("top", "rtl_checker") != "rtl_checker":
+        raise ValueError(f"verify task '{task_id}' must use top 'rtl_checker'")
+    if verify.get("dut_top", parent.top) != parent.top:
+        raise ValueError(f"verify task '{task_id}' DUT top must match its parent")
+    trajectory = meta.get("demo_trajectory", [])
+    names = {path.name for path in (root / "candidates").glob("*.sv")}
+    if not isinstance(trajectory, list) or not all(_is_basename(n) and n in names for n in trajectory):
+        raise ValueError(f"verify task '{task_id}' demo trajectory must name checker candidates")
+    return Task(
+        id=task_id, root=root, top="rtl_checker", kind="verify", parent_id=parent_id,
+        difficulty=meta.get("difficulty", parent.difficulty),
+        spec=(root / "spec.md").read_text(encoding="utf-8"),
+        test_module="", tags=tuple(meta.get("tags", ("verification",))),
+        sim_timeout_s=parent.sim_timeout_s, demo_trajectory=tuple(trajectory),
+        formal=dict(verify), verify=dict(verify), dut_root=parent.root, dut_top=parent.top,
+    )
+
+
 def load_task(task_id: str, tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> Task:
     tasks_root = Path(tasks_root)
     root, meta = _manifest(task_id, tasks_root)
@@ -169,6 +225,8 @@ def load_task(task_id: str, tasks_root: Path | str = DEFAULT_TASKS_ROOT) -> Task
         return _design_task(task_id, root, meta)
     if kind == "repair":
         return _repair_task(task_id, root, meta, tasks_root)
+    if kind == "verify":
+        return _verify_task(task_id, root, meta, tasks_root)
     raise ValueError(f"task '{task_id}' has unknown kind {kind!r}")
 
 
