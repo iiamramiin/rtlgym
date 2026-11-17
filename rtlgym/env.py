@@ -239,6 +239,8 @@ def format_feedback(r: EvalResult, level: str = "full") -> str:
             lines.append(r.compile_log.strip())
         return "\n".join(lines)
 
+    if r.sim_frontend == "sv2v":
+        lines.append("Simulation front end: Icarus compiled after sv2v conversion.")
     lines.append(f"Hidden tests: {r.tests_passed}/{r.tests_total} passed")
     if r.sim_timed_out:
         lines.append("  The simulation timed out (a loop that never ends or logic that never "

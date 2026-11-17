@@ -37,7 +37,7 @@ from .task import Task
 
 CACHE_DIR = Path(os.environ.get("RTLGYM_CACHE", Path.home() / ".cache" / "rtlgym"))
 # Bump when grading semantics change, so cached results from older graders are ignored.
-GRADER_VERSION = "8"
+GRADER_VERSION = "9"
 _TOOL_VERSIONS: dict[str, str] | None = None
 _REF_LOCK = threading.Lock()
 _REF_PPA: dict[str, dict] = {}
@@ -80,6 +80,7 @@ class EvalResult:
     score: float = 0.0
     breakdown: dict[str, float] = field(default_factory=dict)
     cached: bool = False
+    sim_frontend: str | None = None
     synth_frontend: str | None = None
     formal_frontend: str | None = None
     frontend_errors: list[str] = field(default_factory=list)
@@ -227,11 +228,12 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
     src = workdir / "candidate.sv"
     src.write_text(code)
 
-    c = tools.compile_iverilog(src, task.top, workdir)
+    c, sim_src = tools.compile_simulation(src, task.top, workdir)
     res.compile_ok, res.compile_log = c.ok, tools.tail(c.log, 2000)
     res.timings_s["compile"] = round(c.elapsed_s, 3)
     if not res.compile_ok:
         return
+    res.sim_frontend = "sv2v" if sim_src != src else "native"
 
     # Lint, synthesis, simulation and the formal check are independent; run them
     # concurrently so wall-clock latency per step is max(), not sum(), of the tools.
@@ -241,7 +243,7 @@ def _run_tools(task: Task, code: str, workdir: Path, res: EvalResult, ref: dict,
     with ThreadPoolExecutor(max_workers=4) as pool:
         f_lint = pool.submit(tools.lint_verilator, src, task.top, workdir / "lint")
         f_syn = pool.submit(tools.synth_yosys, src, task.top, workdir / "synth")
-        f_sim = pool.submit(tools.simulate_cocotb, src, task.top, task.test_path, workdir,
+        f_sim = pool.submit(tools.simulate_cocotb, sim_src, task.top, task.test_path, workdir,
                             task.sim_timeout_s)
         f_fv = (pool.submit(formal.check_equivalence, task, src, workdir / "formal")
                 if run_formal else None)

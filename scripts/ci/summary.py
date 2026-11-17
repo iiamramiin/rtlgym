@@ -158,6 +158,14 @@ def report(folder: str) -> str:
             front_end, resource = (s.get(key, "n/a") for key in failure_keys)
             out.append(f"| {_name(s)} | {s['feedback']} | {front_end} | {resource} |")
 
+    fallback_key = "sim_frontend_fallback_attempts"
+    if any(fallback_key in s for s in arms):
+        out.append("\n### Icarus simulation front-end retries\n")
+        out.append("| Model | Feedback | Compiled after sv2v |")
+        out.append("|---|---|---:|")
+        for s in arms:
+            out.append(f"| {_name(s)} | {s['feedback']} | {s.get(fallback_key, 'n/a')} |")
+
     _report_arms_by_kind(out, arm_files)
 
     # Tokens per model: every arm's own calls, plus the shared first calls of pairs.

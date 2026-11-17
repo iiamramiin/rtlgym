@@ -26,13 +26,17 @@ from .task import DEFAULT_TASKS_ROOT, list_tasks, load_task
 from .tools import tool_versions
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+_TASKS_HELP = "all, design, repair, or comma-separated task IDs"
 
 
 def _tasks_arg(value: str, root: Path) -> list[str]:
     all_ids = list_tasks(root)
     if value == "all":
         return all_ids
-    ids = [t.strip() for t in value.split(",") if t.strip()]
+    if value in ("design", "repair"):
+        ids = [tid for tid in all_ids if load_task(tid, root).kind == value]
+    else:
+        ids = [t.strip() for t in value.split(",") if t.strip()]
     unknown = set(ids) - set(all_ids)
     if unknown:
         sys.exit(f"unknown task(s): {', '.join(sorted(unknown))}")
@@ -67,7 +71,7 @@ def _git_commit(cwd: Path = REPO_ROOT) -> str:
 
 
 def cmd_list(args) -> int:
-    for tid in list_tasks(args.tasks_root):
+    for tid in _tasks_arg(args.tasks, args.tasks_root):
         t = load_task(tid, args.tasks_root)
         fv = f"formal depth {t.formal.get('depth')}" if t.has_formal else "no formal"
         repair = f" (repair of {t.parent_id})" if t.kind == "repair" else ""
@@ -106,7 +110,8 @@ def cmd_baselines(args) -> int:
                      "tests": f"{r.tests_passed}/{r.tests_total}", "formal": r.formal_status,
                      "formal_message": r.formal_message, "frontend_errors": r.frontend_errors,
                      "resource_failures": r.resource_failures, "ppa_unavailable": r.ppa_unavailable,
-                     "synth_frontend": r.synth_frontend, "formal_frontend": r.formal_frontend,
+                     "sim_frontend": r.sim_frontend, "synth_frontend": r.synth_frontend,
+                     "formal_frontend": r.formal_frontend,
                      "timings_s": r.timings_s, "tools": versions,
                      "compile": r.compile_ok, "lint_warn": len(r.lint_warnings),
                      "cells": r.cells, "ref_cells": r.ref_cells, "depth": r.depth,
@@ -128,6 +133,8 @@ def cmd_baselines(args) -> int:
             note = "PPA unavailable: " + row["ppa_unavailable"]
         elif row["formal"] == "error" and not note:
             note = "formal: " + row["formal_message"][:45]
+        if row["sim_frontend"] == "sv2v":
+            note = "sv2v simulation fallback" + (f"; {note}" if note else "")
         if row["is_starter"]:
             note = f"repair starter; {note}" if note else "repair starter"
         print(f"{row['task']:18s} {row['candidate']:30s} {row['score']:6.3f} {row['tests']:>6s} "
@@ -144,7 +151,8 @@ def _turn_record(r, reward: float, info: dict) -> dict:
             **({"lines_changed": info["lines_changed"]} if "lines_changed" in info else {}),
             "tests": f"{r.tests_passed}/{r.tests_total}",
             "all_tests_pass": r.all_tests_pass, "formal": r.formal_status,
-            "frontend_errors": r.frontend_errors, "synth_frontend": r.synth_frontend,
+            "frontend_errors": r.frontend_errors, "sim_frontend": r.sim_frontend,
+            "synth_frontend": r.synth_frontend,
             "formal_frontend": r.formal_frontend, "resource_failures": r.resource_failures,
             "test_escape": r.test_escape, "inconclusive": r.inconclusive,
             "ppa_unavailable": r.ppa_unavailable,
@@ -360,6 +368,7 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "test_escape_attempts": sum(r["test_escapes"] for r in results),
         "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in results),
         "frontend_failure_attempts": sum(bool(t.get("frontend_errors")) for t in steps),
+        "sim_frontend_fallback_attempts": sum(t.get("sim_frontend") == "sv2v" for t in steps),
         "resource_failure_attempts": sum(bool(t.get("resource_failures")) for t in steps),
         "mean_first_score": mean("first_score"),
         "mean_best_score": mean("best_score"),
@@ -673,7 +682,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--tasks-root", type=Path, default=DEFAULT_TASKS_ROOT)
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    sub.add_parser("list", help="list tasks").set_defaults(fn=cmd_list)
+    p = sub.add_parser("list", help="list tasks")
+    p.add_argument("--tasks", default="all", help=_TASKS_HELP)
+    p.set_defaults(fn=cmd_list)
 
     p = sub.add_parser("score", help="grade one RTL file against one task")
     p.add_argument("task")
@@ -683,7 +694,7 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(fn=cmd_score)
 
     p = sub.add_parser("baselines", help="grade the reference and all hand-written candidates")
-    p.add_argument("--tasks", default="all")
+    p.add_argument("--tasks", default="all", help=_TASKS_HELP)
     p.add_argument("--workers", type=_positive_int, default=4)
     p.add_argument("--out")
     p.add_argument("--no-cache", action="store_true")
@@ -699,7 +710,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-tokens", type=_positive_int,
                    help="output token limit per call, thinking included "
                         "(default: the model's own for Claude; 8192 for --agent ollama)")
-    p.add_argument("--tasks", default="all")
+    p.add_argument("--tasks", default="all", help=_TASKS_HELP)
     p.add_argument("--samples", type=_positive_int, default=1, help="episodes per task")
     p.add_argument("--paired", action="store_true",
                    help="grade one first attempt per episode, then branch it into the 'full' "

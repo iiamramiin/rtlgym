@@ -5,7 +5,7 @@
 #
 # Settings (environment variables):
 #   MODELS="claude-sonnet-5-5"   comma-separated model IDs
-#   TASKS=all                    comma-separated task IDs, or "all"
+#   TASKS=all                    all, design, repair, or comma-separated task IDs
 #   SAMPLES=5 MAX_TURNS=3        episodes per task, attempts per episode
 #   PAIRED=true                  true: one first attempt branched into the "full" and
 #                                "none" arms (--paired); false: run each FEEDBACK arm
@@ -36,11 +36,8 @@ mkdir -p "$OUT"
 [ "$AGENT" = replay ] && MODELS=replay            # the replay agent has no model
 models=$(echo "$MODELS" | tr ',' ' ')
 arms=$(echo "$FEEDBACK" | tr ',' ' ')
-if [ "$TASKS" = all ]; then
-    n_tasks=$("$PYTHON" -m rtlgym list | grep -c .)
-else
-    n_tasks=$(echo "$TASKS" | tr ',' '\n' | grep -c .)
-fi
+task_list=$("$PYTHON" -m rtlgym list --tasks "$TASKS" 2>/dev/null) || task_list=
+n_tasks=$(printf '%s' "$task_list" | awk 'NF { n++ } END { print n+0 }')
 n_models=$(echo "$models" | wc -w)
 n_arms=$(echo "$arms" | wc -w)
 calls=$("$PYTHON" "$HERE/summary.py" plan "$n_models" "$n_tasks" "$SAMPLES" "$MAX_TURNS" \

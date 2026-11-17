@@ -28,6 +28,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from .checks import static_check
+
 MAX_LOG_CHARS = 4000
 MIN_CPU_LIMIT_S = 120
 MAX_CPU_LIMIT_S = 300
@@ -207,6 +209,17 @@ def yosys_resource_limit(result: ToolRun, log: str = "") -> str | None:
     return _resource_limit(result, result.log + "\n" + log) if result.parsed else None
 
 
+def _convert_sv2v(src: Path, lowered: Path, workdir: Path, *defines: str) -> ToolRun:
+    lowered.unlink(missing_ok=True)
+    # Bound the Haskell RTS even on machines with many logical CPUs.
+    return run(["sv2v", "+RTS", "-N1", "-M256m", "-RTS", *defines,
+                f"--write={lowered}", str(src)], cwd=workdir, timeout_s=15)
+
+
+def _conversion_ok(result: ToolRun, output: Path) -> bool:
+    return result.ok and output.is_file() and output.stat().st_size > 0
+
+
 def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
                    invoke: Callable[..., ToolRun]) -> tuple[ToolRun, str, bool]:
     """Keep native Yosys for accepted sources. Retry only inputs it cannot parse."""
@@ -230,16 +243,11 @@ def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
 
         index = paths.index(syntax)
         lowered = workdir / f"frontend_{index}.v"
-        lowered.unlink(missing_ok=True)
-        # Match read_verilog's synthesis/preprocessor defaults. Keep conversion
-        # output in a file, away from the bounded diagnostic log.
-        # The release defaults to a worker per logical CPU, which can exhaust
-        # the address-space limit even for a tiny input on a many-core host.
-        conversion = run(["sv2v", "+RTS", "-N1", "-M256m", "-RTS", "-DSYNTHESIS", "-DYOSYS",
-                          f"--write={lowered}", str(syntax)], cwd=workdir, timeout_s=15)
+        # Match read_verilog's preprocessor defaults.
+        conversion = _convert_sv2v(syntax, lowered, workdir, "-DSYNTHESIS", "-DYOSYS")
         elapsed += conversion.elapsed_s
         diagnostics.append("Native Yosys parser: " + tail(result.log, 1000))
-        if not conversion.ok or not lowered.is_file() or lowered.stat().st_size == 0:
+        if not _conversion_ok(conversion, lowered):
             conversion.ok = False
             conversion.elapsed_s = elapsed
             conversion.log = "\n".join([*diagnostics, "sv2v: " + conversion.log])
@@ -254,6 +262,35 @@ def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
 def compile_iverilog(src: Path, top: str, workdir: Path, timeout_s: float = 30) -> ToolRun:
     return run(["iverilog", "-g2012", "-s", top, "-o", str(workdir / "compile_check.vvp"), str(src)],
                cwd=workdir, timeout_s=timeout_s)
+
+
+def compile_simulation(src: Path, top: str, workdir: Path) -> tuple[ToolRun, Path]:
+    """Retry Icarus diagnostics with lowered RTL and return the file to simulate."""
+    native = compile_iverilog(src, top, workdir)
+    if native.ok or not native.returncode or native.returncode < 0 or _resource_limit(native, native.log):
+        return native, src
+    # sv2v can collapse identical assignments or lower variables into resolved
+    # nets. Do not let that hide an illegal multiple-driver source.
+    if "cannot have multiple drivers" in native.log:
+        return native, src
+
+    lowered = workdir / "candidate_icarus.v"
+    conversion = _convert_sv2v(src, lowered, workdir, "-D__ICARUS__")
+    native.elapsed_s += conversion.elapsed_s
+    if not _conversion_ok(conversion, lowered):
+        native.log = f"Native Icarus:\n{tail(native.log, 1200)}\nsv2v:\n{tail(conversion.log, 650)}"
+        return native, src
+
+    # Check the exact source that will be handed to the simulator as well.
+    check = static_check(lowered.read_text(), top)
+    if not check.ok:
+        native.log = f"Native Icarus:\n{tail(native.log, 1200)}\nLowered RTL: {', '.join(check.violations)}"
+        return native, src
+
+    retry = compile_iverilog(lowered, top, workdir)
+    retry.elapsed_s += native.elapsed_s
+    retry.log = f"Native Icarus:\n{tail(native.log, 1200)}\nIcarus after sv2v:\n{tail(retry.log, 650)}"
+    return retry, lowered if retry.ok else src
 
 
 # --------------------------------------------------------------------------- lint
