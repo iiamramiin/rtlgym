@@ -244,10 +244,8 @@ def test_namespace_provenance_and_interface_are_checked(tmp_path, code):
 @pytest.mark.parametrize("change", [
     lambda code: code.replace("posedge clk", "negedge clk"),
     lambda code: code.replace("posedge clk", "posedge en"),
-    lambda code: code.replace("expected<=0; seen<=0;", "seen<=0;"),
-    lambda code: code.replace("expected<=0;", "if(en) expected<=0;"),
 ])
-def test_monitor_clock_and_complete_reset_are_required(tmp_path, change):
+def test_monitor_uses_only_the_task_clock(tmp_path, change):
     result = validate(change(SEQUENTIAL), tmp_path, SEQUENTIAL_PORTS, "clk", "rst")
     assert not result.valid and result.reason
 
@@ -259,7 +257,7 @@ def test_validation_resource_stop_is_inconclusive(tmp_path, monkeypatch):
     assert not result.valid and result.inconclusive
 
 
-def test_submitted_tool_pragmas_cannot_hide_undriven_monitor(tmp_path):
+def test_unwritten_module_storage_is_left_for_the_formal_gate(tmp_path):
     code = """module rtl_checker(input [3:0] x,input [2:0] count);
 /* verilator lint_off UNDRIVEN */
 reg enable_check;
@@ -267,15 +265,15 @@ always @* if(enable_check) assert(count == x[2:0]);
 endmodule
 """
     result = validate(code, tmp_path)
-    assert not result.valid and result.reason
+    assert result.valid, result.reason
 
 
-def test_clocked_blocking_assignment_cannot_create_unreset_history(tmp_path):
+def test_clocked_blocking_history_need_not_reset(tmp_path):
     code = SEQUENTIAL.replace("expected<=0; seen<=0;", "seen<=0;").replace(
         "expected <= q + {1'b0,en};", "expected = q + {1'b0,en};"
     )
     result = validate(code, tmp_path, SEQUENTIAL_PORTS, "clk", "rst")
-    assert not result.valid and "complete" in result.reason
+    assert result.valid and result.state_bits == 3, result.reason
 
 
 def test_clocked_local_work_variable_is_allowed_when_assigned_before_use(tmp_path):
@@ -381,11 +379,10 @@ endmodule
     "initial begin #1; history=0; end",
     "initial history<=0;",
     "initial history=4'bxx01;",
-    "initial history[1:0]=0;",
     "initial en=0;",
     "initial history=0; initial history=1;",
 ])
-def test_nonconstant_partial_or_racing_initialization_is_rejected(tmp_path, initializer):
+def test_nonconstant_timed_or_racing_initialization_is_rejected(tmp_path, initializer):
     code = f"""module rtl_checker(input clk,en,input[3:0]q);
 reg[3:0]history; {initializer}
 always@(posedge clk) begin assert(q==history); history<=q; end
@@ -397,7 +394,7 @@ endmodule
     assert "initialstatic" not in result.reason and "moddiv" not in result.reason
 
 
-def test_partial_init_and_partial_reset_cannot_be_combined(tmp_path):
+def test_partial_init_and_partial_reset_are_allowed(tmp_path):
     code = """module rtl_checker(input clk,rst,input[1:0]q);
 reg[1:0]history; initial history[0]=0;
 always@(posedge clk) begin
@@ -407,7 +404,7 @@ endmodule
 """
     result = validate(code, tmp_path, {"clk": ("input", 1), "rst": ("input", 1),
                                      "q": ("output", 2)}, "clk", "rst")
-    assert not result.valid and "complete" in result.reason
+    assert result.valid and result.state_bits == 2, result.reason
 
 
 def test_same_initial_block_constant_rewrites_and_expressions_are_deterministic(tmp_path):
@@ -533,7 +530,7 @@ endmodule
         assert simulated.ok and "ERROR" not in simulated.log, simulated.log
 
 
-def test_module_scratch_is_allowed_but_path_dependent_history_needs_initialization(tmp_path):
+def test_path_dependent_module_history_is_classified_as_arbitrary_state(tmp_path):
     code = """module rtl_checker(input clk,en,input[3:0]q);
 reg[3:0] scratch;
 always@(posedge clk) begin
@@ -547,7 +544,7 @@ endmodule
     assert result.valid and result.state_bits == 0, result.reason
     bad = code.replace("scratch=q; assert(scratch==q);", "assert(scratch==q);")
     rejected = validate(bad, tmp_path, ports, "clk")
-    assert not rejected.valid and "complete" in rejected.reason
+    assert rejected.valid and rejected.state_bits == 4, rejected.reason
 
 
 @pytest.mark.parametrize("signed", [False, True])

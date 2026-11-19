@@ -10,6 +10,7 @@ the simulator or formal engine, and the design conversion fallback is unused.
 from __future__ import annotations
 
 import re
+import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
@@ -19,11 +20,13 @@ from .tools import run, tail
 MAX_SOURCE_BYTES = 64 * 1024
 MAX_XML_BYTES = 4 * 1024 * 1024
 MAX_NODES = 12000
+MAX_AST_DEPTH = 128
 MAX_PRIVATE_BITS = 4096
 MAX_LOOP_STEPS = 128
 MAX_ASSERTIONS = 64
 MAX_EXPANDED_BYTES = 1024 * 1024
 _PREFIX = "__rtlgym_"
+_INDEX_HELPER = _PREFIX + "index_value"
 _TOKEN = re.compile(
     r'\s+|//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\\[^\s]+|'
     r"[a-zA-Z_$][a-zA-Z0-9_$]*|[0-9][a-zA-Z0-9_'?]*|.", re.S,
@@ -103,8 +106,163 @@ def _without_comments(code: str) -> str:
     return _TOKEN.sub(replace, code)
 
 
+class _NativeValidationLimit(InvalidChecker):
+    pass
+
+
+def _native_document(code: str, source: Path, xml: Path, workdir: Path,
+                     budget_s: float = 15) -> ET.Element:
+    source.write_text(_without_comments(code), encoding="utf-8")
+    xml.unlink(missing_ok=True)
+    result = run(["verilator", "--xml-only", "--assert", "--language", "1800-2012",
+                  "-Wall", "-Wno-fatal", "--top-module", "rtl_checker", "--xml-output",
+                  str(xml), str(source)], cwd=workdir, timeout_s=budget_s)
+    if not result.ok or not xml.is_file():
+        if result.timed_out or result.returncode in (-9, -24, -25):
+            raise _NativeValidationLimit("Native checker validation hit a resource limit")
+        raise InvalidChecker("Native checker validation failed. " + tail(result.log, 1600))
+    if any(f"%Warning-{name}:" in result.log for name in ("LATCH", "MULTIDRIVEN")):
+        raise InvalidChecker("Observer has incomplete combinational assignments or multiple drivers")
+    if xml.stat().st_size > MAX_XML_BYTES:
+        raise InvalidChecker("Checker XML exceeds the size limit")
+    document = ET.parse(xml).getroot()
+    if len(list(document.iter())) > MAX_NODES:
+        raise InvalidChecker("Checker AST exceeds the node limit")
+    pending = [(document, 0)]
+    while pending:
+        node, depth = pending.pop()
+        if depth > MAX_AST_DEPTH:
+            raise InvalidChecker("Checker nesting exceeds 128 syntax levels")
+        pending.extend((child, depth + 1) for child in node)
+    source_id = next((node.get("id") for node in document.findall("./files/file")
+                      if Path(node.get("filename", "")).resolve() == source.resolve()), None)
+    if source_id is None:
+        raise InvalidChecker("Checker source provenance is unavailable")
+    for node in document.findall("./module_files/file"):
+        if node.get("id") != source_id:
+            raise InvalidChecker("Checker must be self-contained")
+    for module in document.findall("./netlist/module"):
+        for node in module.iter():
+            if node.get("loc") and node.get("loc", "").split(",")[0] != source_id:
+                raise InvalidChecker("Observer AST contains code from another source")
+    return document
+
+
+def _shield_remainder_indices(code: str, document: ET.Element) -> str:
+    """Keep complete modulo index expressions inside a native argument context.
+
+    Verilator discards modulo-by-four when narrowing an array's address. The
+    identity call prevents that narrowing from propagating into its argument.
+    The sized cast is self-determined, so the 256-bit argument cannot widen the
+    submitted arithmetic. The second argument records its width before any
+    argument truncation, allowing over-wide expressions to be rejected safely.
+    """
+    tokens = _tokens(code)
+    positions = {position: index for index, (_, position) in enumerate(tokens)}
+    lines = code.splitlines(keepends=True)
+    spans = set()
+    for selection in document.findall(".//arraysel"):
+        location = selection.get("loc", "").split(",")
+        if len(location) != 5:
+            continue
+        line, column = int(location[1]), int(location[2])
+        if not 0 < line <= len(lines):
+            continue
+        offset = sum(map(len, lines[:line - 1])) + column - 1
+        index = positions.get(offset)
+        if index is None or tokens[index][0] != "[":
+            continue
+        depth, end = 0, None
+        for following in range(index, len(tokens)):
+            token = tokens[following][0]
+            depth += token == "["
+            depth -= token == "]"
+            if depth == 0:
+                end = following
+                break
+        if end is not None and any(token == "%" for token, _ in tokens[index + 1:end]):
+            spans.add((offset + 1, tokens[end][1]))
+    if not spans:
+        return code
+
+    def rewrite(start: int, stop: int, excluded: tuple[int, int] | None = None) -> str:
+        children = sorted(span for span in spans if span != excluded and start <= span[0] < span[1] <= stop)
+        chunks, position, length = [], start, 0
+        for begin, end in children:
+            if begin < position:
+                continue  # An enclosing span already rewrote this child.
+            expression = rewrite(begin, end, (begin, end))
+            if 3 * len(expression) + len(_INDEX_HELPER) + 40 > MAX_EXPANDED_BYTES:
+                raise InvalidChecker("Expanded checker exceeds 1 MiB")
+            protected = f"{_INDEX_HELPER}($bits({expression})'({expression}), $bits({expression}))"
+            chunk = code[position:begin] + protected
+            length += len(chunk)
+            if length > MAX_EXPANDED_BYTES:
+                raise InvalidChecker("Expanded checker exceeds 1 MiB")
+            chunks.append(chunk)
+            position = end
+        chunks.append(code[position:stop])
+        return "".join(chunks)
+
+    # Append the trusted function before endmodule; no user declaration is moved.
+    rewritten = rewrite(0, len(code))
+    ending = next(position for token, position in _tokens(rewritten) if token == "endmodule")
+    helper = (f"\nfunction automatic [255:0] {_INDEX_HELPER}(input [255:0] {_PREFIX}value, "
+              f"input [31:0] {_PREFIX}width);\n{_INDEX_HELPER} = {_PREFIX}value;\nendfunction\n")
+    rewritten = rewritten[:ending] + helper + rewritten[ending:]
+    if len(rewritten.encode()) > MAX_EXPANDED_BYTES:
+        raise InvalidChecker("Expanded checker exceeds 1 MiB")
+    return rewritten
+
+
+def _unshield_indices(document: ET.Element) -> set[ET.Element]:
+    """Remove only compiler truncations immediately enclosing the trusted call."""
+    types = {node.get("id"): node for node in document.findall("./netlist/typetable/*")}
+
+    def width(node: ET.Element) -> int:
+        dtype = types.get(node.get("dtype_id", ""))
+        if dtype is None or dtype.tag != "basicdtype":
+            raise InvalidChecker("Array index must be a packed integer expression")
+        return abs(int(dtype.get("left", "0")) - int(dtype.get("right", "0"))) + 1
+
+    protected = set()
+    for selection in reversed(document.findall(".//arraysel")):
+        address = selection[1]
+        call = address
+        if (address.tag == "sel" and len(address) == 3 and address[0].tag == "funcref"
+                and address[0].get("name") == _INDEX_HELPER):
+            if (address[1].tag != "const" or _number(address[1].get("name", "")) != 0
+                    or address.get("loc") != address[0].get("loc")):
+                raise InvalidChecker("Native array-index validation could not preserve its bounds")
+            call = address[0]
+        if call.tag != "funcref" or call.get("name") != _INDEX_HELPER:
+            continue
+        if (len(call) != 2 or any(arg.tag != "arg" or len(arg) != 1 for arg in call)
+                or call[1][0].tag != "const"):
+            raise InvalidChecker("Native array-index validation could not preserve its width")
+        original_width = _number(call[1][0].get("name", ""))
+        if not 0 < original_width <= 256:
+            raise InvalidChecker("Array index expression exceeds 256 bits")
+        value = call[0][0]
+        if (value.tag in ("extend", "extends") and len(value) == 1 and width(value) == 256
+                and width(value[0]) == original_width):
+            value = value[0]
+        if width(value) < original_width:
+            raise InvalidChecker("Native array-index validation lost significant address bits")
+        selection.remove(address)
+        selection.append(value)
+        protected.add(value)
+    for module in document.findall("./netlist/module"):
+        for node in list(module):
+            if node.tag == "func" and node.get("name") == _INDEX_HELPER:
+                module.remove(node)
+    if any(node.get("name") == _INDEX_HELPER for node in document.iter("funcref")):
+        raise InvalidChecker("Native array-index validation left an unsupported helper call")
+    return protected
+
+
 _BINARY = {
-    "add": "+", "sub": "-", "mul": "*", "and": "&", "or": "|", "xor": "^",
+    "add": "+", "sub": "-", "mul": "*", "muls": "*", "and": "&", "or": "|", "xor": "^",
     "eq": "==", "neq": "!=", "eqcase": "===", "neqcase": "!==",
     "lt": "<", "lte": "<=", "gt": ">", "gte": ">=",
     "lts": "<", "ltes": "<=", "gts": ">", "gtes": ">=",
@@ -118,9 +276,10 @@ _UNARY = {
 
 class _Renderer:
     def __init__(self, document: ET.Element, code: str, ports: dict, clock: str | None,
-                 reset: str | None):
+                 reset: str | None, protected_addresses: set[ET.Element] | None = None):
         self.document, self.code, self.clock, self.reset = document, code, clock, reset
         self.tokens = _tokens(code)
+        self.protected_addresses = protected_addresses or set()
         modules = document.findall("./netlist/module")
         if len(modules) != 1 or modules[0].get("origName") != "rtl_checker":
             raise InvalidChecker("Submit exactly one rtl_checker module")
@@ -143,11 +302,9 @@ class _Renderer:
         self.nba_names: set[str] = set()
         self.prior_reads: set[str] = set()
         self.read_processes: dict[str, set[int]] = {}
-        self.reset_bits: dict[str, set[int]] = {}
         self.init_bits: dict[str, set[int]] = {}
         self.init_owners: dict[str, dict[int, int]] = {}
         self.initializing = False
-        self.in_reset = False
         self.initialized: set[str] = set()
         self.symbols: dict[str, _Symbol] = {}
         self.assertions: dict[ET.Element, int] = {}
@@ -274,7 +431,7 @@ class _Renderer:
             return node.get("name", "")
         if tag in _BINARY and len(children) == 2:
             left, right = (self.expr(child) for child in children)
-            if tag in ("lts", "ltes", "gts", "gtes", "shiftrs"):
+            if tag in ("lts", "ltes", "gts", "gtes", "shiftrs", "muls"):
                 left, right = f"$signed({left})", f"$signed({right})"
             return self._typed(node, f"({left}) {_BINARY[tag]} ({right})")
         if tag in _UNARY and len(children) == 1:
@@ -343,6 +500,8 @@ class _Renderer:
         Compiler-generated truncations share their operand's source location;
         explicit source selects and casts have distinct locations and stay intact.
         """
+        if node in self.protected_addresses:
+            return node
         if node.tag == "sel" and len(node) == 3:
             base = self._restore_address(node[0], node)
             operand_location = node.get("loc") == node[0].get("loc")
@@ -392,7 +551,7 @@ class _Renderer:
                             raise InvalidChecker("Constant width exceeds the checker limit")
                         result.set("name", f"{width}'{'s' if signed else ''}h{value % (1 << width):x}")
                         result.set("dtype_id", self._address_dtype(width, signed))
-        elif children and node.tag in ("add", "sub", "mul", "and", "or", "xor", "moddiv", "moddivs",
+        elif children and node.tag in ("add", "sub", "mul", "muls", "and", "or", "xor", "moddiv", "moddivs",
                                        "shiftl", "shiftr", "shiftrs", "negate", "not", "extend", "extends"):
             types = [self.dtype(child.get("dtype_id", "")) for child in children]
             width = max(self.dtype(node.get("dtype_id", ""))[0], *(kind[0] for kind in types))
@@ -423,6 +582,14 @@ class _Renderer:
             name = self._lookup(node.get("name", "")).name
             if name in values:
                 return values[name]
+        if node.tag in ("moddiv", "moddivs") and len(node) == 2:
+            dividend, divisor = (self.constant(child, values) for child in node)
+            if divisor <= 0 or divisor & (divisor - 1):
+                raise InvalidChecker("Remainder requires a positive constant power-of-two divisor")
+            quotient = abs(dividend) // divisor
+            if dividend < 0:
+                quotient = -quotient
+            return self._constant_width(node, dividend - quotient * divisor)
         if node.tag in ("extend", "extends") and len(node) == 1:
             return self._constant_width(node, self.constant(node[0], values))
         if node.tag in ("not", "lognot", "negate") and len(node) == 1:
@@ -445,6 +612,7 @@ class _Renderer:
         if node.tag in _BINARY and len(node) == 2:
             a, b = (self.constant(child, values) for child in node)
             operators = {"add": lambda: a + b, "sub": lambda: a - b, "mul": lambda: a * b,
+                         "muls": lambda: a * b,
                          "and": lambda: a & b, "or": lambda: a | b, "xor": lambda: a ^ b,
                          "lt": lambda: a < b, "lts": lambda: a < b,
                          "lte": lambda: a <= b, "ltes": lambda: a <= b,
@@ -495,9 +663,6 @@ class _Renderer:
                     self.clocked_writes.add(symbol.name)
                     if node.tag == "assigndly":
                         self.nba_names.add(symbol.name)
-                    if self.in_reset:
-                        bits = self._reset_target_bits(node[1])
-                        self.reset_bits.setdefault(symbol.name, set()).update(bits)
         if node.tag == "assigndly" and (not self.sequential or self.in_function):
             raise InvalidChecker("Nonblocking assignments require the checker clock")
         try:
@@ -509,7 +674,7 @@ class _Renderer:
         operator = "<=" if node.tag == "assigndly" else "="
         return f"{lhs} {operator} {rhs};"
 
-    def _reset_target_bits(self, node: ET.Element) -> set[int]:
+    def _initial_target_bits(self, node: ET.Element) -> set[int]:
         _, symbol = self._target(node)
         width, _, count = self.dtype(symbol.dtype)
         if node.tag == "varref":
@@ -525,14 +690,6 @@ class _Renderer:
                 raise InvalidChecker("Reset bit selection is outside its declared range")
             return set(range(start, start + selected))
         raise InvalidChecker("Use complete monitor initialization/reset assignments with constant indices")
-
-    def _reset_condition(self, node: ET.Element) -> bool | None:
-        if node.tag == "varref" and node.get("name") == self.reset:
-            return True
-        if node.tag in ("not", "lognot") and len(node) == 1:
-            if node[0].tag == "varref" and node[0].get("name") == self.reset:
-                return False
-        return None
 
     def _bare_assertion(self, node: ET.Element) -> ET.Element | None:
         if node.tag != "if" or len(node) != 2 or node[0].tag != "cexpr":
@@ -602,30 +759,15 @@ class _Renderer:
             condition = self.expr(node[0])
             before = dict(self.constants)
             before_initialized = set(self.initialized)
-            before_reset = self.in_reset
-            before_bits = {name: set(bits) for name, bits in self.reset_bits.items()}
-            reset_branch = self._reset_condition(node[0])
-            self.in_reset = before_reset or reset_branch is True
             yes = self.statement(node[1])
             yes_constants = dict(self.constants)
             yes_initialized = set(self.initialized)
-            yes_bits = self.reset_bits
             self.constants = dict(before)
             self.initialized = set(before_initialized)
-            self.reset_bits = {name: set(bits) for name, bits in before_bits.items()}
-            self.in_reset = before_reset or reset_branch is False
             no = " else " + self.statement(node[2]) if len(node) == 3 else ""
             self.constants = {name: value for name, value in yes_constants.items()
                               if self.constants.get(name) == value}
             self.initialized &= yes_initialized
-            no_bits = self.reset_bits
-            if reset_branch is True:
-                self.reset_bits = yes_bits
-            elif reset_branch is False:
-                self.reset_bits = no_bits
-            else:
-                self.reset_bits = {name: bits & no_bits.get(name, set()) for name, bits in yes_bits.items()}
-            self.in_reset = before_reset
             return f"if ({condition}) {yes}{no}"
         if node.tag == "case" and len(node):
             if node.attrib.keys() - {"loc"}:
@@ -634,15 +776,12 @@ class _Renderer:
             items = []
             before = dict(self.constants)
             before_initialized = set(self.initialized)
-            before_bits = {name: set(bits) for name, bits in self.reset_bits.items()}
             branches = []
             initialized_branches = []
-            reset_branches = []
             has_default = False
             for item in list(node)[1:]:
                 self.constants = dict(before)
                 self.initialized = set(before_initialized)
-                self.reset_bits = {name: set(bits) for name, bits in before_bits.items()}
                 if item.tag != "caseitem":
                     raise InvalidChecker("Unsupported case construct")
                 labels, statements = [], []
@@ -655,19 +794,13 @@ class _Renderer:
                 has_default |= not labels
                 branches.append(dict(self.constants))
                 initialized_branches.append(set(self.initialized))
-                reset_branches.append(self.reset_bits)
                 items.append(label + ": begin\n" + "\n".join(statements) + "\nend")
             if not has_default:
                 branches.append(before)
                 initialized_branches.append(before_initialized)
-                reset_branches.append(before_bits)
             self.constants = {name: value for name, value in before.items()
                               if all(branch.get(name) == value for branch in branches)}
             self.initialized = set.intersection(*initialized_branches)
-            self.reset_bits = {
-                name: set.intersection(*(branch.get(name, set()) for branch in reset_branches))
-                for name in set().union(*(branch.keys() for branch in reset_branches))
-            }
             return f"case ({condition})\n" + "\n".join(items) + "\nendcase"
         if node.tag == "while":
             return self._loop(node)
@@ -688,7 +821,7 @@ class _Renderer:
         lhs, symbol = self._target(node[1])
         if symbol.input_port or symbol.constant:
             raise InvalidChecker("Initialization may write only private monitor variables")
-        bits = self._reset_target_bits(node[1])
+        bits = self._initial_target_bits(node[1])
         owners = self.init_owners.setdefault(symbol.name, {})
         if any(owners.get(bit, self.process) != self.process for bit in bits):
             raise InvalidChecker("Separate initialization processes may not write overlapping monitor bits")
@@ -843,14 +976,6 @@ class _Renderer:
             if name in self.nba_names or name in self.prior_reads
             or self.read_processes.get(name, set()) - {self.write_owners[name]}
         }
-        for name in self.state_names:
-            width, _, count = self.dtype(self.symbols[name].dtype)
-            complete = set(range(width * count))
-            if (self.init_bits.get(name) != complete
-                    and (self.reset is None or self.reset_bits.get(name) != complete)):
-                raise InvalidChecker("Each persistent monitor register needs complete constant initialization"
-                                     " "
-                                     "or complete reset through the task reset signal")
         port_names = list(self.ports)
         if instrumented:
             port_names.append(_PREFIX + "fail")
@@ -871,50 +996,34 @@ def validate_checker(code: str, ports: dict[str, tuple[str, int]], workdir: Path
 
     ``ports`` names the observed DUT interface, with its original direction and
     width. Every checker port is an input. ``reset`` identifies a DUT signal;
-    monitor history must be completely constant-initialized or explicitly reset
-    using that signal. Initialization is preserved in both generated variants.
+    private module storage may start arbitrary. Explicit initialization is
+    preserved in both generated variants; formal checks every possible initial state.
     """
     try:
         if len(code.encode("utf-8")) > MAX_SOURCE_BYTES:
             raise InvalidChecker("Checker source exceeds 64 KiB")
-        _tokens(code)
+        tokens = _tokens(code)
+        if any(token.removeprefix("\\").startswith(_PREFIX) for token, _ in tokens):
+            raise InvalidChecker("Reserved checker identifier")
         if clock is not None and (clock not in ports or ports[clock][1] != 1):
             raise InvalidChecker("Task clock is not a scalar interface signal")
         if reset is not None and (reset not in ports or ports[reset][1] != 1):
             raise InvalidChecker("Task reset is not a scalar interface signal")
         workdir.mkdir(parents=True, exist_ok=True)
         source, xml = workdir / "rtl_checker.sv", workdir / "checker.xml"
-        source.write_text(_without_comments(code), encoding="utf-8")
-        xml.unlink(missing_ok=True)
-        result = run(["verilator", "--xml-only", "--assert", "--language", "1800-2012",
-                      "-Wall", "-Wno-fatal", "--top-module", "rtl_checker", "--xml-output",
-                      str(xml), str(source)], cwd=workdir, timeout_s=15)
-        if not result.ok or not xml.is_file():
-            if result.timed_out or result.returncode in (-9, -24, -25):
-                return CheckerValidation(False, reason="Native checker validation hit a resource limit",
-                                         inconclusive=True)
-            raise InvalidChecker("Native checker validation failed. " + tail(result.log, 1600))
-        if any(f"%Warning-{name}:" in result.log for name in ("LATCH", "MULTIDRIVEN", "UNDRIVEN")):
-            raise InvalidChecker("Observer has incomplete combinational assignments or multiple drivers")
-        if xml.stat().st_size > MAX_XML_BYTES:
-            raise InvalidChecker("Checker XML exceeds the size limit")
-        document = ET.parse(xml).getroot()
-        if len(list(document.iter())) > MAX_NODES:
-            raise InvalidChecker("Checker AST exceeds the node limit")
-        source_id = next((node.get("id") for node in document.findall("./files/file")
-                          if Path(node.get("filename", "")).resolve() == source.resolve()), None)
-        if source_id is None:
-            raise InvalidChecker("Checker source provenance is unavailable")
-        for node in document.findall("./module_files/file"):
-            if node.get("id") != source_id:
-                raise InvalidChecker("Checker must be self-contained")
-        for module in document.findall("./netlist/module"):
-            for node in module.iter():
-                if node.get("loc") and node.get("loc", "").split(",")[0] != source_id:
-                    raise InvalidChecker("Observer AST contains code from another source")
-        native = _Renderer(document, code, ports, clock, reset)
+        parse_started = time.monotonic()
+        document = _native_document(code, source, xml, workdir)
+        rewritten = _shield_remainder_indices(code, document)
+        protected = set()
+        if rewritten != code:
+            remaining = 15 - (time.monotonic() - parse_started)
+            if remaining <= 0:
+                raise _NativeValidationLimit("Native checker validation hit a resource limit")
+            document = _native_document(rewritten, source, xml, workdir, remaining)
+            protected = _unshield_indices(document)
+        native = _Renderer(document, rewritten, ports, clock, reset, protected)
         regenerated = native.render()
-        monitor = _Renderer(document, code, ports, clock, reset)
+        monitor = _Renderer(document, rewritten, ports, clock, reset, protected)
         instrumented = monitor.render(instrumented=True)
         if max(len(regenerated.encode()), len(instrumented.encode())) > 1024 * 1024:
             raise InvalidChecker("Expanded checker exceeds 1 MiB")
@@ -922,5 +1031,9 @@ def validate_checker(code: str, ports: dict[str, tuple[str, int]], workdir: Path
                          * native.dtype(native.symbols[name].dtype)[2] for name in native.state_names)
         return CheckerValidation(True, source=regenerated, instrumented=instrumented,
                                  assert_count=len(native.assertions), state_bits=state_bits)
+    except RecursionError:
+        return CheckerValidation(False, reason="Checker nesting exceeds supported limits")
+    except _NativeValidationLimit as exc:
+        return CheckerValidation(False, reason=str(exc), inconclusive=True)
     except (InvalidChecker, OSError, ET.ParseError, ValueError, TypeError, KeyError) as exc:
         return CheckerValidation(False, reason=str(exc))

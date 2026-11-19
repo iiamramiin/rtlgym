@@ -20,7 +20,7 @@ from .evaluator import EvalResult
 from .task import Task
 from .verify_syntax import validate_checker
 
-VERIFY_GRADER_VERSION = "2"
+VERIFY_GRADER_VERSION = "3"
 
 
 def extract_checker(action: str) -> str:
@@ -88,11 +88,12 @@ def load_manifest(task: Task) -> dict:
 
 
 def _read_design(task: Task, source: Path) -> list[str]:
-    commands = [f'read_verilog -sv "{source}"', f"hierarchy -check -top {task.dut_top}"]
+    commands = [f'read_verilog -sv "{source}"']
     params = task.verify.get("params", {})
     if params:
         settings = " ".join(f"-set {key} {int(value)}" for key, value in params.items())
-        commands += [f"chparam {settings} {task.dut_top}", f"hierarchy -check -top {task.dut_top}"]
+        commands.append(f"chparam {settings} {task.dut_top}")
+    commands.append(f"hierarchy -check -top {task.dut_top}")
     return commands
 
 
@@ -250,7 +251,14 @@ def evaluate_checker(task: Task, code: str, use_cache: bool = True,
     workdir = (Path(context.name) if context else Path(keep_dir)).resolve()
     workdir.mkdir(parents=True, exist_ok=True)
     try:
-        _evaluate(task, code, manifest, workdir, res)
+        with tools.runtime_budget(task.verify.get("max_grading_s")) as deadline:
+            try:
+                _evaluate(task, code, manifest, workdir, res)
+            except RuntimeError:
+                if deadline is None or time.monotonic() < deadline:
+                    raise
+                detail["status"] = "inconclusive"
+                res.violations = ["Verification grading time limit exhausted"]
     finally:
         if context:
             context.cleanup()

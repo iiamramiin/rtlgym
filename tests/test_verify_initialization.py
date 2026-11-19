@@ -67,12 +67,15 @@ endmodule
 
 def test_verification_specs_publish_the_system_prompt_rules():
     from rtlgym.agents.claude import VERIFY_SYSTEM_PROMPT
+    from rtlgym.task import list_tasks
 
     rules = VERIFY_SYSTEM_PROMPT.split("\n", 1)[1]
-    for task_id in ("verify_popcount16", "verify_rr_arbiter4", "verify_fifo_sync"):
-        assert rules in load_task(task_id).spec
+    for task_id in list_tasks():
+        task = load_task(task_id)
+        if task.kind == "verify":
+            assert rules in task.spec
     for phrase in ("constant declaration initializer", "initial block", "$countones", "$onehot",
-                   "$onehot0", "all bits initialized", "Do not drive observed ports"):
+                   "$onehot0", "may start arbitrary", "Do not drive observed ports"):
         assert phrase in rules
 
 
@@ -92,3 +95,53 @@ def test_checker_cache_version_is_separate_from_design_and_repair(monkeypatch):
     assert verify._cache_key(task, code, manifest) != old_verify
     assert [evaluator._cache_key(t, t.ref_path.read_text(), RewardWeights(), True)
             for t in legacy] == old_legacy
+
+
+@pytest.mark.needs_tools
+@pytest.mark.parametrize("writer", ["", "unknown <= unknown;"])
+def test_uninitialized_module_values_are_not_assumed_zero(writer):
+    code = f"""module rtl_checker(input clk, rst, input [3:0] req, gnt);
+reg unknown;
+always @(posedge clk) begin
+    if (!rst) assert(unknown == 1'b0);
+    {writer}
+end
+endmodule
+"""
+    result = evaluate(load_task("verify_rr_arbiter4"), code, use_cache=False)
+    assert result.verification["status"] == "false_alarm", result.to_dict()
+    assert result.verification["false_alarm_trace"]
+    assert result.score == 0 and not result.accepted
+
+
+@pytest.mark.needs_tools
+def test_uninitialized_fifo_storage_is_safe_when_reads_follow_writes():
+    task = load_task("verify_fifo_sync")
+    code = task.ref_path.read_text().replace(
+        "            for (integer entry = 0; entry < DEPTH; entry++)\n"
+        "                queue[entry] <= '0;\n", "")
+    assert code != task.ref_path.read_text()
+    result = evaluate(task, code, use_cache=False)
+    assert result.accepted and result.score == 1, result.to_dict()
+    assert result.verification["caught"] == 14
+    assert all(not target["sim_failed"] for target in result.verification["targets"]
+               if target["kind"] == "positive")
+
+
+@pytest.mark.needs_tools
+def test_partially_initialized_words_keep_other_bits_arbitrary():
+    code = """module rtl_checker(input clk, rst, input [3:0] req, gnt);
+reg [1:0] history;
+initial history[0] = 0;
+always @(posedge clk) begin
+    if (!rst) assert(history == 0);
+    history <= history;
+end
+endmodule
+"""
+    result = evaluate(load_task("verify_rr_arbiter4"), code, use_cache=False)
+    assert result.verification["status"] == "false_alarm", result.to_dict()
+    # The initialized low bit is known, while the high bit stays arbitrary.
+    sound = code.replace("history == 0", "history[0] == 0")
+    result = evaluate(load_task("verify_rr_arbiter4"), sound, use_cache=False)
+    assert result.verification["status"] == "pass" and result.score == 0, result.to_dict()

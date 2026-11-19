@@ -18,20 +18,23 @@ with packed widths up to 256 bits. Two-state bit declarations are unsupported. O
 array dimension [0:N] is supported for module variables, with at most 64 entries. If the native
 parser reduces an array index ambiguously, the checker is rejected. Compute such indices in a
 full-width private integer temporary before indexing. Explicit part-selects and recoverable
-indices are permitted. Parameters and localparams must resolve to defined integer constants. Declare
+indices are permitted. Power-of-two constant remainder is supported in array indices.
+Parameters and localparams must resolve to defined integer constants. Declare
 persistent monitor registers at module scope. Clocked monitor assignments may be blocking or
 nonblocking, with ordinary SystemVerilog ordering. Use blocking assignments for combinational
 calculations and temporary values. Continuous assignments may compute private checker signals.
-Scratch variables at block or module scope must be assigned completely before every read in each
-process activation. Each variable has one procedural or continuous writer, apart from its
-permitted initialization.
+Block-scoped scratch variables must be assigned completely before every read in each process
+activation. Module variables may retain monitor history. Combinational calculations must not
+infer latches. Each variable has at most one procedural or continuous writer, apart from its permitted
+initialization.
 
 A private register may have a constant declaration initializer or be initialized by constant
 blocking assignments in an initial block. Constant expressions, localparams, and whole-array
 declaration assignment patterns are supported. Bounded constant for loops may initialize array
-elements. Every persistent clocked register must have all bits initialized or all bits reset in
-the task's if (rst) branch. Partial initialization and partial reset cannot be combined to
-satisfy this rule. Repeated assignments in one initial block execute in order. Overlapping
+elements. Module-scope monitor storage may start arbitrary: reset and starting values are
+optional, including for private arrays and partially initialized words. Formal checks assertions
+for every possible initial value of unspecified storage. Guard reads until stored data is known.
+Repeated assignments in one initial block execute in order. Overlapping
 initializations from separate processes are rejected. Initialization cannot read ports or
 contain data-dependent branches, timing controls, or assertions. It sets checker storage only
 and does not initialize the DUT.
@@ -44,8 +47,8 @@ loops. Each loop has at most 128 iterations, with at most 1024 expanded iteratio
 Functions must be nonrecursive, use supported integer types, and write only function-local
 variables; function-local unpacked arrays are unsupported. Function-local variables must be
 completely assigned before every read on every
-call. Functions cannot retain history between calls; keep monitor history at module scope,
-with the required initialization or reset. Local declaration initializers in automatic
+call. Functions cannot retain history between calls; keep monitor history at module scope.
+Local declaration initializers in automatic
 functions execute on every call. Static function declaration initializers are unsupported.
 Supported system functions are $signed, $unsigned, $clog2, $bits, $countones, $onehot, and
 $onehot0. Their arguments must be packed expressions of at most 256 bits. The last three count
@@ -61,9 +64,11 @@ and random/file/OS operations are unsupported. Identifiers beginning __rtlgym_ a
 
 Limits are 64 KiB of submitted source, 64 assertions, 16 functions, and 4096 declared private
 bits. Native SystemVerilog parsing has a 15-second limit, with no checker conversion fallback.
-Parser output is limited to 4 MiB and 12,000 syntax elements; each expanded checker variant is
-limited to 1 MiB. Follow the task's initialization, reset, timing, and parameter profile. When
-you receive feedback, return the complete corrected checker.
+Parser output is limited to 4 MiB, 12,000 syntax elements, and 128 nested syntax levels.
+Each expanded checker variant is limited to 1 MiB. A task may publish an overall grading
+time budget; exhaustion is
+inconclusive, earns no reward, and is not cached. Follow the task's initialization, reset,
+timing, and parameter profile. When you receive feedback, return the complete corrected checker.
 
 ```systemverilog
 module rtl_checker #(

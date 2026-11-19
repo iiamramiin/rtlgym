@@ -25,6 +25,8 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -63,6 +65,25 @@ class MissingToolError(RuntimeError):
 
 
 _TOOLS_CHECKED = False
+_TOOL_DEADLINE: ContextVar[float | None] = ContextVar("rtlgym_tool_deadline", default=None)
+
+
+@contextmanager
+def runtime_budget(seconds: float | None):
+    """Limit successive tool calls in this grading thread without affecting other attempts."""
+    if seconds is None:
+        yield _TOOL_DEADLINE.get()
+        return
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise ValueError("runtime budget must be a positive finite number")
+    deadline = time.monotonic() + seconds
+    if (outer := _TOOL_DEADLINE.get()) is not None:
+        deadline = min(deadline, outer)
+    token = _TOOL_DEADLINE.set(deadline)
+    try:
+        yield deadline
+    finally:
+        _TOOL_DEADLINE.reset(token)
 
 
 def require_tools() -> None:
@@ -135,6 +156,12 @@ def run(cmd: list[str], cwd: Path, timeout_s: float, env: dict | None = None) ->
     cannot exhaust this process's memory; only the tail is read back.
     """
     t0 = time.monotonic()
+    if (deadline := _TOOL_DEADLINE.get()) is not None:
+        _cpu_limit_s(timeout_s)
+        remaining = deadline - t0
+        if remaining <= 0:
+            return ToolRun(False, None, "[grading runtime budget exhausted]", 0, timed_out=True)
+        timeout_s = min(timeout_s, remaining)
     limited_cmd = _limited(cmd, timeout_s)
     if shutil.which(cmd[0]) is None and not Path(cmd[0]).is_file():
         return ToolRun(False, None, f"tool not found: {cmd[0]}", time.monotonic() - t0)
