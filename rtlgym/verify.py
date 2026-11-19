@@ -20,7 +20,7 @@ from .evaluator import EvalResult
 from .task import Task
 from .verify_syntax import validate_checker
 
-VERIFY_GRADER_VERSION = "1"
+VERIFY_GRADER_VERSION = "2"
 
 
 def extract_checker(action: str) -> str:

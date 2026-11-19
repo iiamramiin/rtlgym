@@ -150,8 +150,9 @@ Every DUT signal is an input to the checker. The harness drives the DUT.
 
 The sequential profiles add a final observation to check the last transition.
 A rising-edge immediate assertion observes the outputs from the preceding
-transition. Monitor registers must have explicit reset assignments. DUT state
-before reset remains unrestricted.
+transition. Monitor registers must start from complete constant initial values or explicit
+reset assignments. Declaration initializers and constant-only initial blocks
+are supported. DUT state before reset remains unrestricted.
 
 The verification FIFO specifies `dout` only immediately after a successful
 read. It allows arbitrary data during idle cycles. Its correct implementations
@@ -169,7 +170,8 @@ no effect on the formal mutation score.
 
 Verilator XML supplies the checker syntax tree. The grader regenerates a small
 native language of expressions, immediate assertions, pure functions, statically
-bounded loops, and reset monitor registers. It rejects input drives, extra
+bounded loops, and initialized or reset monitor registers. The supported pure
+functions include `$countones`, `$onehot`, and `$onehot0`. It rejects input drives, extra
 instances, hierarchical access, assumptions, foreign calls, timing controls,
 and user system tasks. A lexical gate blocks includes and preprocessing before
 the compiler can read other files. These checks complement the existing process

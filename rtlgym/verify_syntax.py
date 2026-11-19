@@ -22,6 +22,7 @@ MAX_NODES = 12000
 MAX_PRIVATE_BITS = 4096
 MAX_LOOP_STEPS = 128
 MAX_ASSERTIONS = 64
+MAX_EXPANDED_BYTES = 1024 * 1024
 _PREFIX = "__rtlgym_"
 _TOKEN = re.compile(
     r'\s+|//[^\n]*|/\*.*?\*/|"(?:\\.|[^"\\])*"|\\[^\s]+|'
@@ -80,8 +81,9 @@ def _tokens(code: str) -> list[tuple[str, int]]:
         if text in ("import", "export", "bind", "force", "release", "assume", "restrict", "cover",
                     "casex", "casez", "unique", "unique0", "priority"):
             raise InvalidChecker(f"Unsupported checker construct {text}")
-        if text.startswith("$") and text not in ("$signed", "$unsigned", "$clog2", "$bits"):
-            raise InvalidChecker("Only pure integer cast and width system functions are supported")
+        if text.startswith("$") and text not in (
+                "$signed", "$unsigned", "$clog2", "$bits", "$countones", "$onehot", "$onehot0"):
+            raise InvalidChecker("Use only supported pure integer and bit-counting system functions")
         tokens.append((text, match.start()))
     if sum(text == "module" for text, _ in tokens) != 1 or sum(
             text == "endmodule" for text, _ in tokens) != 1:
@@ -137,7 +139,14 @@ class _Renderer:
         self.write_owners: dict[str, int] = {}
         self.private_bits = 0
         self.state_names: set[str] = set()
+        self.clocked_writes: set[str] = set()
+        self.nba_names: set[str] = set()
+        self.prior_reads: set[str] = set()
+        self.read_processes: dict[str, set[int]] = {}
         self.reset_bits: dict[str, set[int]] = {}
+        self.init_bits: dict[str, set[int]] = {}
+        self.init_owners: dict[str, dict[int, int]] = {}
+        self.initializing = False
         self.in_reset = False
         self.initialized: set[str] = set()
         self.symbols: dict[str, _Symbol] = {}
@@ -147,6 +156,7 @@ class _Renderer:
         self.sequential = False
         self.loop_work = 0
         self.loop_constants: dict[str, int] = {}
+        self.source_lines = code.splitlines(keepends=True)
         self._validate_function_graph()
 
     def _validate_function_graph(self) -> None:
@@ -170,7 +180,9 @@ class _Renderer:
         node = self.types.get(type_id)
         if node is None:
             raise InvalidChecker("Unknown checker type")
-        if node.tag == "basicdtype" and node.get("name") in ("logic", "bit", "integer", "int"):
+        if node.tag == "basicdtype" and node.get("name") == "bit":
+            raise InvalidChecker("Use logic/reg instead of two-state bit variables")
+        if node.tag == "basicdtype" and node.get("name") in ("logic", "integer", "int"):
             width = abs(int(node.get("left", "0")) - int(node.get("right", "0"))) + 1
             if not 0 < width <= 256:
                 raise InvalidChecker("Checker word width exceeds 256 bits")
@@ -187,7 +199,7 @@ class _Renderer:
             if count != 1:
                 raise InvalidChecker("Use one unpacked array dimension")
             return width, signed, high + 1
-        raise InvalidChecker(f"Unsupported checker type {node.tag}")
+        raise InvalidChecker("Use packed integer words or one-dimensional private arrays")
 
     def _lookup(self, name: str) -> _Symbol:
         for scope in reversed(self.scopes):
@@ -202,6 +214,8 @@ class _Renderer:
         if original in self.scopes[-1]:
             raise InvalidChecker("Duplicate variable declaration")
         width, signed, count = self.dtype(node.get("dtype_id", ""))
+        if self.in_function and self.types[node.get("dtype_id", "")].tag == "unpackarraydtype":
+            raise InvalidChecker("Use packed function locals; unpacked function arrays are unsupported")
         if port:
             if node.get("dir") != "input" or count != 1 or original not in self.ports:
                 raise InvalidChecker("Checker ports must be the exact DUT signals, all inputs")
@@ -219,6 +233,8 @@ class _Renderer:
                          self.in_function, len(self.scopes) > 1 and not self.in_function)
         self.scopes[-1][original] = symbol
         self.symbols[name] = symbol
+        if self.in_function and node.get("dir") == "input":
+            self.initialized.add(name)
         sign = " signed" if signed else ""
         packed = f" [{width - 1}:0]" if width > 1 else ""
         unpacked = f" [0:{count - 1}]" if count > 1 else ""
@@ -228,7 +244,7 @@ class _Renderer:
             self.constants[name] = _number(node[0].get("name", ""))
             return f"localparam{sign}{packed} {name} = {node[0].get('name')};"
         if len(node):
-            raise InvalidChecker("Declare checker monitor state without initializers")
+            raise InvalidChecker("Use constant module initialization or explicit function assignments")
         return f"{'input wire' if port else 'reg'}{sign}{packed} {name}{unpacked};"
 
     def _typed(self, node: ET.Element, text: str, *, unsigned: bool = False) -> str:
@@ -242,6 +258,10 @@ class _Renderer:
         tag, children = node.tag, list(node)
         if tag == "varref" and not children:
             symbol = self._lookup(node.get("name", ""))
+            self._read(symbol)
+            if (self.in_function and symbol.function_local and not symbol.constant
+                    and symbol.name not in self.initialized):
+                raise InvalidChecker("Function locals must be assigned before use on every call")
             if self.sequential and symbol.temporary and symbol.name not in self.initialized:
                 raise InvalidChecker("Clocked temporary variables must be assigned before use")
             if symbol.name in self.loop_constants:
@@ -272,9 +292,10 @@ class _Renderer:
             if children[0].tag != "varref":
                 raise InvalidChecker("Only local observer arrays can be indexed")
             symbol = self._lookup(children[0].get("name", ""))
+            self._read(symbol)
             if self.dtype(symbol.dtype)[2] <= 1:
                 raise InvalidChecker("Array selection requires an observer array")
-            return f"{symbol.name}[{self.expr(children[1])}]"
+            return f"{symbol.name}[{self.expr(self._restore_address(children[1]))}]"
         if tag == "cond" and len(children) == 3:
             condition, yes, no = (self.expr(child) for child in children)
             return self._typed(node, f"({condition}) ? ({yes}) : ({no})")
@@ -291,7 +312,108 @@ class _Renderer:
                 raise InvalidChecker("Only pure checker function calls are supported")
             return self._typed(node, self.function_names[name] + "(" + ", ".join(
                 self.expr(child[0]) for child in children) + ")")
-        raise InvalidChecker(f"Unsupported expression {tag}")
+        if tag in ("moddiv", "moddivs") and len(children) == 2:
+            divisor = self.constant(children[1])
+            if divisor <= 0 or divisor & (divisor - 1):
+                raise InvalidChecker("Remainder requires a positive constant power-of-two divisor")
+            left, right = (self.expr(child) for child in children)
+            if tag == "moddivs":
+                left, right = f"$signed({left})", f"$signed({right})"
+            return self._typed(node, f"({left}) % ({right})")
+        if tag in ("countones", "onehot", "onehot0") and len(children) == 1:
+            operand = self.expr(children[0])
+            width, _, count = self.dtype(children[0].get("dtype_id", ""))
+            if count != 1:
+                raise InvalidChecker("Bit-counting functions require a packed integer expression")
+            if width * (len(operand) + 80) > MAX_EXPANDED_BYTES:
+                raise InvalidChecker("Expanded checker exceeds 1 MiB")
+            # Case equality returns a known bit for X/Z operands, matching the
+            # system functions' definition: count only bits that are known 1.
+            terms = [f"32'((1'($unsigned({operand}) >> {i})) === 1'b1)" for i in range(width)]
+            total = "(" + " + ".join(terms) + ")"
+            value = total if tag == "countones" else f"{total} {'==' if tag == 'onehot' else '<='} 32'd1"
+            return self._typed(node, value)
+        raise InvalidChecker("Expression is outside the supported integer observer language")
+
+    def _restore_address(self, node: ET.Element, parent: ET.Element | None = None) -> ET.Element:
+        """Undo width reduction that is valid for Verilator's native arrays.
+
+        XML addresses use narrowed low bits, sometimes retaining a signed type
+        alias. Regenerated Verilog needs the original integer width and bounds.
+        Compiler-generated truncations share their operand's source location;
+        explicit source selects and casts have distinct locations and stay intact.
+        """
+        if node.tag == "sel" and len(node) == 3:
+            base = self._restore_address(node[0], node)
+            operand_location = node.get("loc") == node[0].get("loc")
+            operation_location = (parent is not None and parent.tag in _BINARY
+                                  and node.get("loc") == parent.get("loc"))
+            if (operand_location or operation_location) and self.constant(node[1]) == 0:
+                return base
+            location = node.get("loc", "").split(",")
+            if len(location) != 5:
+                raise InvalidChecker("Array index source location is unavailable")
+            line, column = int(location[1]), int(location[2])
+            if self.source_lines[line - 1][column - 1:column] != "[":
+                raise InvalidChecker("Array index was reduced ambiguously; use a bounded index variable "
+                                     "or explicit part-select")
+            result = ET.Element(node.tag, node.attrib)
+            # Select offset/width constants are compiler metadata, whose source
+            # locations can point at a bound rather than the computed width.
+            result.extend([base, node[1], node[2]])
+            return result
+        children = [self._restore_address(child, node) for child in node]
+        result = ET.Element(node.tag, node.attrib)
+        result.extend(children)
+        if node.tag == "const":
+            location = node.get("loc", "").split(",")
+            if len(location) == 5:
+                start_line, start_col, end_line, end_col = map(int, location[1:])
+                if start_line == end_line and 0 < start_line <= len(self.source_lines):
+                    literal = self.source_lines[start_line - 1][start_col - 1:end_col - 1].strip()
+                    width, signed, value = 0, False, 0
+                    if re.fullmatch(r"-?[0-9][0-9_]*", literal):
+                        value = int(literal.replace("_", ""))
+                        width, signed = max(32, abs(value).bit_length() + (value < 0)), True
+                    else:
+                        match = re.fullmatch(r"([0-9]+)'(s?)([hbod])([0-9a-f_]+)", literal, re.I)
+                        if match:
+                            size, sign, base, digits = match.groups()
+                            width, signed = int(size), bool(sign)
+                            value = int(digits.replace("_", ""), {"h": 16, "b": 2, "o": 8,
+                                                                   "d": 10}[base.lower()])
+                        elif literal in self.scopes[0]:
+                            symbol = self.scopes[0][literal]
+                            if symbol.constant:
+                                width, signed, _ = self.dtype(symbol.dtype)
+                                value = self.constants[symbol.name]
+                    if width:
+                        if width > 256:
+                            raise InvalidChecker("Constant width exceeds the checker limit")
+                        result.set("name", f"{width}'{'s' if signed else ''}h{value % (1 << width):x}")
+                        result.set("dtype_id", self._address_dtype(width, signed))
+        elif children and node.tag in ("add", "sub", "mul", "and", "or", "xor", "moddiv", "moddivs",
+                                       "shiftl", "shiftr", "shiftrs", "negate", "not", "extend", "extends"):
+            types = [self.dtype(child.get("dtype_id", "")) for child in children]
+            width = max(self.dtype(node.get("dtype_id", ""))[0], *(kind[0] for kind in types))
+            if node.tag in ("shiftl", "shiftr", "shiftrs"):
+                width = types[0][0]
+            signed = all(kind[1] for kind in types)
+            result.set("dtype_id", self._address_dtype(width, signed))
+        return result
+
+    def _address_dtype(self, width: int, signed: bool) -> str:
+        name = f"address_{width}_{signed}"
+        self.types[name] = ET.Element("basicdtype", name="logic", left=str(width - 1), right="0",
+                                      signed="true" if signed else "false")
+        return name
+
+    def _read(self, symbol: _Symbol) -> None:
+        if self.initializing or symbol.input_port or symbol.constant or symbol.function_local:
+            return
+        self.read_processes.setdefault(symbol.name, set()).add(self.process)
+        if self.sequential and not symbol.temporary and symbol.name not in self.initialized:
+            self.prior_reads.add(symbol.name)
 
     def constant(self, node: ET.Element, values: dict[str, int] | None = None) -> int:
         values = self.constants if values is None else values
@@ -303,6 +425,20 @@ class _Renderer:
                 return values[name]
         if node.tag in ("extend", "extends") and len(node) == 1:
             return self._constant_width(node, self.constant(node[0], values))
+        if node.tag in ("not", "lognot", "negate") and len(node) == 1:
+            value = self.constant(node[0], values)
+            result = {"not": lambda: ~value, "lognot": lambda: int(not value),
+                      "negate": lambda: -value}[node.tag]()
+            return self._constant_width(node, result)
+        if node.tag == "cond" and len(node) == 3:
+            branch = node[1] if self.constant(node[0], values) else node[2]
+            return self._constant_width(node, self.constant(branch, values))
+        if node.tag == "concat" and len(node) == 2:
+            right_width, _, count = self.dtype(node[1].get("dtype_id", ""))
+            if count != 1:
+                raise InvalidChecker("Constant initialization requires packed integer expressions")
+            left, right = (self.constant(child, values) for child in node)
+            return self._constant_width(node, (left << right_width) | (right % (1 << right_width)))
         if node.tag == "sel" and len(node) == 3:
             value, offset, width = (self.constant(child, values) for child in node)
             return (value >> offset) & ((1 << width) - 1)
@@ -317,7 +453,7 @@ class _Renderer:
                          "eq": lambda: a == b, "neq": lambda: a != b}
             if node.tag in operators:
                 return self._constant_width(node, int(operators[node.tag]()))
-        raise InvalidChecker("Loop bounds and increments must be compile-time integers")
+        raise InvalidChecker("Initialization, loop bounds and increments must be compile-time integers")
 
     def _constant_width(self, node: ET.Element, value: int) -> int:
         width, signed, _ = self.dtype(node.get("dtype_id", ""))
@@ -331,7 +467,7 @@ class _Renderer:
         if node.tag in ("sel", "arraysel") and len(node) >= 2:
             base, symbol = self._target(node[0])
             if node.tag == "arraysel":
-                return f"{base}[{self.expr(node[1])}]", symbol
+                return f"{base}[{self.expr(self._restore_address(node[1]))}]", symbol
             width = self.constant(node[2])
             return f"{base}[{self.expr(node[1])} +: {width}]", symbol
         raise InvalidChecker("Assignment requires a local checker variable")
@@ -343,27 +479,30 @@ class _Renderer:
         if symbol.input_port or symbol.constant or (self.in_function and not symbol.function_local):
             raise InvalidChecker("Checker may write only its private monitor state")
         if self.sequential and not self.in_function:
-            if node.tag == "assign" and not symbol.temporary:
-                raise InvalidChecker("Use nonblocking assignments for persistent monitor registers")
             if node.tag == "assigndly" and symbol.temporary:
                 raise InvalidChecker("Declare persistent monitor registers at module scope")
             if symbol.temporary and node[1].tag != "varref":
                 raise InvalidChecker("Assign a clocked temporary completely before using it")
         rhs = self.expr(node[0])
-        self.initialized.add(symbol.name)
+        if node.tag == "assign" and node[1].tag == "varref":
+            self.initialized.add(symbol.name)
         if not self.in_function:
             owner = self.write_owners.setdefault(symbol.name, self.process)
             if owner != self.process:
                 raise InvalidChecker("Each checker variable must have a single writer")
             if self.sequential:
-                if node.tag == "assigndly":
-                    self.state_names.add(symbol.name)
+                if not symbol.temporary:
+                    self.clocked_writes.add(symbol.name)
+                    if node.tag == "assigndly":
+                        self.nba_names.add(symbol.name)
                     if self.in_reset:
                         bits = self._reset_target_bits(node[1])
                         self.reset_bits.setdefault(symbol.name, set()).update(bits)
         if node.tag == "assigndly" and (not self.sequential or self.in_function):
             raise InvalidChecker("Nonblocking assignments require the checker clock")
         try:
+            if node.tag != "assign" or node[1].tag != "varref":
+                raise InvalidChecker("Assignment does not establish a compile-time value")
             self.constants[symbol.name] = self.constant(node[0])
         except InvalidChecker:
             self.constants.pop(symbol.name, None)
@@ -376,16 +515,16 @@ class _Renderer:
         if node.tag == "varref":
             return set(range(width * count))
         if node.tag == "arraysel" and node[0].tag == "varref":
-            index = self.constant(node[1])
+            index = self.constant(self._restore_address(node[1]))
             if not 0 <= index < count:
-                raise InvalidChecker("Reset array index is outside its declared range")
+                raise InvalidChecker("Monitor array initialization/reset index is outside its range")
             return set(range(index * width, (index + 1) * width))
         if node.tag == "sel" and node[0].tag == "varref":
             start, selected = self.constant(node[1]), self.constant(node[2])
             if not 0 <= start < start + selected <= width:
                 raise InvalidChecker("Reset bit selection is outside its declared range")
             return set(range(start, start + selected))
-        raise InvalidChecker("Use complete monitor reset assignments with constant indices")
+        raise InvalidChecker("Use complete monitor initialization/reset assignments with constant indices")
 
     def _reset_condition(self, node: ET.Element) -> bool | None:
         if node.tag == "varref" and node.get("name") == self.reset:
@@ -436,6 +575,8 @@ class _Renderer:
         return inner[0]
 
     def statement(self, node: ET.Element) -> str:
+        if self.initializing:
+            return self._initial_statement(node)
         predicate = self._bare_assertion(node)
         if predicate is not None:
             if self.in_function:
@@ -530,7 +671,55 @@ class _Renderer:
             return f"case ({condition})\n" + "\n".join(items) + "\nendcase"
         if node.tag == "while":
             return self._loop(node)
-        raise InvalidChecker(f"Unsupported statement {node.tag}")
+        raise InvalidChecker("Statement is outside the supported observer language")
+
+    def _initial_statement(self, node: ET.Element) -> str:
+        if node.tag == "begin":
+            self.scopes.append({})
+            statements = [self._declare(child) if child.tag == "var" else self._initial_statement(child)
+                          for child in node]
+            self.scopes.pop()
+            return "begin\n" + "\n".join(statements) + "\nend"
+        if node.tag == "while":
+            return self._loop(node)
+        if node.tag != "assign" or len(node) != 2:
+            raise InvalidChecker("Initialization allows only constant blocking assignments "
+                                 "and bounded for loops")
+        lhs, symbol = self._target(node[1])
+        if symbol.input_port or symbol.constant:
+            raise InvalidChecker("Initialization may write only private monitor variables")
+        bits = self._reset_target_bits(node[1])
+        owners = self.init_owners.setdefault(symbol.name, {})
+        if any(owners.get(bit, self.process) != self.process for bit in bits):
+            raise InvalidChecker("Separate initialization processes may not write overlapping monitor bits")
+        for bit in bits:
+            owners[bit] = self.process
+        self.init_bits.setdefault(symbol.name, set()).update(bits)
+        width, _, count = self.dtype(symbol.dtype)
+        if node[0].tag == "initarray":
+            if node[1].tag != "varref" or count <= 1:
+                raise InvalidChecker("Array initialization must target a complete private array")
+            values = {}
+            for item in node[0]:
+                if item.tag != "inititem" or len(item) != 1:
+                    raise InvalidChecker("Array initialization requires constant values for every element")
+                index = int(item.get("index", "-1"))
+                if index in values:
+                    raise InvalidChecker("Array initialization repeats an element")
+                values[index] = self.constant(item[0])
+            if set(values) != set(range(count)):
+                raise InvalidChecker("Array initialization must define every element")
+            return "\n".join(f"{lhs}[{index}] = {width}'h{values[index] % (1 << width):x};"
+                             for index in range(count))
+        if node[1].tag == "varref" and count > 1:
+            raise InvalidChecker("Initialize private arrays with an assignment pattern "
+                                 "or individual elements")
+        value = self.constant(node[0])
+        if node[1].tag == "varref":
+            self.constants[symbol.name] = self._constant_width(node[1], value)
+        else:
+            self.constants.pop(symbol.name, None)
+        return f"{lhs} = {len(bits)}'h{value % (1 << len(bits)):x};"
 
     def _loop(self, node: ET.Element) -> str:
         if (len(node) != 4 or any(child.tag != "begin" for child in node)
@@ -559,10 +748,15 @@ class _Renderer:
             raise InvalidChecker("Checker loops exceed the total work limit")
         self.constants[symbol.name] = start
         bodies = []
+        expanded = 0
         for value in iterations:
             self.loop_constants[symbol.name] = value
             self.constants[symbol.name] = value
-            bodies.append(self.statement(node[2]))
+            body = self.statement(node[2])
+            expanded += len(body) + 1
+            if expanded > MAX_EXPANDED_BYTES:
+                raise InvalidChecker("Expanded checker exceeds 1 MiB")
+            bodies.append(body)
         self.loop_constants.pop(symbol.name, None)
         final_value = values[symbol.name]
         self.constants[symbol.name] = final_value
@@ -603,19 +797,29 @@ class _Renderer:
             raise InvalidChecker("Checker ports must be the exact DUT signals, all inputs")
         for node in self.module.findall("var"):
             declarations.append(self._declare(node, port=node.get("dir") is not None))
+        parameters = dict(self.constants)
         for node in self.module:
             if node.tag == "var":
                 continue
+            self.constants = dict(parameters)
+            self.initialized = set()
             if node.tag == "func":
                 processes.append(self._function(node))
                 continue
             self.process += 1
+            if node.tag in ("initial", "initialstatic"):
+                self.initializing = True
+                body = "\n".join(self._initial_statement(child) for child in node)
+                processes.append("initial begin\n" + body + "\nend")
+                self.initializing = False
+                continue
             before = len(self.assertions)
             if node.tag == "contassign":
                 processes.append("assign " + self._assignment(node))
                 continue
             if node.tag != "always":
-                raise InvalidChecker(f"Unsupported observer member {node.tag}")
+                raise InvalidChecker("Use only private declarations, functions, initialization "
+                                     "and observer processes")
             children = list(node)
             self.sequential = bool(children and children[0].tag == "sentree")
             event = "@*"
@@ -634,10 +838,19 @@ class _Renderer:
             self.sequential = False
         if not self.assertions:
             raise InvalidChecker("Checker must contain a retained immediate assertion")
+        self.state_names = {
+            name for name in self.clocked_writes
+            if name in self.nba_names or name in self.prior_reads
+            or self.read_processes.get(name, set()) - {self.write_owners[name]}
+        }
         for name in self.state_names:
             width, _, count = self.dtype(self.symbols[name].dtype)
-            if self.reset is None or self.reset_bits.get(name) != set(range(width * count)):
-                raise InvalidChecker("Every clocked monitor register must reset through if (rst)")
+            complete = set(range(width * count))
+            if (self.init_bits.get(name) != complete
+                    and (self.reset is None or self.reset_bits.get(name) != complete)):
+                raise InvalidChecker("Each persistent monitor register needs complete constant initialization"
+                                     " "
+                                     "or complete reset through the task reset signal")
         port_names = list(self.ports)
         if instrumented:
             port_names.append(_PREFIX + "fail")
@@ -658,7 +871,8 @@ def validate_checker(code: str, ports: dict[str, tuple[str, int]], workdir: Path
 
     ``ports`` names the observed DUT interface, with its original direction and
     width. Every checker port is an input. ``reset`` identifies a DUT signal;
-    monitor history must explicitly reset using that signal in submitted code.
+    monitor history must be completely constant-initialized or explicitly reset
+    using that signal. Initialization is preserved in both generated variants.
     """
     try:
         if len(code.encode("utf-8")) > MAX_SOURCE_BYTES:
