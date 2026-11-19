@@ -33,7 +33,7 @@ Each version cell lists **status; mutants caught/total; false alarm; reward**. A
 
 ## Exact-source provenance
 
-Inputs are the top-level JSON files in `E:\11__my_github_repo\rtlgym_results\26_11_17__run1`. The join verifies each raw JSON byte hash, original episode/task/sample/turn, exact submitted UTF-8 source hash and archived verdict before joining both offline grades by task and full SHA-256. It requires exactly twelve unique coordinates and sources at every stage.
+The original top-level pilot JSON files are kept outside the repository. The join verifies each raw JSON byte hash, original episode/task/sample/turn, exact submitted UTF-8 source hash and archived verdict before joining both offline grades by task and full SHA-256. It requires exactly twelve unique coordinates and sources at every stage.
 
 | Original pilot file | SHA-256 of file bytes |
 | --- | --- |
@@ -55,7 +55,7 @@ Inputs are the top-level JSON files in `E:\11__my_github_repo\rtlgym_results\26_
 | Sonnet / `verify_rr_arbiter4` / 1 | `1b0fb6bdb08b45740d20edc84f367aa023f613fa049b49938ccb6340ba88f392` |
 | Sonnet / `verify_rr_arbiter4` / 2 | `72971a371b459baa1da3d04e037d77e57edaaab750c83e160c63737e614ceff1` |
 
-Working evidence (outside the repository) is under `C:\Users\rajae\OneDrive\Documents\ChatGPT\Resume`: `verify-init-report/verify-pilot-checkers.json`, `verify-init-report/grades-final.jsonl` and `verify-hard-work/pilot-final.jsonl`. Raw pilot JSON was not rewritten or copied by this report.
+The exact-source manifest and offline grading evidence are kept outside the repository. Raw pilot JSON was not rewritten or copied by this report.
 
 | Working evidence | SHA-256 of file bytes |
 | --- | --- |

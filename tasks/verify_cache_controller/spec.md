@@ -153,5 +153,5 @@ immediate assertion sees values before that edge's nonblocking updates,
 including the outputs produced by the previous edge. Sample handshakes and
 cache changes with that ordering. Gate assertions that require established
 state until reset has established it. The grading tool calls share a
-60-second budget; a proof or overall budget exhaustion is
+90-second budget; a proof or overall budget exhaustion is
 inconclusive and earns no reward. No full cache RTL is supplied.

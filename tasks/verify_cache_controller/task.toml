@@ -18,6 +18,6 @@ depth = 12
 clock = "clk"
 reset = "rst"
 timeout_s = 10
-max_grading_s = 60
+max_grading_s = 90
 manifest = "mutants.json"
 params = { DATA_W = 2, TAG_W = 1, INDEX_W = 1 }

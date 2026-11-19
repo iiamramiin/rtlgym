@@ -228,7 +228,7 @@ def sources(root: Path) -> dict:
             "reset": "rst",
             "clock": "clk",
             "observe_extra_cycle": True,
-            "max_grading_s": 60,
+            "max_grading_s": 90,
             "fifo_dout": None,
         },
         "reference": {"path": "designs/ref.sv", "sha256": digest(root / "designs/ref.sv")},

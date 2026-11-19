@@ -11,7 +11,7 @@
     "clock": "clk",
     "observe_extra_cycle": true,
     "fifo_dout": null,
-    "max_grading_s": 60
+    "max_grading_s": 240
   },
   "reference": {
     "path": "designs/ref.sv",

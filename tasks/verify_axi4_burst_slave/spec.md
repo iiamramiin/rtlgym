@@ -177,6 +177,6 @@ several correct designs with different ready throttling, response delays and
 idle payload values. A checker that requires exact timing or idle payloads will
 raise a false alarm.
 
-A complete grading attempt has a 60-second tool budget. Exhaustion is
+A complete grading attempt has a 240-second tool budget. Exhaustion is
 inconclusive, earns zero and is not cached. Each individual proof also has a
 15-second limit.

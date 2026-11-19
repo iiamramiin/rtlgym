@@ -23,7 +23,7 @@ TASK_ID = "verify_axi4_burst_slave"
 PARENT = "axi4_burst_slave"
 PROFILE = {"depth": 8, "params": {"ADDR_W": 3, "ID_W": 1, "LEN_W": 1},
            "reset": "rst", "clock": "clk", "observe_extra_cycle": True, "fifo_dout": None,
-           "max_grading_s": 60}
+           "max_grading_s": 240}
 
 
 def write(path, text):

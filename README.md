@@ -166,8 +166,8 @@ gate checks every supplied correct implementation.
 AXI, cache and gearbox tasks also allow bounded timing choices. Check accepted
 transactions, output stability and progress bounds; one implementation's exact
 ready/valid schedule is not the contract. Each has four correct designs and at
-least ten distinct qualified mutants. The new tasks share a 60-second grading
-tool budget per attempt. Exhaustion is inconclusive and is never cached.
+least ten distinct qualified mutants. AXI has a 240-second grading tool budget per attempt;
+cache has 90 seconds and gearbox has 60 seconds. Exhaustion is inconclusive and is never cached.
 Reduced profiles keep grading practical; model difficulty has not yet been measured.
 Details, limitations and the proposed pilot are in [the verification notes](docs/verify-hard.md).
 

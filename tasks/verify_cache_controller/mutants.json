@@ -10,7 +10,7 @@
     "reset": "rst",
     "clock": "clk",
     "observe_extra_cycle": true,
-    "max_grading_s": 60,
+    "max_grading_s": 90,
     "fifo_dout": null
   },
   "reference": {

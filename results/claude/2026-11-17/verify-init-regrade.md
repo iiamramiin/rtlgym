@@ -299,13 +299,13 @@ Archived result was declaration initialization, score 0.0000. Offline result is 
 
 Ruff is clean. All 452 pytest tests passed in 227.68 seconds. An uncached baseline with four workers graded all 29 tasks and 159 candidates in 97.9 seconds. All 159 stable result rows match the prior artifact, covering 142 design/repair rows and 17 verification rows, including coverage and target verdicts. Timing and diagnostic trace text are excluded from this comparison. The regression suite checks zero and nonzero initialization, original and regenerated native simulation/formal agreement, four-state bit-count helpers, cache isolation, and the parser rejection boundaries.
 
-The prior baseline artifact SHA-256 is `b92957372ea5f6814d06a57bf1ae7ad6d76aa1431f1c67206da6491fc85c4848`. The final baseline artifact SHA-256 is `86e2429b8dea298012312dda0a79af78e9943efa98d237f61116e09fd720a85c`. Working evidence is `verify-baselines-committed.json`, `verify-init-baselines-final.json` and `verify-init-report/baseline-final-comparison.json` under `C:\Users\rajae\OneDrive\Documents\ChatGPT\Resume`.
+The prior baseline artifact SHA-256 is `b92957372ea5f6814d06a57bf1ae7ad6d76aa1431f1c67206da6491fc85c4848`. The final baseline artifact SHA-256 is `86e2429b8dea298012312dda0a79af78e9943efa98d237f61116e09fd720a85c`. The baseline artifacts and comparison evidence are kept outside the repository.
 
 ## Reproduction and limits
 
-The working exact-source manifest and grader result JSONL remain under `C:\Users\rajae\OneDrive\Documents\ChatGPT\Resume\verify-init-report`, as `verify-pilot-checkers.json` and `grades-final.jsonl`. The report join requires every saved coordinate and hash to match, and exactly one offline result for each task/source pair.
+The exact-source manifest and grader result JSONL are kept outside the repository. The report join requires every saved coordinate and hash to match, and exactly one offline result for each task/source pair.
 
-Sources are the top-level JSON files in `E:\11__my_github_repo\rtlgym_results\26_11_17__run1`. The source file hashes are recorded in the manifest. No raw pilot JSON was rewritten or copied into the repository for this report.
+The original top-level pilot JSON files are kept outside the repository. The source file hashes are recorded in the manifest. No raw pilot JSON was rewritten or copied into the repository for this report.
 
 Two-state `bit` declarations are excluded from the checker subset because preserving their X/Z-to-zero coercion needs separate lowering. This restriction affects none of the twelve saved checkers. Ambiguous compiler reductions that discard array-address arithmetic are also rejected when the original expression cannot be preserved. Checker cache version 2 is separate from design/repair grader version 9.
 

@@ -16,13 +16,41 @@ implementation's ready/valid schedule. Their empirical difficulty is not yet kno
 
 Each task adds one final observation after its last transition and supplies four
 correct designs, including its reference. Times above are complete hand-checker
-grades from the final uncached baseline with four workers. Both accepted AXI
+grades from the November 18 uncached baseline with four workers. Both accepted AXI
 fixtures were below 42 seconds; cache was below 17 seconds. These measurements
 do not bound the difficulty of an arbitrary submitted checker.
 
-The new profiles share a 60-second grading tool budget per attempt. Exhaustion
-is inconclusive, earns zero and is not cached. The budget covers EDA tool calls;
-Python preparation and cleanup can add overhead. Existing task limits are unchanged.
+AXI has a 240-second grading tool budget per attempt. Cache has 90 seconds and
+gearbox has 60 seconds. Exhaustion is inconclusive, earns zero and is not cached.
+The budget covers EDA tool calls;
+Python preparation and cleanup can add overhead. The original three verification
+tasks retain their existing limits.
+
+## Grading budget headroom
+
+On November 19, 2026, all 27 verification baseline candidates ran uncached
+with four workers restricted to two CPUs (`taskset -c 0,1`). Every fixture
+had its expected classification. The table uses the slower accepted reference
+or good-checker grade for each task, including simulation and all formal gates.
+
+| Task | Slowest accepted grade | Overall budget | Headroom |
+| --- | ---: | ---: | ---: |
+| `verify_axi4_burst_slave` | 71.017 s | 240 s | 3.38x |
+| `verify_cache_controller` | 27.535 s | 90 s | 3.27x |
+| `verify_fifo_sync` | 21.632 s | No aggregate cap | Uncapped |
+| `verify_gearbox_16to12` | 13.771 s | 60 s | 4.36x |
+| `verify_popcount16` | 2.169 s | No aggregate cap | Uncapped |
+| `verify_rr_arbiter4` | 5.874 s | No aggregate cap | Uncapped |
+
+Headroom is the overall budget divided by a complete checker grade. The
+original three verification tasks do not set `max_grading_s`, so they have
+no aggregate deadline. Individual proof limits remain unchanged (10 seconds
+for cache, 15 seconds for the other tasks); they are separate from this ratio.
+The headroom baseline evidence is kept outside the repository.
+
+Every finite overall budget has at least 3x measured headroom. The chosen
+budgets are 240 seconds for AXI and 90 seconds for cache; gearbox retains
+60 seconds.
 
 ## Checker language fixes
 
@@ -121,8 +149,7 @@ patches continue at 0029. No push or paid model call was made.
   and tool versions. Timing and diagnostic trace text are excluded.
 - The baseline artifact SHA-256 is `e1fe450e50ebfebc6a60abb499bf37555d2ebbd7c886ca94364faa1660bbf861`;
   the prior artifact SHA-256 is `86e2429b8dea298012312dda0a79af78e9943efa98d237f61116e09fd720a85c`.
-  Working comparison evidence is `verify-hard-work/baseline-comparison.json`
-  in `C:\Users\rajae\OneDrive\Documents\ChatGPT\Resume`.
+  The baseline artifacts and comparison evidence are kept outside the repository.
 
 The exact twelve saved pilot sources were regraded without model calls or cache.
 The final parallel batch has **11 accepted, one inconclusive, no syntax
