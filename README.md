@@ -147,17 +147,29 @@ Every DUT signal is an input to the checker. The harness drives the DUT.
 | `verify_popcount16` | Combinational, all 16-bit inputs | 11 |
 | `verify_rr_arbiter4` | 12 transitions after the published reset schedule | 12 |
 | `verify_fifo_sync` | W=2, DEPTH=4, 12 transitions | 14 |
+| `verify_axi4_burst_slave` | Two memory words, one/two beats, 8 transitions | 12 |
+| `verify_cache_controller` | Two lines, two 2-bit words per line, 12 transitions | 14 |
+| `verify_gearbox_16to12` | Two-bit units, 4:3 conversion, 12 transitions | 14 |
 
 The sequential profiles add a final observation to check the last transition.
 A rising-edge immediate assertion observes the outputs from the preceding
-transition. Monitor registers must start from complete constant initial values or explicit
-reset assignments. Declaration initializers and constant-only initial blocks
-are supported. DUT state before reset remains unrestricted.
+transition. Private monitor storage may start arbitrary; reset and starting values
+are optional. Formal checks every possible unspecified initial value, so a checker
+that relies on one raises a false alarm. Declaration initializers and constant-only
+initial blocks remain supported. DUT state before reset remains unrestricted.
 
 The verification FIFO specifies `dout` only immediately after a successful
 read. It allows arbitrary data during idle cycles. Its correct implementations
 include retained data, zero idle data, and exposed idle storage. The false-alarm
 gate checks every supplied correct implementation.
+
+AXI, cache and gearbox tasks also allow bounded timing choices. Check accepted
+transactions, output stability and progress bounds; one implementation's exact
+ready/valid schedule is not the contract. Each has four correct designs and at
+least ten distinct qualified mutants. The new tasks share a 60-second grading
+tool budget per attempt. Exhaustion is inconclusive and is never cached.
+Reduced profiles keep grading practical; model difficulty has not yet been measured.
+Details, limitations and the proposed pilot are in [the verification notes](docs/verify-hard.md).
 
 Bounded formal decides both gates. An assertion failure on the reference or any
 `good_*` implementation gives zero reward. Otherwise the reward is the mean
@@ -170,7 +182,7 @@ no effect on the formal mutation score.
 
 Verilator XML supplies the checker syntax tree. The grader regenerates a small
 native language of expressions, immediate assertions, pure functions, statically
-bounded loops, and initialized or reset monitor registers. The supported pure
+bounded loops, and private monitor storage with optional initialization or reset. The supported pure
 functions include `$countones`, `$onehot`, and `$onehot0`. It rejects input drives, extra
 instances, hierarchical access, assumptions, foreign calls, timing controls,
 and user system tasks. A lexical gate blocks includes and preprocessing before
@@ -192,6 +204,9 @@ To regenerate and requalify the corpus locally:
 
 ```bash
 python -m scripts.generate_verify_mutants
+python -m scripts.generate_verify_axi4 --repo .
+python -m scripts.generate_verify_cache
+python -m scripts.generate_verify_gearbox
 python -m rtlgym baselines --tasks verify --no-cache --workers 4
 python -m rtlgym run --agent replay --tasks verify --max-turns 1 --out verify.json
 ```
@@ -618,7 +633,7 @@ rtlgym/
   simworker.py    child process that runs one cocotb testbench
   agents/         scripted replay agent (offline), Claude agent (API), Ollama agent (local)
   cli.py          list / score / baselines / run / report
-tasks/            18 design tasks, 8 repair variants and 3 verification tasks
+tasks/            18 design tasks, 8 repair variants and 6 verification tasks
 tests/            Tests: reward, formal, tools, extraction, end-to-end grading, environment, agents, CLI
 scripts/ci/       eval.sh (the eval workflow's run logic) and its summary helper
 scripts/local/    Windows + WSL + Ollama setup and run scripts for local models
