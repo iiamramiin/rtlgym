@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+# Delay freedom makes exact mirroring of one RTL implementation an invalid checker.
+# Transactions, stable backpressure payloads, tags, refill words, invalidation and
+# bounded local progress all matter; environment backpressure is unrestricted.
+id = "verify_cache_controller"
+kind = "verify"
+parent = "cache_controller"
+top = "rtl_checker"
+difficulty = "hard"
+tags = ["verification", "cache", "transactions", "latency-freedom"]
+demo_trajectory = ["bug_cycle_exact.sv", "good_transactions.sv"]
+
+[verification]
+dut_top = "cache_controller"
+depth = 12
+clock = "clk"
+reset = "rst"
+timeout_s = 10
+max_grading_s = 60
+manifest = "mutants.json"
+params = { DATA_W = 2, TAG_W = 1, INDEX_W = 1 }
