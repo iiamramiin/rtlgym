@@ -356,6 +356,14 @@ one shared function: the last code block (or bare `module ... endmodule` text) t
 defines the task's top module, plus any helper modules it instantiates that are defined
 elsewhere in the reply. Testbenches and prose are left out.
 
+Output-limit cutoffs are reported as `truncated` when no complete code block or
+module was extracted. Turn records keep `usage`, `complete_code` and
+`report_status` alongside the original grade; grading and rewards are unchanged.
+A complete submission followed by cut-off explanation is graded normally. Reports
+also classify old one-turn files from saved usage and code without rewriting them.
+Older files lack the original fence metadata, and cumulative usage in old multi-turn
+files cannot identify which turn was cut off.
+
 **On GitHub (no local setup):** add the repository secret `ANTHROPIC_API_KEY`
 (Settings → Secrets and variables → Actions), then open Actions → eval → Run workflow.
 Inputs: models (comma-separated), tasks (`all`, `design`, `repair`, `verify`, or a comma-separated list for a cheap
@@ -559,6 +567,42 @@ submission. The pilot has one tool-limited discordant pair.
 
 The [offline Icarus regrade](results/claude/2026-11-16/icarus-regrade.md) lists the
 saved submissions and the revised paired outcomes.
+
+### November 17 verification pilot
+
+The [first verification pilot](results/claude/2026-11-17/verify-pilot/summary.md)
+used two samples per model on popcount, arbitration and FIFO checking, one shot,
+default effort, at `ba4f7ec`. Both models originally passed 2/6. Eight of the
+12 checkers were rejected for initialization or bit-count syntax that the specs
+had not forbidden. After the checker-language fixes, the
+[offline batch](results/claude/2026-11-17/verify-hard-regrade.md) accepted 11/12;
+one Sonnet FIFO proof was inconclusive under parallel load. The same checker
+passed in an isolated repeat with the same proof limit. The archive keeps the
+original verdicts and the batch result remains 11/12.
+
+### November 19 harder verification pilot
+
+The [harder pilot](results/claude/2026-11-19/verify-hard-pilot/summary.md)
+used two samples per model on AXI burst, cache-controller and gearbox checking,
+one shot, default effort, at `31bdbe9`.
+
+| Model | Accepted first | Truncated replies | Mutants caught / assessed |
+|---|---:|---:|---:|
+| Sonnet 5.5 | 6/6 | 0 | 80/80 |
+| Haiku 5.5 | 2/6 | 4 | 28/28 |
+
+All four Haiku AXI/cache replies hit the 32,000-output-token limit without a
+complete extracted code block. They are reported as truncated, with zero reward,
+instead of invalid checkers. Their mutant coverage and false alarms were not
+assessed. Every accepted checker caught all admitted mutants without false
+alarms on the supplied correct designs. Raw JSON grades remain unchanged.
+
+At this size, Sonnet saturates design, repair and verification tasks: it solved
+all original design tasks within three feedback turns, all eight repairs on the
+first try, and all six harder verification submissions on the first try.
+These small samples and public, bounded profiles leave little room to measure
+improvement. They do not establish performance on larger designs or unrestricted
+verification problems.
 
 ## Tasks
 

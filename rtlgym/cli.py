@@ -11,6 +11,7 @@ import json
 import math
 import os
 import platform
+import re
 import statistics
 import subprocess
 import sys
@@ -20,6 +21,7 @@ from pathlib import Path
 
 from .agents import make_agent
 from .agents.claude import DEFAULT_MODEL
+from .checks import _FENCE_RE, _MODULE_RE, _OPEN_FENCE_RE
 from .env import RTLEnv, format_feedback, is_solved
 from .evaluator import EvalResult, evaluate
 from .task import DEFAULT_TASKS_ROOT, list_tasks, load_task
@@ -177,17 +179,58 @@ def _turn_record(r, reward: float, info: dict) -> dict:
             "cached": r.cached}
 
 
+def _usage_delta(before: dict, after: dict) -> dict:
+    return {key: round(value - before.get(key, 0), 2) for key, value in after.items()}
+
+
+def _complete_code(action: str, code: str) -> bool:
+    """A closed submitted block, or a complete module recovered by the extractor.
+
+    Missing closing fences alone do not make recovered complete RTL truncated.
+    This describes extraction, not syntax validity or acceptance.
+    """
+    for match in _FENCE_RE.finditer(action):
+        body = match.group(2).strip()
+        if body and (body == code.strip() or (
+                action.strip() == code.strip()
+                and re.search(r"(?m)^\s*(?:macro)?module\s+[A-Za-z_]\w*\s*(?:#|\(|;)", body))):
+            return True
+    # An unclosed checker fence is returned verbatim, rather than extracted.
+    if _OPEN_FENCE_RE.search(code):
+        return False
+    # Comments and quoted diagnostics must not supply a missing endmodule.
+    stripped = re.sub(r'"(?:\\.|[^"\\])*"|//[^\n]*|/\*.*?\*/',
+                      lambda m: "\n" * m.group().count("\n") or " ", code, flags=re.S)
+    return _MODULE_RE.search(stripped) is not None
+
+
+def _report_turn(turn: dict, usage: dict, complete_code: bool) -> dict:
+    result = {**turn, "usage": dict(usage), "complete_code": complete_code}
+    if usage.get("truncated", 0) > 0 and not complete_code:
+        result["report_status"] = "truncated"
+    return result
+
+
 def _play(env: RTLEnv, agent, obs: dict, turns: list, ret: float,
           first_action: str | None = None,
-          first_grade: tuple[str, EvalResult, float] | None = None) -> tuple[float, str | None]:
+          first_grade: tuple[str, EvalResult, float] | None = None,
+          first_usage: dict | None = None) -> tuple[float, str | None]:
     """Run turns until the episode ends. Returns (return, error)."""
     try:
         while True:
             if first_grade is not None:
+                action = first_action or first_grade[0]
+                usage = first_usage or {}
                 obs, reward, terminated, truncated, info = env._apply_grade(*first_grade)
                 first_grade = None
+                first_action = None
             else:
-                action = first_action if first_action is not None else agent.act(obs)
+                if first_action is not None:
+                    action, usage = first_action, first_usage or {}
+                else:
+                    before = dict(getattr(agent, "usage", None) or {})
+                    action = agent.act(obs)
+                    usage = _usage_delta(before, getattr(agent, "usage", None) or {})
                 first_action = None
                 obs, reward, terminated, truncated, info = env.step(action)
             ret += reward
@@ -197,7 +240,7 @@ def _play(env: RTLEnv, agent, obs: dict, turns: list, ret: float,
             rec["code"] = info.get("code")
             rec["feedback_shown"] = obs.get("feedback", "")
             rec["tool_report"] = format_feedback(info["eval"], "full")
-            turns.append(rec)
+            turns.append(_report_turn(rec, usage, _complete_code(action, rec["code"] or "")))
             if terminated or truncated:
                 return ret, None
     except Exception as exc:  # noqa: BLE001 - one failed API call must not sink the run
@@ -216,6 +259,9 @@ def _episode_record(task_id: str, env: RTLEnv, turns: list, ret: float, error: s
            if last is not None and getattr(last, "verification", None) else {}),
         **({"starter_score": state.starter_score} if state and state.starter_code is not None else {}),
         "error": error,
+        "truncated_attempts": sum(t.get("report_status") == "truncated" for t in turns),
+        **({"report_status": "truncated"}
+           if turns and turns[-1].get("report_status") == "truncated" else {}),
         "turns": len(turns),
         "pass@1": bool(first and is_solved(first)),
         "pass@1_tests_only": bool(first and first.all_tests_pass),
@@ -277,7 +323,7 @@ def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, ta
         turns: list = []
         ret, err = (0.0, error) if first_action is None or error else _play(
             branch_env, branch, obs, turns, 0.0,
-            first_action=None if repair else first_action, first_grade=first_grade,
+            first_action=first_action, first_grade=first_grade, first_usage=shared["usage"],
         )
         rec = _episode_record(task_id, branch_env, turns, ret, err, ta,
                               getattr(branch, "usage", None))
@@ -316,17 +362,21 @@ def _repair_edits(steps: list[dict]) -> dict:
 
 def _acceptance_counts(results: list[dict]) -> dict:
     n = len(results)
+    truncated_attempts = sum(t.get("report_status") == "truncated"
+                             for row in results for t in row["trajectory"])
     return {
         "tasks": sorted({r["task"] for r in results}),
         "episodes": n,
         "errors": sum(bool(r["error"]) for r in results),
         "pass@1_count": f"{sum(bool(r['pass@1']) for r in results)}/{n}",
         "solved_count": f"{sum(bool(r['solved']) for r in results)}/{n}",
+        **({"truncated_attempts": truncated_attempts} if truncated_attempts else {}),
     }
 
 
 def _verification_counts(results: list[dict]) -> dict:
-    details = [row.get("verification") for row in results]
+    details = [row.get("verification") for row in results
+               if row.get("report_status") != "truncated"]
     measured = [value for value in details if value]
     caught = sum(value.get("caught", 0) for value in measured)
     total = sum(value.get("mutants_total", 0) for value in measured)
@@ -342,7 +392,9 @@ def _verification_counts(results: list[dict]) -> dict:
         "episodes": len(results),
         "graded_episodes": len(measured),
         "false_alarm_episodes": sum(value.get("status") == "false_alarm" for value in measured),
-        "invalid_episodes": sum(value.get("status") == "invalid" for value in measured),
+        "invalid_episodes": sum((row.get("verification") or {}).get("status") == "invalid"
+                                and row.get("report_status") != "truncated" for row in results),
+        "truncated_episodes": sum(row.get("report_status") == "truncated" for row in results),
         "inconclusive_episodes": sum(value.get("status") == "inconclusive" for value in measured),
         "caught": caught,
         "mutants_total": total,
@@ -393,6 +445,10 @@ def summarize(results: list[dict], meta: dict) -> dict:
                          "pass@1_count": f"{sum(r['pass@1'] for r in rs)}/{len(rs)}",
                          "solved_count": f"{sum(r['solved'] for r in rs)}/{len(rs)}",
                          "mean_turns": round(sum(r["turns"] for r in rs) / len(rs), 2)}
+        truncated_attempts = sum(t.get("report_status") == "truncated"
+                                 for row in rs for t in row["trajectory"])
+        if truncated_attempts:
+            per_task[tid]["truncated_attempts"] = truncated_attempts
         if tid in formal_by_task:
             per_task[tid]["formal_enabled"] = formal_by_task[tid]
         kind = rs[0].get("task_kind", "design")
@@ -426,9 +482,11 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "solved_count": count("solved"),
         "test_escape_attempts": sum(r["test_escapes"] for r in results),
         "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in results),
-        "frontend_failure_attempts": sum(bool(t.get("frontend_errors")) for t in steps),
+        "frontend_failure_attempts": sum(bool(t.get("frontend_errors"))
+                                         and t.get("report_status") != "truncated" for t in steps),
         "sim_frontend_fallback_attempts": sum(t.get("sim_frontend") == "sv2v" for t in steps),
         "resource_failure_attempts": sum(bool(t.get("resource_failures")) for t in steps),
+        "truncated_attempts": sum(t.get("report_status") == "truncated" for t in steps),
         "mean_first_score": mean("first_score"),
         "mean_best_score": mean("best_score"),
         "mean_turns": mean("turns"),
@@ -439,6 +497,44 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "usage": usage,
         "per_task": per_task,
     }
+
+
+def refresh_report(data: dict) -> dict:
+    """Refresh reporting causes in memory, leaving archived grades and bytes alone.
+
+    Old one-turn runs have unambiguous per-call usage. Old multi-turn totals do
+    not identify the cut-off turn, so they are never assigned to an attempt.
+    """
+    if not data.get("episodes"):
+        return data
+    episodes = []
+    for original in data["episodes"]:
+        turns = []
+        old_turns = original.get("trajectory", [])
+        for turn in old_turns:
+            usage = turn.get("usage")
+            if usage is None and len(old_turns) == 1:
+                shared = original.get("shared_first")
+                usage = ((shared or {}).get("usage") if shared else original.get("usage")) or {}
+            if usage is not None:
+                code = turn.get("code")
+                complete = turn.get("complete_code")
+                if complete is None and code is not None:
+                    complete = _complete_code(code, code)
+                if complete is not None:
+                    turn = _report_turn(turn, usage, complete)
+            turns.append(turn)
+        episode = {**original, "trajectory": turns,
+                   "truncated_attempts": sum(t.get("report_status") == "truncated" for t in turns)}
+        if turns and turns[-1].get("report_status") == "truncated":
+            episode["report_status"] = "truncated"
+        episodes.append(episode)
+    result = {**data, "episodes": episodes}
+    required = {"task", "error", "trajectory", "pass@1", "pass@1_tests_only", "solved",
+                "turns", "test_escapes", "first_score", "best_score"}
+    if "summary" in data and all(required <= row.keys() for row in episodes):
+        result["summary"] = summarize(episodes, data["summary"])
+    return result
 
 
 def mcnemar_exact(b: int, c: int) -> float:
@@ -628,7 +724,8 @@ def _print_episodes(results: list[dict]) -> None:
     print(f"{'task':18s} {'turns':>5s} {'pass@1':>6s} {'solved':>6s} {'first':>6s} {'best':>6s}"
           f"  per-turn scores")
     for r in results:
-        scores = " -> ".join(f"{t['score']:.2f}" for t in r["trajectory"])
+        scores = " -> ".join("truncated" if t.get("report_status") == "truncated"
+                            else f"{t['score']:.2f}" for t in r["trajectory"])
         if r["error"]:
             print(f"{r['task']:18s} ERROR {r['error'][:90]}" + (f"  (after {scores})"
                                                                  if scores else ""))
@@ -690,9 +787,9 @@ def _print_verify_results(runs: list[dict]) -> None:
     if not any("verify" in summary.get("by_kind", {}) for summary in runs):
         return
     print("\n### Verification checker results\n")
-    print("| Arm | Episodes (graded) | False alarms | Invalid | Inconclusive | "
+    print("| Arm | Episodes (graded) | False alarms | Invalid | Truncated | Inconclusive | "
           "Mutants caught | Mean family coverage | Mean reward |")
-    print("|---|---:|---:|---:|---:|---:|---:|---:|")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
     for summary in runs:
         group = summary.get("by_kind", {}).get("verify")
         if group is None:
@@ -700,11 +797,12 @@ def _print_verify_results(runs: list[dict]) -> None:
         counts = group["verification"]
         print(f"| {_arm(summary)} | {counts['episodes']} ({counts['graded_episodes']}) | "
               f"{counts['false_alarm_episodes']} | {counts['invalid_episodes']} | "
+              f"{counts.get('truncated_episodes', 0)} | "
               f"{counts['inconclusive_episodes']} | {counts['caught']}/{counts['mutants_total']} | "
               f"{_pct(counts['mean_weighted_caught'])} | {counts['mean_score']} |")
     print("\nEach episode contributes its final checker. Mutant counts are checks across episodes. "
           "Family coverage weights mutation families equally. False alarms, invalid checkers, "
-          "inconclusive grades and episodes with errors earn zero reward.")
+          "truncated outputs, inconclusive grades and episodes with errors earn zero reward.")
     print("\n| Arm | Mean assertions | Mean state bits | Mean source bytes |")
     print("|---|---:|---:|---:|")
     for summary in runs:
@@ -717,19 +815,19 @@ def _print_verify_results(runs: list[dict]) -> None:
 
 def cmd_report(args) -> int:
     """Turn one or more `run --out` files into Markdown tables."""
-    data = [json.loads(Path(f).read_text()) for f in args.files]
+    data = [refresh_report(json.loads(Path(f).read_text())) for f in args.files]
     runs = [d["summary"] for d in data if "summary" in d]      # skip paired summaries
     print("| Arm | Episodes (errors) | Accepted on 1st attempt | 1st attempt passes tests "
-          "| Accepted within N turns | Test escapes | Inconclusive | Mean turns "
+          "| Accepted within N turns | Test escapes | Inconclusive | Truncated attempts | Mean turns "
           "| Grading p50 / p95 |")
-    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for s in runs:
         n = s["episodes"]
         print(f"| {_arm(s)} | {n} ({s['errors']}) | "
               f"{_count(s['pass@1'], n)} | {_count(s['pass@1_tests_only'], n)} | "
               f"{_count(s['solved_within_turns'], n)} (N={s['max_turns']}) | "
               f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
-              f"{s['mean_turns']} | {_grading(s)} |")
+              f"{s.get('truncated_attempts', 0)} | {s['mean_turns']} | {_grading(s)} |")
     _print_verify_results(runs)
     if any(s.get("by_verification") for s in runs):
         print("\n### Acceptance by verification mode\n")
@@ -753,6 +851,8 @@ def cmd_report(args) -> int:
                 continue
             simulation_only = pt.get("formal_enabled", s.get("formal")) is False
             label = " (simulation only)" if simulation_only else ""
+            if pt.get("truncated_attempts"):
+                label += f"; {pt['truncated_attempts']} truncated"
             cells.append(f"{_count(pt['pass@1'], pt['episodes'])} → "
                          f"{_count(pt['solved'], pt['episodes'])}{label}")
         print(f"| {t} | " + " | ".join(cells) + " |")

@@ -6,3 +6,9 @@
 *.sv text eol=lf
 *.ps1 text eol=crlf
 *.bat text eol=crlf
+
+# Preserve archived run bytes on every platform.
+results/claude/2026-11-17/verify-pilot/*.json -text
+results/claude/2026-11-17/verify-pilot/recorded-summary.md -text
+results/claude/2026-11-19/verify-hard-pilot/*.json -text
+results/claude/2026-11-19/verify-hard-pilot/recorded-summary.md -text

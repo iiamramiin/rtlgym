@@ -23,6 +23,12 @@ def plan(models: int, tasks: int, samples: int, turns: int, paired: bool, arms: 
 
 
 def _load(folder: Path):
+    # Also support direct script invocation, where scripts/ci is on sys.path.
+    root = str(Path(__file__).resolve().parents[2])
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    from rtlgym.cli import refresh_report
+
     arms, pairs = [], []
     for p in sorted(folder.glob("*.json")):
         try:
@@ -30,6 +36,8 @@ def _load(folder: Path):
         except ValueError:
             continue
         if "summary" in d:
+            if d.get("episodes"):
+                d = refresh_report(d)
             arms.append((d["summary"], d.get("episodes", [])))
         elif "paired" in d:
             pairs.append((d["meta"].get("model") or d["meta"].get("agent"), d["paired"]))
@@ -63,6 +71,7 @@ def _arm_kind_counts(rows: list[dict]) -> dict:
             "errors": sum(bool(episode.get("error")) for episode in group),
             "pass@1_count": f"{first}/{n}",
             "solved_count": f"{solved}/{n}",
+            "truncated_attempts": sum(episode.get("truncated_attempts", 0) for episode in group),
         }
         if kind == "repair":
             all_edits, accepted_edits = [], []
@@ -86,15 +95,17 @@ def _report_arms_by_kind(out: list[str], arm_files: list[tuple[dict, list[dict]]
     if not any(arm.get("by_kind") or any("task_kind" in row for row in rows) for arm, rows in arm_files):
         return
     out.append("\n### Acceptance by task kind\n")
-    out.append("| Model | Feedback | Kind | Episodes (errors) | First attempt | Within turn budget |")
-    out.append("|---|---|---|---:|---:|---:|")
+    out.append("| Model | Feedback | Kind | Episodes (errors) | First attempt | Within turn budget | "
+               "Truncated attempts |")
+    out.append("|---|---|---|---:|---:|---:|---:|")
     repair_rows = []
     for arm, rows in arm_files:
         name, feedback = _name(arm), arm["feedback"]
         counts = arm.get("by_kind") or _arm_kind_counts(rows)
         for kind, group in sorted(counts.items()):
             out.append(f"| {name} | {feedback} | {kind} | {group['episodes']} ({group['errors']}) | "
-                       f"{group['pass@1_count']} | {group['solved_count']} |")
+                       f"{group['pass@1_count']} | {group['solved_count']} | "
+                       f"{group.get('truncated_attempts', 0)} |")
             if kind == "repair":
                 edits = group.get("lines_changed") or {}
                 all_edits = _edit_median(edits.get("median"), edits.get("attempts", 0))
@@ -133,9 +144,9 @@ def _report_verify(out: list[str], arms: list[dict]) -> None:
     if not any("verify" in arm.get("by_kind", {}) for arm in arms):
         return
     out.append("\n### Verification checker results\n")
-    out.append("| Model | Feedback | Episodes (graded) | False alarms | Invalid | Inconclusive | "
+    out.append("| Model | Feedback | Episodes (graded) | False alarms | Invalid | Inconclusive | Truncated | "
                "Mutants caught | Mean family coverage | Mean reward |")
-    out.append("|---|---|---:|---:|---:|---:|---:|---:|---:|")
+    out.append("|---|---|---:|---:|---:|---:|---:|---:|---:|---:|")
     for arm in arms:
         group = arm.get("by_kind", {}).get("verify")
         if group is None:
@@ -146,10 +157,12 @@ def _report_verify(out: list[str], arms: list[dict]) -> None:
         out.append(f"| {_name(arm)} | {arm['feedback']} | {counts['episodes']} "
                    f"({counts['graded_episodes']}) | {counts['false_alarm_episodes']} | "
                    f"{counts['invalid_episodes']} | {counts['inconclusive_episodes']} | "
+                   f"{counts.get('truncated_episodes', 0)} | "
                    f"{counts['caught']}/{counts['mutants_total']} | {coverage} | {counts['mean_score']} |")
     out.append("\nEach episode contributes its final checker. Mutant counts are checks across "
                "episodes. Family coverage weights mutation families equally. False alarms, "
-               "invalid checkers, inconclusive grades and episodes with errors earn zero reward.")
+               "invalid checkers, truncated replies, inconclusive grades and episodes with errors "
+               "earn zero reward.")
     out.append("\n| Model | Feedback | Mean assertions | Mean state bits | Mean source bytes |")
     out.append("|---|---|---:|---:|---:|")
     for arm in arms:
@@ -181,14 +194,18 @@ def report(folder: str) -> str:
                        f"{s.get('inconclusive_attempts', 0)} inconclusive, "
                        f"{s.get('errors', 0)} errored")
 
-    failure_keys = ("frontend_failure_attempts", "resource_failure_attempts")
+    truncated = sum(s.get("truncated_attempts", 0) for s in arms)
+    out.append(f"\n**Truncated attempts: {truncated}** (the output limit was reached without "
+               "complete extracted code; these earn zero reward).")
+
+    failure_keys = ("frontend_failure_attempts", "resource_failure_attempts", "truncated_attempts")
     if any(key in s for s in arms for key in failure_keys):
-        out.append("\n### Front-end and resource failures by arm\n")
-        out.append("| Model | Feedback | Front-end failures | Resource failures |")
-        out.append("|---|---|---:|---:|")
+        out.append("\n### Front-end, resource and truncated attempts by arm\n")
+        out.append("| Model | Feedback | Front-end failures | Resource failures | Truncated |")
+        out.append("|---|---|---:|---:|---:|")
         for s in arms:
-            front_end, resource = (s.get(key, "n/a") for key in failure_keys)
-            out.append(f"| {_name(s)} | {s['feedback']} | {front_end} | {resource} |")
+            front_end, resource, cut_off = (s.get(key, "n/a") for key in failure_keys)
+            out.append(f"| {_name(s)} | {s['feedback']} | {front_end} | {resource} | {cut_off} |")
 
     fallback_key = "sim_frontend_fallback_attempts"
     if any(fallback_key in s for s in arms):
