@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
+
+id = "verify_axi4_burst_slave"
+kind = "verify"
+parent = "axi4_burst_slave"
+top = "rtl_checker"
+difficulty = "hard"
+demo_trajectory = ["bug_cycle_exact.sv", "good_protocol.sv"]
+
+[verification]
+dut_top = "axi4_burst_slave"
+depth = 8
+clock = "clk"
+reset = "rst"
+timeout_s = 15
+max_grading_s = 60
+manifest = "mutants.json"
+params = { ADDR_W = 3, ID_W = 1, LEN_W = 1 }
