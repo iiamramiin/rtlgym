@@ -1,0 +1,159 @@
+{
+  "paired": {
+    "arms": [
+      "full",
+      "none"
+    ],
+    "episodes": 2,
+    "outcomes": {
+      "both": 1,
+      "only_full": 0,
+      "only_none": 0,
+      "neither": 1,
+      "errored": 0
+    },
+    "informative_episodes": 1,
+    "discordant_pairs": 0,
+    "mcnemar_exact_p": 1.0,
+    "by_verification": {
+      "formal": {
+        "episodes": 2,
+        "outcomes": {
+          "both": 1,
+          "only_full": 0,
+          "only_none": 0,
+          "neither": 1,
+          "errored": 0
+        },
+        "informative_episodes": 1,
+        "discordant_pairs": 0,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "by_kind": {
+      "design": {
+        "episodes": 1,
+        "outcomes": {
+          "both": 1,
+          "only_full": 0,
+          "only_none": 0,
+          "neither": 0,
+          "errored": 0
+        },
+        "informative_episodes": 0,
+        "discordant_pairs": 0,
+        "mcnemar_exact_p": 1.0
+      },
+      "verify": {
+        "episodes": 1,
+        "outcomes": {
+          "both": 0,
+          "only_full": 0,
+          "only_none": 0,
+          "neither": 1,
+          "errored": 0
+        },
+        "informative_episodes": 1,
+        "discordant_pairs": 0,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "shared_first": {
+      "act_s": 1196.76,
+      "calls": 2,
+      "input_tokens": 2583,
+      "output_tokens": 1587,
+      "refusals": 0,
+      "truncated": 0,
+      "ctx_truncated": 0,
+      "generate_s": 1129.64,
+      "eval_s": 882.9
+    },
+    "rows": [
+      {
+        "task": "popcount16",
+        "task_kind": "design",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9485,
+        "none_best": 0.9485,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "verify_popcount16",
+        "task_kind": "verify",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      }
+    ]
+  },
+  "meta": {
+    "agent": "ollama",
+    "model": "qwen3:14b",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "popcount16": true,
+      "verify_popcount16": true
+    },
+    "tasks": [
+      "popcount16",
+      "verify_popcount16"
+    ],
+    "started_utc": "2026-11-22T22:32:03+00:00",
+    "wall_s": 1994.03,
+    "git_commit": "8d4818d6c5b7d2916c66f346375428c44579c666",
+    "python": "3.12.3",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "seed": {
+      "base": 20261122,
+      "per_episode": "base + episode index"
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "options": {
+        "num_ctx": 8192,
+        "num_predict": 8192,
+        "seed": 20261122
+      },
+      "think": false,
+      "think_requested": false,
+      "think_ignored": false,
+      "timeout_s": 1800.0,
+      "build": {
+        "model": "qwen3:14b",
+        "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+        "size_bytes": 9276198565,
+        "family": "qwen3",
+        "parameter_size": "14.8B",
+        "quantization": "Q4_K_M",
+        "format": "gguf",
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ],
+        "ollama_version": "0.40.16"
+      }
+    }
+  }
+}

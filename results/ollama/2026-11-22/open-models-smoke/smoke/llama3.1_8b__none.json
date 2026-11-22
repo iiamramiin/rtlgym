@@ -1,0 +1,866 @@
+{
+  "summary": {
+    "agent": "ollama",
+    "model": "llama3.1:8b",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 3,
+    "feedback": "none",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "popcount16": true,
+      "verify_popcount16": true
+    },
+    "tasks": [
+      "popcount16",
+      "verify_popcount16"
+    ],
+    "started_utc": "2026-11-22T22:04:27+00:00",
+    "wall_s": 738.95,
+    "git_commit": "8d4818d6c5b7d2916c66f346375428c44579c666",
+    "python": "3.12.3",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "seed": {
+      "base": 20261122,
+      "per_episode": "base + episode index"
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "options": {
+        "num_ctx": 8192,
+        "num_predict": 8192,
+        "seed": 20261122
+      },
+      "think": false,
+      "think_requested": false,
+      "think_ignored": false,
+      "timeout_s": 1800.0,
+      "build": {
+        "model": "llama3.1:8b",
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "size_bytes": 4920753328,
+        "family": "llama",
+        "parameter_size": "8.0B",
+        "quantization": "Q4_K_M",
+        "format": "gguf",
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "ollama_version": "0.40.16"
+      }
+    },
+    "paired": true,
+    "pair_arms": [
+      "full",
+      "none"
+    ],
+    "by_verification": {
+      "formal": {
+        "tasks": [
+          "popcount16",
+          "verify_popcount16"
+        ],
+        "episodes": 2,
+        "errors": 0,
+        "pass@1_count": "1/2",
+        "solved_count": "1/2"
+      }
+    },
+    "by_kind": {
+      "design": {
+        "tasks": [
+          "popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1"
+      },
+      "verify": {
+        "tasks": [
+          "verify_popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "verification": {
+          "episodes": 1,
+          "graded_episodes": 1,
+          "false_alarm_episodes": 0,
+          "invalid_episodes": 0,
+          "truncated_episodes": 0,
+          "inconclusive_episodes": 0,
+          "caught": 11,
+          "mutants_total": 11,
+          "mutation_rate": 1.0,
+          "mean_score": 1.0,
+          "mean_weighted_caught": 1.0,
+          "mean_assertions": 1,
+          "mean_state_bits": 0,
+          "mean_checker_bytes": 434,
+          "families": {
+            "behavioral": {
+              "total": 1,
+              "caught": 1
+            },
+            "comparison": {
+              "total": 3,
+              "caught": 3
+            },
+            "dropped_input": {
+              "total": 2,
+              "caught": 2
+            },
+            "index_swap": {
+              "total": 1,
+              "caught": 1
+            },
+            "off_by_one": {
+              "total": 2,
+              "caught": 2
+            },
+            "operator": {
+              "total": 2,
+              "caught": 2
+            }
+          }
+        }
+      }
+    },
+    "episodes": 2,
+    "errors": 0,
+    "pass@1": 0.5,
+    "pass@1_count": "1/2",
+    "pass@1_ci95": [
+      0.012579117093425018,
+      0.9874208829065749
+    ],
+    "pass@1_tests_only": 0.5,
+    "solved_within_turns": 0.5,
+    "solved_count": "1/2",
+    "solved_within_turns_ci95": [
+      0.012579117093425018,
+      0.9874208829065749
+    ],
+    "test_escape_attempts": 0,
+    "inconclusive_attempts": 0,
+    "frontend_failure_attempts": 0,
+    "sim_frontend_fallback_attempts": 0,
+    "resource_failure_attempts": 0,
+    "truncated_attempts": 0,
+    "mean_first_score": 0.5,
+    "mean_best_score": 0.5,
+    "mean_turns": 2.0,
+    "grading_s_p50": 0.101,
+    "grading_s_p95": 0.258,
+    "cache_hit_rate": 0.5,
+    "usage": {
+      "calls": 2,
+      "input_tokens": 2232,
+      "output_tokens": 1321,
+      "refusals": 0,
+      "truncated": 0,
+      "ctx_truncated": 0,
+      "generate_s": 240.92,
+      "eval_s": 237.01
+    },
+    "per_task": {
+      "popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 0.0,
+        "solved": 0.0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1",
+        "mean_turns": 3.0,
+        "formal_enabled": true
+      },
+      "verify_popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true,
+        "task_kind": "verify",
+        "verification": {
+          "episodes": 1,
+          "graded_episodes": 1,
+          "false_alarm_episodes": 0,
+          "invalid_episodes": 0,
+          "truncated_episodes": 0,
+          "inconclusive_episodes": 0,
+          "caught": 11,
+          "mutants_total": 11,
+          "mutation_rate": 1.0,
+          "mean_score": 1.0,
+          "mean_weighted_caught": 1.0,
+          "mean_assertions": 1,
+          "mean_state_bits": 0,
+          "mean_checker_bytes": 434,
+          "families": {
+            "behavioral": {
+              "total": 1,
+              "caught": 1
+            },
+            "comparison": {
+              "total": 3,
+              "caught": 3
+            },
+            "dropped_input": {
+              "total": 2,
+              "caught": 2
+            },
+            "index_swap": {
+              "total": 1,
+              "caught": 1
+            },
+            "off_by_one": {
+              "total": 2,
+              "caught": 2
+            },
+            "operator": {
+              "total": 2,
+              "caught": 2
+            }
+          }
+        }
+      }
+    },
+    "arm_s": 256.24,
+    "shared_first_s": 235.76
+  },
+  "episodes": [
+    {
+      "task": "popcount16",
+      "task_kind": "design",
+      "error": null,
+      "truncated_attempts": 0,
+      "turns": 3,
+      "pass@1": false,
+      "pass@1_tests_only": false,
+      "solved": false,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.0,
+      "best_score": 0.0,
+      "return": 0.0,
+      "wall_s": 256.24,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.0,
+          "reward": 0.0,
+          "tests": "0/0",
+          "all_tests_pass": false,
+          "formal": "skipped",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": null,
+          "breakdown": {
+            "compile": 0.0,
+            "lint": 0.0,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.008
+          },
+          "grade_s": 0.001,
+          "cached": true,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [15:0] count0;\nlogic [15:0] count1;\n\nassign count0 = x[0]  ? 1 : 0;\nassign count0 = count0 + (x[1] ? 1 : 0);\nassign count0 = count0 + (x[2] ? 1 : 0);\nassign count0 = count0 + (x[3] ? 1 : 0);\nassign count0 = count0 + (x[4] ? 1 : 0);\nassign count0 = count0 + (x[5] ? 1 : 0);\nassign count0 = count0 + (x[6] ? 1 : 0);\nassign count0 = count0 + (x[7] ? 1 : 0);\nassign count0 = count0 + (x[8] ? 1 : 0);\nassign count0 = count0 + (x[9] ? 1 : 0);\nassign count0 = count0 + (x[10] ? 1 : 0);\nassign count0 = count0 + (x[11] ? 1 : 0);\nassign count0 = count0 + (x[12] ? 1 : 0);\nassign count0 = count0 + (x[13] ? 1 : 0);\nassign count0 = count0 + (x[14] ? 1 : 0);\nassign count0 = count0 + (x[15] ? 1 : 0);\n\nassign count1 = x[0]  ? 1 : 0;\nassign count1 = count1 + (x[2] ? 1 : 0);\nassign count1 = count1 + (x[4] ? 1 : 0);\nassign count1 = count1 + (x[6] ? 1 : 0);\nassign count1 = count1 + (x[8] ? 1 : 0);\nassign count1 = count1 + (x[10] ? 1 : 0);\nassign count1 = count1 + (x[12] ? 1 : 0);\nassign count1 = count1 + (x[14] ? 1 : 0);\n\nassign count = {count1[4], count1[3], count1[2], count1[1], count0};\n\nendmodule\n",
+          "feedback_shown": "",
+          "tool_report": "Score: 0.000\nCompilation failed (Icarus Verilog, -g2012).\n...\ncannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:15: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:16: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:17: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:18: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:19: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:20: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:21: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:22: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:23: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:24: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:27: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:28: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:29: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:30: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:31: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:32: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_nvk24qgf/candidate.sv:33: error: Unresolved net/uwire count1 cannot have multiple drivers.\n22 error(s) during elaboration.",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 282,
+            "output_tokens": 594,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 94.75,
+            "eval_s": 94.56
+          },
+          "complete_code": true
+        },
+        {
+          "turn": 2,
+          "score": 0.0,
+          "reward": 0.0,
+          "tests": "0/0",
+          "all_tests_pass": false,
+          "formal": "skipped",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": null,
+          "breakdown": {
+            "compile": 0.0,
+            "lint": 0.0,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.036
+          },
+          "grade_s": 0.042,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [4:0] count0;\nlogic [4:0] count1;\n\nassign count0 = x[0]  ? 1 : 0;\nassign count0 = count0 + (x[1] ? 1 : 0);\nassign count0 = count0 + (x[2] ? 1 : 0);\nassign count0 = count0 + (x[3] ? 1 : 0);\nassign count0 = count0 + (x[4] ? 1 : 0);\n\nassign count1 = (x[0]  | x[1]) ? 1 : 0;\nassign count1 = count1 + ((x[2]  | x[3]) ? 1 : 0);\nassign count1 = count1 + ((x[4]  | x[5]) ? 1 : 0);\nassign count1 = count1 + ((x[6]  | x[7]) ? 1 : 0);\nassign count1 = count1 + ((x[8]  | x[9]) ? 1 : 0);\nassign count1 = count1 + ((x[10] | x[11]) ? 1 : 0);\nassign count1 = count1 + ((x[12] | x[13]) ? 1 : 0);\nassign count1 = count1 + ((x[14] | x[15]) ? 1 : 0);\n\nassign count = count0 + count1;\n\nendmodule\n",
+          "feedback_shown": "",
+          "tool_report": "Score: 0.000\nCompilation failed (Icarus Verilog, -g2012).\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:10: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:11: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:12: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:13: error: Unresolved net/uwire count0 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:16: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:17: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:18: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:19: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:20: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:21: error: Unresolved net/uwire count1 cannot have multiple drivers.\n/tmp/rtlgym_popcount16_35qq8y1i/candidate.sv:22: error: Unresolved net/uwire count1 cannot have multiple drivers.\n11 error(s) during elaboration.",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 906,
+            "output_tokens": 390,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 68.56,
+            "eval_s": 66.55
+          },
+          "complete_code": true
+        },
+        {
+          "turn": 3,
+          "score": 0.0,
+          "reward": 0.0,
+          "tests": "0/0",
+          "all_tests_pass": false,
+          "formal": "skipped",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": null,
+          "breakdown": {
+            "compile": 0.0,
+            "lint": 0.0,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.153
+          },
+          "grade_s": 0.159,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [4:0] count;\n\nassign count = {5'd0, 5'd0, 5'd0, 5'd0, 5'd0};\n\nassign count[0] = x[0];\nassign count[1] = x[1] | x[0];\nassign count[2] = x[2] | x[1] | x[0];\nassign count[3] = x[3] | x[2] | x[1] | x[0];\nassign count[4] = x[4] | x[3] | x[2] | x[1] | x[0];\nassign count[4] = count[4] + (x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[10] | x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[11] | x[10] | x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[12] | x[11] | x[10] | x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[13] | x[12] | x[11] | x[10] | x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[14] | x[13] | x[12] | x[11] | x[10] | x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\nassign count[4] = count[4] + (x[15] | x[14] | x[13] | x[12] | x[11] | x[10] | x[9] | x[8] | x[7] | x[6] | x[5] | x[4] | x[3] | x[2] | x[1] | x[0]);\n\nendmodule\n",
+          "feedback_shown": "",
+          "tool_report": "Score: 0.000\nCompilation failed (Icarus Verilog, -g2012).\nNative Icarus:\n/tmp/rtlgym_popcount16_vmj8_prx/candidate.sv:6: error: 'count' has already been declared in this scope.\n/tmp/rtlgym_popcount16_vmj8_prx/candidate.sv:3:      : It was declared here as a variable.\n\nsv2v:\nsv2v: declarations `output logic [4:0] count` and `logic [4:0] count` are incompatible due to redeclaration\nCallStack (from HasCallStack):\n  error, called at src/Convert/PortDecl.hs:141:24 in main:Convert.PortDecl",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 1326,
+            "output_tokens": 931,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 172.36,
+            "eval_s": 170.46
+          },
+          "complete_code": true
+        }
+      ],
+      "usage": {
+        "calls": 2,
+        "input_tokens": 2232,
+        "output_tokens": 1321,
+        "refusals": 0,
+        "truncated": 0,
+        "ctx_truncated": 0,
+        "generate_s": 240.92,
+        "eval_s": 237.01
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 282,
+          "output_tokens": 594,
+          "refusals": 0,
+          "truncated": 0,
+          "ctx_truncated": 0,
+          "generate_s": 94.75,
+          "eval_s": 94.56
+        },
+        "act_s": 100.29,
+        "error": null
+      }
+    },
+    {
+      "task": "verify_popcount16",
+      "task_kind": "verify",
+      "verification": {
+        "status": "pass",
+        "mutants_total": 11,
+        "caught": 11,
+        "weighted_caught": 1.0,
+        "families": {
+          "behavioral": {
+            "total": 1,
+            "caught": 1
+          },
+          "comparison": {
+            "total": 3,
+            "caught": 3
+          },
+          "dropped_input": {
+            "total": 2,
+            "caught": 2
+          },
+          "index_swap": {
+            "total": 1,
+            "caught": 1
+          },
+          "off_by_one": {
+            "total": 2,
+            "caught": 2
+          },
+          "operator": {
+            "total": 2,
+            "caught": 2
+          }
+        },
+        "assertions": 1,
+        "state_bits": 0,
+        "checker_bytes": 434,
+        "false_alarm_trace": "",
+        "targets": [
+          {
+            "kind": "positive",
+            "index": 0,
+            "formal": "pass",
+            "formal_message": "",
+            "formal_s": 0.116,
+            "sim_complete": true,
+            "sim_failed": false,
+            "sim_s": 0.103,
+            "simulation_trace": "...\nRACE_9ceb4a9246f6379e0b4a8f7d 52 x=34a8 count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 53 x=8fe7 count=0b\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 54 x=4c1a count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 55 x=2cb1 count=07\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 56 x=be5c count=0a\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 57 x=460b count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 58 x=e3ee count=0b\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 59 x=5a75 count=09\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 60 x=2950 count=05\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 61 x=ec6f count=0b\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 62 x=2f02 count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 63 x=2279 count=07\nRTLGYM_DONE_9ceb4a9246f6379e0b4a8f7d\n/tmp/rtlgym_verify_2irk3ymh/positive_0_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "positive",
+            "index": 1,
+            "formal": "pass",
+            "formal_message": "",
+            "formal_s": 0.116,
+            "sim_complete": true,
+            "sim_failed": false,
+            "sim_s": 0.033,
+            "simulation_trace": "...\nRACE_6e2c983df130907206a1c292 52 x=34a8 count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 53 x=8fe7 count=0b\nRTLGYM_TRACE_6e2c983df130907206a1c292 54 x=4c1a count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 55 x=2cb1 count=07\nRTLGYM_TRACE_6e2c983df130907206a1c292 56 x=be5c count=0a\nRTLGYM_TRACE_6e2c983df130907206a1c292 57 x=460b count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 58 x=e3ee count=0b\nRTLGYM_TRACE_6e2c983df130907206a1c292 59 x=5a75 count=09\nRTLGYM_TRACE_6e2c983df130907206a1c292 60 x=2950 count=05\nRTLGYM_TRACE_6e2c983df130907206a1c292 61 x=ec6f count=0b\nRTLGYM_TRACE_6e2c983df130907206a1c292 62 x=2f02 count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 63 x=2279 count=07\nRTLGYM_DONE_6e2c983df130907206a1c292\n/tmp/rtlgym_verify_2irk3ymh/positive_1_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "bug_width",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": false,
+            "sim_s": 0.026,
+            "simulation_trace": "...\n_TRACE_7344748d260602ee11a73c48 52 x=34a8 count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 53 x=8fe7 count=0b\nRTLGYM_TRACE_7344748d260602ee11a73c48 54 x=4c1a count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 55 x=2cb1 count=07\nRTLGYM_TRACE_7344748d260602ee11a73c48 56 x=be5c count=0a\nRTLGYM_TRACE_7344748d260602ee11a73c48 57 x=460b count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 58 x=e3ee count=0b\nRTLGYM_TRACE_7344748d260602ee11a73c48 59 x=5a75 count=09\nRTLGYM_TRACE_7344748d260602ee11a73c48 60 x=2950 count=05\nRTLGYM_TRACE_7344748d260602ee11a73c48 61 x=ec6f count=0b\nRTLGYM_TRACE_7344748d260602ee11a73c48 62 x=2f02 count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 63 x=2279 count=07\nRTLGYM_DONE_7344748d260602ee11a73c48\n/tmp/rtlgym_verify_2irk3ymh/mutant_0_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "escape_rare_input",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.116,
+            "sim_complete": true,
+            "sim_failed": false,
+            "sim_s": 0.025,
+            "simulation_trace": "...\n_TRACE_71608eb5d375bc6898365da1 52 x=34a8 count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 53 x=8fe7 count=0b\nRTLGYM_TRACE_71608eb5d375bc6898365da1 54 x=4c1a count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 55 x=2cb1 count=07\nRTLGYM_TRACE_71608eb5d375bc6898365da1 56 x=be5c count=0a\nRTLGYM_TRACE_71608eb5d375bc6898365da1 57 x=460b count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 58 x=e3ee count=0b\nRTLGYM_TRACE_71608eb5d375bc6898365da1 59 x=5a75 count=09\nRTLGYM_TRACE_71608eb5d375bc6898365da1 60 x=2950 count=05\nRTLGYM_TRACE_71608eb5d375bc6898365da1 61 x=ec6f count=0b\nRTLGYM_TRACE_71608eb5d375bc6898365da1 62 x=2f02 count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 63 x=2279 count=07\nRTLGYM_DONE_71608eb5d375bc6898365da1\n/tmp/rtlgym_verify_2irk3ymh/mutant_1_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "operator_xor",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.025,
+            "simulation_trace": "...\nf8381ef1a0e351d61b2 56 x=be5c count=02\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 57\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 57 x=460b count=00\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 58\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 58 x=e3ee count=03\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 59\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 59 x=5a75 count=01\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 60\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 60 x=2950 count=01\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 61\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 61 x=ec6f count=03\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 62\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 62 x=2f02 count=04\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 63 x=2279 count=07\nRTLGYM_DONE_809a7f8381ef1a0e351d61b2\n/tmp/rtlgym_verify_2irk3ymh/mutant_2_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "operator_or",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.017,
+            "simulation_trace": "...\na30d90d7a27476627c6 56 x=be5c count=06\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 57\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 57 x=460b count=03\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 58\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 58 x=e3ee count=07\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 59\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 59 x=5a75 count=05\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 60\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 60 x=2950 count=03\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 61\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 61 x=ec6f count=07\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 62\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 62 x=2f02 count=05\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 63 x=2279 count=07\nRTLGYM_DONE_a391ea30d90d7a27476627c6\n/tmp/rtlgym_verify_2irk3ymh/mutant_3_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "offset_plus",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.018,
+            "simulation_trace": "...\nTLGYM_FAIL_c3b473c3fa1375b6f933d449 57\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 57 x=460b count=07\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 58\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 58 x=e3ee count=0c\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 59\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 59 x=5a75 count=0a\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 60\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 60 x=2950 count=06\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 61\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 61 x=ec6f count=0c\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 62\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 62 x=2f02 count=07\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 63\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 63 x=2279 count=08\nRTLGYM_DONE_c3b473c3fa1375b6f933d449\n/tmp/rtlgym_verify_2irk3ymh/mutant_4_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "offset_minus",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.025,
+            "simulation_trace": "...\nTLGYM_FAIL_610415b2b9ccb02b0aedc28e 57\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 57 x=460b count=05\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 58\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 58 x=e3ee count=0a\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 59\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 59 x=5a75 count=08\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 60\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 60 x=2950 count=04\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 61\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 61 x=ec6f count=0a\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 62\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 62 x=2f02 count=05\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 63\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 63 x=2279 count=06\nRTLGYM_DONE_610415b2b9ccb02b0aedc28e\n/tmp/rtlgym_verify_2irk3ymh/mutant_5_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "threshold_eight",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.017,
+            "simulation_trace": "...\nt=06\nRTLGYM_TRACE_bf10254b688f8f0080221edd 55 x=2cb1 count=07\nRTLGYM_FAIL_bf10254b688f8f0080221edd 56\nRTLGYM_TRACE_bf10254b688f8f0080221edd 56 x=be5c count=09\nRTLGYM_TRACE_bf10254b688f8f0080221edd 57 x=460b count=06\nRTLGYM_FAIL_bf10254b688f8f0080221edd 58\nRTLGYM_TRACE_bf10254b688f8f0080221edd 58 x=e3ee count=0a\nRTLGYM_FAIL_bf10254b688f8f0080221edd 59\nRTLGYM_TRACE_bf10254b688f8f0080221edd 59 x=5a75 count=08\nRTLGYM_TRACE_bf10254b688f8f0080221edd 60 x=2950 count=05\nRTLGYM_FAIL_bf10254b688f8f0080221edd 61\nRTLGYM_TRACE_bf10254b688f8f0080221edd 61 x=ec6f count=0a\nRTLGYM_TRACE_bf10254b688f8f0080221edd 62 x=2f02 count=06\nRTLGYM_TRACE_bf10254b688f8f0080221edd 63 x=2279 count=07\nRTLGYM_DONE_bf10254b688f8f0080221edd\n/tmp/rtlgym_verify_2irk3ymh/mutant_6_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "drop_bit_zero",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.066,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.018,
+            "simulation_trace": "...\na 55\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 55 x=2cb1 count=06\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 56 x=be5c count=0a\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 57\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 57 x=460b count=05\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 58 x=e3ee count=0b\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 59\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 59 x=5a75 count=08\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 60 x=2950 count=05\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 61\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 61 x=ec6f count=0a\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 62 x=2f02 count=06\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 63\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 63 x=2279 count=06\nRTLGYM_DONE_3bd51a4e69f020cbc554774a\n/tmp/rtlgym_verify_2irk3ymh/mutant_7_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "duplicate_bit_two",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.066,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.026,
+            "simulation_trace": "...\n3 55\nRTLGYM_TRACE_575049f9689e7ca0bf893373 55 x=2cb1 count=06\nRTLGYM_FAIL_575049f9689e7ca0bf893373 56\nRTLGYM_TRACE_575049f9689e7ca0bf893373 56 x=be5c count=0b\nRTLGYM_FAIL_575049f9689e7ca0bf893373 57\nRTLGYM_TRACE_575049f9689e7ca0bf893373 57 x=460b count=05\nRTLGYM_FAIL_575049f9689e7ca0bf893373 58\nRTLGYM_TRACE_575049f9689e7ca0bf893373 58 x=e3ee count=0c\nRTLGYM_TRACE_575049f9689e7ca0bf893373 59 x=5a75 count=09\nRTLGYM_TRACE_575049f9689e7ca0bf893373 60 x=2950 count=05\nRTLGYM_TRACE_575049f9689e7ca0bf893373 61 x=ec6f count=0b\nRTLGYM_TRACE_575049f9689e7ca0bf893373 62 x=2f02 count=06\nRTLGYM_FAIL_575049f9689e7ca0bf893373 63\nRTLGYM_TRACE_575049f9689e7ca0bf893373 63 x=2279 count=06\nRTLGYM_DONE_575049f9689e7ca0bf893373\n/tmp/rtlgym_verify_2irk3ymh/mutant_8_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "rare_zero",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": false,
+            "sim_s": 0.017,
+            "simulation_trace": "...\n_TRACE_02af375c8d831fcbe2237d24 52 x=34a8 count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 53 x=8fe7 count=0b\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 54 x=4c1a count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 55 x=2cb1 count=07\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 56 x=be5c count=0a\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 57 x=460b count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 58 x=e3ee count=0b\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 59 x=5a75 count=09\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 60 x=2950 count=05\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 61 x=ec6f count=0b\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 62 x=2f02 count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 63 x=2279 count=07\nRTLGYM_DONE_02af375c8d831fcbe2237d24\n/tmp/rtlgym_verify_2irk3ymh/mutant_9_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          },
+          {
+            "kind": "mutant",
+            "id": "drop_bit_fifteen",
+            "formal": "fail",
+            "formal_message": "",
+            "formal_s": 0.065,
+            "sim_complete": true,
+            "sim_failed": true,
+            "sim_s": 0.025,
+            "simulation_trace": "...\n40b398e9733f1163444d7ac8 54 x=4c1a count=06\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 55 x=2cb1 count=07\nRTLGYM_FAIL_40b398e9733f1163444d7ac8 56\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 56 x=be5c count=09\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 57 x=460b count=06\nRTLGYM_FAIL_40b398e9733f1163444d7ac8 58\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 58 x=e3ee count=0a\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 59 x=5a75 count=09\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 60 x=2950 count=05\nRTLGYM_FAIL_40b398e9733f1163444d7ac8 61\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 61 x=ec6f count=0a\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 62 x=2f02 count=06\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 63 x=2279 count=07\nRTLGYM_DONE_40b398e9733f1163444d7ac8\n/tmp/rtlgym_verify_2irk3ymh/mutant_10_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+          }
+        ],
+        "grading_s": 1.744
+      },
+      "error": null,
+      "truncated_attempts": 0,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 1.0,
+      "best_score": 1.0,
+      "return": 1.0,
+      "wall_s": 0.0,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 1.0,
+          "reward": 1.0,
+          "verification": {
+            "status": "pass",
+            "mutants_total": 11,
+            "caught": 11,
+            "weighted_caught": 1.0,
+            "families": {
+              "behavioral": {
+                "total": 1,
+                "caught": 1
+              },
+              "comparison": {
+                "total": 3,
+                "caught": 3
+              },
+              "dropped_input": {
+                "total": 2,
+                "caught": 2
+              },
+              "index_swap": {
+                "total": 1,
+                "caught": 1
+              },
+              "off_by_one": {
+                "total": 2,
+                "caught": 2
+              },
+              "operator": {
+                "total": 2,
+                "caught": 2
+              }
+            },
+            "assertions": 1,
+            "state_bits": 0,
+            "checker_bytes": 434,
+            "false_alarm_trace": "",
+            "targets": [
+              {
+                "kind": "positive",
+                "index": 0,
+                "formal": "pass",
+                "formal_message": "",
+                "formal_s": 0.116,
+                "sim_complete": true,
+                "sim_failed": false,
+                "sim_s": 0.103,
+                "simulation_trace": "...\nRACE_9ceb4a9246f6379e0b4a8f7d 52 x=34a8 count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 53 x=8fe7 count=0b\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 54 x=4c1a count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 55 x=2cb1 count=07\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 56 x=be5c count=0a\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 57 x=460b count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 58 x=e3ee count=0b\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 59 x=5a75 count=09\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 60 x=2950 count=05\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 61 x=ec6f count=0b\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 62 x=2f02 count=06\nRTLGYM_TRACE_9ceb4a9246f6379e0b4a8f7d 63 x=2279 count=07\nRTLGYM_DONE_9ceb4a9246f6379e0b4a8f7d\n/tmp/rtlgym_verify_2irk3ymh/positive_0_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "positive",
+                "index": 1,
+                "formal": "pass",
+                "formal_message": "",
+                "formal_s": 0.116,
+                "sim_complete": true,
+                "sim_failed": false,
+                "sim_s": 0.033,
+                "simulation_trace": "...\nRACE_6e2c983df130907206a1c292 52 x=34a8 count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 53 x=8fe7 count=0b\nRTLGYM_TRACE_6e2c983df130907206a1c292 54 x=4c1a count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 55 x=2cb1 count=07\nRTLGYM_TRACE_6e2c983df130907206a1c292 56 x=be5c count=0a\nRTLGYM_TRACE_6e2c983df130907206a1c292 57 x=460b count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 58 x=e3ee count=0b\nRTLGYM_TRACE_6e2c983df130907206a1c292 59 x=5a75 count=09\nRTLGYM_TRACE_6e2c983df130907206a1c292 60 x=2950 count=05\nRTLGYM_TRACE_6e2c983df130907206a1c292 61 x=ec6f count=0b\nRTLGYM_TRACE_6e2c983df130907206a1c292 62 x=2f02 count=06\nRTLGYM_TRACE_6e2c983df130907206a1c292 63 x=2279 count=07\nRTLGYM_DONE_6e2c983df130907206a1c292\n/tmp/rtlgym_verify_2irk3ymh/positive_1_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "bug_width",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": false,
+                "sim_s": 0.026,
+                "simulation_trace": "...\n_TRACE_7344748d260602ee11a73c48 52 x=34a8 count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 53 x=8fe7 count=0b\nRTLGYM_TRACE_7344748d260602ee11a73c48 54 x=4c1a count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 55 x=2cb1 count=07\nRTLGYM_TRACE_7344748d260602ee11a73c48 56 x=be5c count=0a\nRTLGYM_TRACE_7344748d260602ee11a73c48 57 x=460b count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 58 x=e3ee count=0b\nRTLGYM_TRACE_7344748d260602ee11a73c48 59 x=5a75 count=09\nRTLGYM_TRACE_7344748d260602ee11a73c48 60 x=2950 count=05\nRTLGYM_TRACE_7344748d260602ee11a73c48 61 x=ec6f count=0b\nRTLGYM_TRACE_7344748d260602ee11a73c48 62 x=2f02 count=06\nRTLGYM_TRACE_7344748d260602ee11a73c48 63 x=2279 count=07\nRTLGYM_DONE_7344748d260602ee11a73c48\n/tmp/rtlgym_verify_2irk3ymh/mutant_0_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "escape_rare_input",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.116,
+                "sim_complete": true,
+                "sim_failed": false,
+                "sim_s": 0.025,
+                "simulation_trace": "...\n_TRACE_71608eb5d375bc6898365da1 52 x=34a8 count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 53 x=8fe7 count=0b\nRTLGYM_TRACE_71608eb5d375bc6898365da1 54 x=4c1a count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 55 x=2cb1 count=07\nRTLGYM_TRACE_71608eb5d375bc6898365da1 56 x=be5c count=0a\nRTLGYM_TRACE_71608eb5d375bc6898365da1 57 x=460b count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 58 x=e3ee count=0b\nRTLGYM_TRACE_71608eb5d375bc6898365da1 59 x=5a75 count=09\nRTLGYM_TRACE_71608eb5d375bc6898365da1 60 x=2950 count=05\nRTLGYM_TRACE_71608eb5d375bc6898365da1 61 x=ec6f count=0b\nRTLGYM_TRACE_71608eb5d375bc6898365da1 62 x=2f02 count=06\nRTLGYM_TRACE_71608eb5d375bc6898365da1 63 x=2279 count=07\nRTLGYM_DONE_71608eb5d375bc6898365da1\n/tmp/rtlgym_verify_2irk3ymh/mutant_1_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "operator_xor",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.025,
+                "simulation_trace": "...\nf8381ef1a0e351d61b2 56 x=be5c count=02\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 57\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 57 x=460b count=00\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 58\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 58 x=e3ee count=03\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 59\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 59 x=5a75 count=01\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 60\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 60 x=2950 count=01\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 61\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 61 x=ec6f count=03\nRTLGYM_FAIL_809a7f8381ef1a0e351d61b2 62\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 62 x=2f02 count=04\nRTLGYM_TRACE_809a7f8381ef1a0e351d61b2 63 x=2279 count=07\nRTLGYM_DONE_809a7f8381ef1a0e351d61b2\n/tmp/rtlgym_verify_2irk3ymh/mutant_2_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "operator_or",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.017,
+                "simulation_trace": "...\na30d90d7a27476627c6 56 x=be5c count=06\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 57\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 57 x=460b count=03\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 58\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 58 x=e3ee count=07\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 59\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 59 x=5a75 count=05\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 60\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 60 x=2950 count=03\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 61\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 61 x=ec6f count=07\nRTLGYM_FAIL_a391ea30d90d7a27476627c6 62\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 62 x=2f02 count=05\nRTLGYM_TRACE_a391ea30d90d7a27476627c6 63 x=2279 count=07\nRTLGYM_DONE_a391ea30d90d7a27476627c6\n/tmp/rtlgym_verify_2irk3ymh/mutant_3_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "offset_plus",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.018,
+                "simulation_trace": "...\nTLGYM_FAIL_c3b473c3fa1375b6f933d449 57\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 57 x=460b count=07\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 58\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 58 x=e3ee count=0c\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 59\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 59 x=5a75 count=0a\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 60\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 60 x=2950 count=06\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 61\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 61 x=ec6f count=0c\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 62\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 62 x=2f02 count=07\nRTLGYM_FAIL_c3b473c3fa1375b6f933d449 63\nRTLGYM_TRACE_c3b473c3fa1375b6f933d449 63 x=2279 count=08\nRTLGYM_DONE_c3b473c3fa1375b6f933d449\n/tmp/rtlgym_verify_2irk3ymh/mutant_4_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "offset_minus",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.025,
+                "simulation_trace": "...\nTLGYM_FAIL_610415b2b9ccb02b0aedc28e 57\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 57 x=460b count=05\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 58\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 58 x=e3ee count=0a\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 59\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 59 x=5a75 count=08\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 60\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 60 x=2950 count=04\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 61\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 61 x=ec6f count=0a\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 62\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 62 x=2f02 count=05\nRTLGYM_FAIL_610415b2b9ccb02b0aedc28e 63\nRTLGYM_TRACE_610415b2b9ccb02b0aedc28e 63 x=2279 count=06\nRTLGYM_DONE_610415b2b9ccb02b0aedc28e\n/tmp/rtlgym_verify_2irk3ymh/mutant_5_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "threshold_eight",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.017,
+                "simulation_trace": "...\nt=06\nRTLGYM_TRACE_bf10254b688f8f0080221edd 55 x=2cb1 count=07\nRTLGYM_FAIL_bf10254b688f8f0080221edd 56\nRTLGYM_TRACE_bf10254b688f8f0080221edd 56 x=be5c count=09\nRTLGYM_TRACE_bf10254b688f8f0080221edd 57 x=460b count=06\nRTLGYM_FAIL_bf10254b688f8f0080221edd 58\nRTLGYM_TRACE_bf10254b688f8f0080221edd 58 x=e3ee count=0a\nRTLGYM_FAIL_bf10254b688f8f0080221edd 59\nRTLGYM_TRACE_bf10254b688f8f0080221edd 59 x=5a75 count=08\nRTLGYM_TRACE_bf10254b688f8f0080221edd 60 x=2950 count=05\nRTLGYM_FAIL_bf10254b688f8f0080221edd 61\nRTLGYM_TRACE_bf10254b688f8f0080221edd 61 x=ec6f count=0a\nRTLGYM_TRACE_bf10254b688f8f0080221edd 62 x=2f02 count=06\nRTLGYM_TRACE_bf10254b688f8f0080221edd 63 x=2279 count=07\nRTLGYM_DONE_bf10254b688f8f0080221edd\n/tmp/rtlgym_verify_2irk3ymh/mutant_6_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "drop_bit_zero",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.066,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.018,
+                "simulation_trace": "...\na 55\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 55 x=2cb1 count=06\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 56 x=be5c count=0a\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 57\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 57 x=460b count=05\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 58 x=e3ee count=0b\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 59\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 59 x=5a75 count=08\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 60 x=2950 count=05\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 61\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 61 x=ec6f count=0a\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 62 x=2f02 count=06\nRTLGYM_FAIL_3bd51a4e69f020cbc554774a 63\nRTLGYM_TRACE_3bd51a4e69f020cbc554774a 63 x=2279 count=06\nRTLGYM_DONE_3bd51a4e69f020cbc554774a\n/tmp/rtlgym_verify_2irk3ymh/mutant_7_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "duplicate_bit_two",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.066,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.026,
+                "simulation_trace": "...\n3 55\nRTLGYM_TRACE_575049f9689e7ca0bf893373 55 x=2cb1 count=06\nRTLGYM_FAIL_575049f9689e7ca0bf893373 56\nRTLGYM_TRACE_575049f9689e7ca0bf893373 56 x=be5c count=0b\nRTLGYM_FAIL_575049f9689e7ca0bf893373 57\nRTLGYM_TRACE_575049f9689e7ca0bf893373 57 x=460b count=05\nRTLGYM_FAIL_575049f9689e7ca0bf893373 58\nRTLGYM_TRACE_575049f9689e7ca0bf893373 58 x=e3ee count=0c\nRTLGYM_TRACE_575049f9689e7ca0bf893373 59 x=5a75 count=09\nRTLGYM_TRACE_575049f9689e7ca0bf893373 60 x=2950 count=05\nRTLGYM_TRACE_575049f9689e7ca0bf893373 61 x=ec6f count=0b\nRTLGYM_TRACE_575049f9689e7ca0bf893373 62 x=2f02 count=06\nRTLGYM_FAIL_575049f9689e7ca0bf893373 63\nRTLGYM_TRACE_575049f9689e7ca0bf893373 63 x=2279 count=06\nRTLGYM_DONE_575049f9689e7ca0bf893373\n/tmp/rtlgym_verify_2irk3ymh/mutant_8_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "rare_zero",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": false,
+                "sim_s": 0.017,
+                "simulation_trace": "...\n_TRACE_02af375c8d831fcbe2237d24 52 x=34a8 count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 53 x=8fe7 count=0b\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 54 x=4c1a count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 55 x=2cb1 count=07\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 56 x=be5c count=0a\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 57 x=460b count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 58 x=e3ee count=0b\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 59 x=5a75 count=09\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 60 x=2950 count=05\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 61 x=ec6f count=0b\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 62 x=2f02 count=06\nRTLGYM_TRACE_02af375c8d831fcbe2237d24 63 x=2279 count=07\nRTLGYM_DONE_02af375c8d831fcbe2237d24\n/tmp/rtlgym_verify_2irk3ymh/mutant_9_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              },
+              {
+                "kind": "mutant",
+                "id": "drop_bit_fifteen",
+                "formal": "fail",
+                "formal_message": "",
+                "formal_s": 0.065,
+                "sim_complete": true,
+                "sim_failed": true,
+                "sim_s": 0.025,
+                "simulation_trace": "...\n40b398e9733f1163444d7ac8 54 x=4c1a count=06\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 55 x=2cb1 count=07\nRTLGYM_FAIL_40b398e9733f1163444d7ac8 56\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 56 x=be5c count=09\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 57 x=460b count=06\nRTLGYM_FAIL_40b398e9733f1163444d7ac8 58\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 58 x=e3ee count=0a\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 59 x=5a75 count=09\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 60 x=2950 count=05\nRTLGYM_FAIL_40b398e9733f1163444d7ac8 61\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 61 x=ec6f count=0a\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 62 x=2f02 count=06\nRTLGYM_TRACE_40b398e9733f1163444d7ac8 63 x=2279 count=07\nRTLGYM_DONE_40b398e9733f1163444d7ac8\n/tmp/rtlgym_verify_2irk3ymh/mutant_10_sim/testbench.sv:20: $finish called at 128 (1s)\n"
+              }
+            ],
+            "grading_s": 1.744
+          },
+          "tests": "11/11",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": null,
+          "breakdown": {
+            "mutation": 1.0
+          },
+          "timings_s": {
+            "verify": 1.744
+          },
+          "grade_s": 0.002,
+          "cached": true,
+          "code": "module rtl_checker (\n    input logic [15:0] x,\n    input logic [4:0] count\n);\n    // The numerical output is 0 through 16. This circuit is combinational and has no clock or reset.\n    // Inputs are unrestricted. The formal profile checks every input combination with these exact widths.\n    always_comb begin\n        // Check if count is equal to the number of set bits in x.\n        assert(count == $countones(x));\n    end\nendmodule\n",
+          "feedback_shown": "",
+          "tool_report": "Mutants caught: 11/11\nWeighted mutation score: 1.000",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 2233,
+            "output_tokens": 159,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 127.07,
+            "eval_s": 34.19
+          },
+          "complete_code": true
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0,
+        "ctx_truncated": 0,
+        "generate_s": 0.0,
+        "eval_s": 0.0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 2233,
+          "output_tokens": 159,
+          "refusals": 0,
+          "truncated": 0,
+          "ctx_truncated": 0,
+          "generate_s": 127.07,
+          "eval_s": 34.19
+        },
+        "act_s": 135.47,
+        "error": null
+      }
+    }
+  ]
+}

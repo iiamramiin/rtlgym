@@ -1,0 +1,296 @@
+{
+  "summary": {
+    "agent": "ollama",
+    "model": "llama3.1:8b",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "popcount16": true
+    },
+    "tasks": [
+      "popcount16"
+    ],
+    "started_utc": "2026-11-22T21:38:45+00:00",
+    "wall_s": 287.93,
+    "git_commit": "083307446a699f2852d2eb05fad35267b5d07991",
+    "python": "3.12.3",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "seed": {
+      "base": 20261122,
+      "per_episode": "base + episode index"
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "options": {
+        "num_ctx": 16384,
+        "num_predict": 8192,
+        "seed": 20261122
+      },
+      "think": false,
+      "think_requested": false,
+      "think_ignored": false,
+      "timeout_s": 1800.0,
+      "build": {
+        "model": "llama3.1:8b",
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "size_bytes": 4920753328,
+        "family": "llama",
+        "parameter_size": "8.0B",
+        "quantization": "Q4_K_M",
+        "format": "gguf",
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "ollama_version": "0.40.16"
+      }
+    },
+    "by_verification": {
+      "formal": {
+        "tasks": [
+          "popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1"
+      }
+    },
+    "by_kind": {
+      "design": {
+        "tasks": [
+          "popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1"
+      }
+    },
+    "episodes": 1,
+    "errors": 0,
+    "pass@1": 0.0,
+    "pass@1_count": "0/1",
+    "pass@1_tests_only": 0.0,
+    "solved_within_turns": 0.0,
+    "solved_count": "0/1",
+    "test_escape_attempts": 0,
+    "inconclusive_attempts": 0,
+    "frontend_failure_attempts": 0,
+    "sim_frontend_fallback_attempts": 0,
+    "resource_failure_attempts": 0,
+    "truncated_attempts": 0,
+    "mean_first_score": 0.1,
+    "mean_best_score": 0.15,
+    "mean_turns": 3.0,
+    "grading_s_p50": 1.991,
+    "grading_s_p95": 2.7,
+    "cache_hit_rate": 0.0,
+    "usage": {
+      "calls": 3,
+      "input_tokens": 2481,
+      "output_tokens": 994,
+      "refusals": 0,
+      "truncated": 0,
+      "ctx_truncated": 0,
+      "generate_s": 266.97,
+      "eval_s": 209.23
+    },
+    "per_task": {
+      "popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 0.0,
+        "solved": 0.0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1",
+        "mean_turns": 3.0,
+        "formal_enabled": true
+      }
+    }
+  },
+  "episodes": [
+    {
+      "task": "popcount16",
+      "task_kind": "design",
+      "error": null,
+      "truncated_attempts": 0,
+      "turns": 3,
+      "pass@1": false,
+      "pass@1_tests_only": false,
+      "solved": false,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.1,
+      "best_score": 0.15,
+      "return": 0.15,
+      "wall_s": 287.56,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.1,
+          "reward": 0.1,
+          "tests": "0/3",
+          "all_tests_pass": false,
+          "formal": "fail",
+          "frontend_errors": [],
+          "sim_frontend": "native",
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": 71,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.0,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.034,
+            "formal": 0.118,
+            "lint": 0.181,
+            "synth": 0.287,
+            "sim": 1.342
+          },
+          "grade_s": 2.385,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [15:0] count0;\nlogic [15:0] count1;\n\nassign count0 = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] + x[6] + x[7];\nassign count1 = x[8] + x[9] + x[10] + x[11] + x[12] + x[13] + x[14] + x[15];\n\nassign count = (count0 + count1[0]) + count1[1] + count1[2] + count1[3];\n\nendmodule\n",
+          "feedback_shown": "Score: 0.100\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0xffff: count=9, expected 16\n  FAIL test_single_bits: x=0xfffe: count=8, expected 15\n  FAIL test_random: x=0x2265: count=5, expected 6\nLint: 22 Verilator warning(s): UNUSEDSIGNAL, WIDTHEXPAND, WIDTHTRUNC\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0xf20]  reference[count=0x5]  yours[count=0x2]   <-- differs\nSynthesis: 71 generic cells (0 flops, 0 latches), logic depth 23; reference: 64 cells, depth 14",
+          "tool_report": "Score: 0.100\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0xffff: count=9, expected 16\n  FAIL test_single_bits: x=0xfffe: count=8, expected 15\n  FAIL test_random: x=0x2265: count=5, expected 6\nLint: 22 Verilator warning(s): UNUSEDSIGNAL, WIDTHEXPAND, WIDTHTRUNC\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0xf20]  reference[count=0x5]  yours[count=0x2]   <-- differs\nSynthesis: 71 generic cells (0 flops, 0 latches), logic depth 23; reference: 64 cells, depth 14",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 282,
+            "output_tokens": 314,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 106.07,
+            "eval_s": 71.66
+          },
+          "complete_code": true
+        },
+        {
+          "turn": 2,
+          "score": 0.15,
+          "reward": 0.05,
+          "tests": "0/3",
+          "all_tests_pass": false,
+          "formal": "fail",
+          "frontend_errors": [],
+          "sim_frontend": "native",
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": 40,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.129,
+            "formal": 0.126,
+            "lint": 0.287,
+            "synth": 0.387,
+            "sim": 1.032
+          },
+          "grade_s": 1.228,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [4:0] count0;\nlogic [4:0] count1;\n\nassign count0 = $signed({1'b0, x[15], x[14], x[13], x[12]}) + \n                $signed({1'b0, x[11], x[10], x[9], x[8]}) + \n                $signed({1'b0, x[7], x[6], x[5], x[4]}) + \n                $signed({1'b0, x[3], x[2], x[1], x[0]});\n\nassign count1 = $signed({1'b0, x[15], x[14], x[13], x[12]}) + \n                $signed({1'b0, x[11], x[10], x[9], x[8]}) + \n                $signed({1'b0, x[7], x[6], x[5], x[4]}) + \n                $signed({1'b0, x[3], x[2], x[1], x[0]});\n\nassign count = count0 + count1;\n\nendmodule\n",
+          "feedback_shown": "Score: 0.150\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0xffff: count=24, expected 16\n  FAIL test_single_bits: x=0x0001: count=2, expected 1\n  FAIL test_random: x=0x2265: count=30, expected 6\nLint: clean\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0x2235]  reference[count=0x6]  yours[count=0x18]   <-- differs\nSynthesis: 40 generic cells (0 flops, 0 latches), logic depth 10; reference: 64 cells, depth 14",
+          "tool_report": "Score: 0.150\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0xffff: count=24, expected 16\n  FAIL test_single_bits: x=0x0001: count=2, expected 1\n  FAIL test_random: x=0x2265: count=30, expected 6\nLint: clean\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0x2235]  reference[count=0x6]  yours[count=0x18]   <-- differs\nSynthesis: 40 generic cells (0 flops, 0 latches), logic depth 10; reference: 64 cells, depth 14",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 804,
+            "output_tokens": 402,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 98.2,
+            "eval_s": 85.36
+          },
+          "complete_code": true
+        },
+        {
+          "turn": 3,
+          "score": 0.1,
+          "reward": 0.0,
+          "tests": "0/3",
+          "all_tests_pass": false,
+          "formal": "fail",
+          "frontend_errors": [],
+          "sim_frontend": "native",
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": 131,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.0,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.337,
+            "formal": 0.238,
+            "lint": 0.634,
+            "synth": 0.889,
+            "sim": 1.6
+          },
+          "grade_s": 1.991,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [4:0] count0;\nlogic [4:0] count1;\n\nassign count0 = $signed(x[0]) + $signed(x[1]) + $signed(x[2]) + $signed(x[3]) + $signed(x[4]) + $signed(x[5]) + $signed(x[6]) + $signed(x[7]);\n\nassign count1 = $signed(x[8]) + $signed(x[9]) + $signed(x[10]) + $signed(x[11]) + $signed(x[12]) + $signed(x[13]) + $signed(x[14]) + $signed(x[15]);\n\nassign count = count0 + count1;\n\nendmodule\n",
+          "feedback_shown": "Score: 0.100\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0x8000: count=31, expected 1\n  FAIL test_single_bits: x=0x0001: count=31, expected 1\n  FAIL test_random: x=0x2265: count=26, expected 6\nLint: 16 Verilator warning(s): WIDTHEXPAND\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0xf000]  reference[count=0x4]  yours[count=0x1c]   <-- differs\nSynthesis: 131 generic cells (0 flops, 0 latches), logic depth 19; reference: 64 cells, depth 14",
+          "tool_report": "Score: 0.100\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0x8000: count=31, expected 1\n  FAIL test_single_bits: x=0x0001: count=31, expected 1\n  FAIL test_random: x=0x2265: count=26, expected 6\nLint: 16 Verilator warning(s): WIDTHEXPAND\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0xf000]  reference[count=0x4]  yours[count=0x1c]   <-- differs\nSynthesis: 131 generic cells (0 flops, 0 latches), logic depth 19; reference: 64 cells, depth 14",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 1395,
+            "output_tokens": 278,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 62.7,
+            "eval_s": 52.21
+          },
+          "complete_code": true
+        }
+      ],
+      "usage": {
+        "calls": 3,
+        "input_tokens": 2481,
+        "output_tokens": 994,
+        "refusals": 0,
+        "truncated": 0,
+        "ctx_truncated": 0,
+        "generate_s": 266.97,
+        "eval_s": 209.23
+      }
+    }
+  ]
+}

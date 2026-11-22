@@ -1,0 +1,70 @@
+{
+  "generation_commit": "8d4818d6c5b7d2916c66f346375428c44579c666",
+  "num_ctx": 8192,
+  "num_predict": 8192,
+  "think": false,
+  "seed_base": 20261122,
+  "timeout_s": 1800,
+  "workers": 1,
+  "paired": true,
+  "max_turns": 3,
+  "smoke_tasks": [
+    "popcount16",
+    "verify_popcount16"
+  ],
+  "smoke_samples_per_task": 1,
+  "probe_tasks": [
+    "popcount16"
+  ],
+  "probe_turns": 1,
+  "probe_samples_per_task": 1,
+  "overnight_blocks": [
+    [
+      "axil_regs",
+      "fifo_sync",
+      "mul_pipe3",
+      "rr_arbiter4",
+      "popcount16",
+      "up_down_counter"
+    ],
+    [
+      "noc_router5",
+      "uart_tx",
+      "crc32_stream",
+      "alu8",
+      "seq_detect_1011",
+      "edge_detect"
+    ]
+  ],
+  "overnight_plan": [
+    {
+      "model": "llama3.1:8b",
+      "samples_per_task": 3,
+      "tasks_per_night": 12,
+      "nights": 1,
+      "episodes_per_night": 36,
+      "minimum_calls_per_night": 36,
+      "maximum_calls_per_night": 180,
+      "observed_reply_basis_s": 113.046,
+      "generation_multiplier": 1.35,
+      "overhead_allowance_s": 12.0,
+      "planned_seconds_per_call": 164.612,
+      "planned_hours_at_maximum_calls": 8.231
+    },
+    {
+      "model": "qwen3:14b",
+      "samples_per_task": 1,
+      "tasks_per_night": 6,
+      "nights": 2,
+      "episodes_per_night": 6,
+      "minimum_calls_per_night": 6,
+      "maximum_calls_per_night": 30,
+      "observed_reply_basis_s": 770.4,
+      "generation_multiplier": 1.35,
+      "overhead_allowance_s": 47.85,
+      "planned_seconds_per_call": 1087.89,
+      "planned_hours_at_maximum_calls": 9.066
+    }
+  ],
+  "planning_note": "Counts are call ceilings; latency allowances are estimates, not bounds. Early acceptance reduces calls."
+}

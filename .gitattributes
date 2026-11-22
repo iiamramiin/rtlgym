@@ -12,3 +12,7 @@ results/claude/2026-11-17/verify-pilot/*.json -text
 results/claude/2026-11-17/verify-pilot/recorded-summary.md -text
 results/claude/2026-11-19/verify-hard-pilot/*.json -text
 results/claude/2026-11-19/verify-hard-pilot/recorded-summary.md -text
+
+# Retain recorded local-run bytes; binary patches preserve their line endings.
+results/ollama/**/*.json -text -diff
+results/ollama/**/recorded-summary.md -text

@@ -1,0 +1,208 @@
+{
+  "summary": {
+    "agent": "ollama",
+    "model": "llama3.1:8b",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 1,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "popcount16": true
+    },
+    "tasks": [
+      "popcount16"
+    ],
+    "started_utc": "2026-11-22T22:03:05+00:00",
+    "wall_s": 80.78,
+    "git_commit": "8d4818d6c5b7d2916c66f346375428c44579c666",
+    "python": "3.12.3",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "seed": {
+      "base": 20261122,
+      "per_episode": "base + episode index"
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "options": {
+        "num_ctx": 8192,
+        "num_predict": 8192,
+        "seed": 20261122
+      },
+      "think": false,
+      "think_requested": false,
+      "think_ignored": false,
+      "timeout_s": 1800.0,
+      "build": {
+        "model": "llama3.1:8b",
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "size_bytes": 4920753328,
+        "family": "llama",
+        "parameter_size": "8.0B",
+        "quantization": "Q4_K_M",
+        "format": "gguf",
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "ollama_version": "0.40.16"
+      }
+    },
+    "by_verification": {
+      "formal": {
+        "tasks": [
+          "popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1"
+      }
+    },
+    "by_kind": {
+      "design": {
+        "tasks": [
+          "popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1"
+      }
+    },
+    "episodes": 1,
+    "errors": 0,
+    "pass@1": 0.0,
+    "pass@1_count": "0/1",
+    "pass@1_ci95": [
+      0.0,
+      0.975
+    ],
+    "pass@1_tests_only": 0.0,
+    "solved_within_turns": 0.0,
+    "solved_count": "0/1",
+    "solved_within_turns_ci95": [
+      0.0,
+      0.975
+    ],
+    "test_escape_attempts": 0,
+    "inconclusive_attempts": 0,
+    "frontend_failure_attempts": 0,
+    "sim_frontend_fallback_attempts": 0,
+    "resource_failure_attempts": 0,
+    "truncated_attempts": 0,
+    "mean_first_score": 0.1,
+    "mean_best_score": 0.1,
+    "mean_turns": 1.0,
+    "grading_s_p50": null,
+    "grading_s_p95": null,
+    "cache_hit_rate": 1.0,
+    "usage": {
+      "calls": 1,
+      "input_tokens": 282,
+      "output_tokens": 314,
+      "refusals": 0,
+      "truncated": 0,
+      "ctx_truncated": 0,
+      "generate_s": 78.13,
+      "eval_s": 50.59
+    },
+    "per_task": {
+      "popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 0.0,
+        "solved": 0.0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true
+      }
+    }
+  },
+  "episodes": [
+    {
+      "task": "popcount16",
+      "task_kind": "design",
+      "error": null,
+      "truncated_attempts": 0,
+      "turns": 1,
+      "pass@1": false,
+      "pass@1_tests_only": false,
+      "solved": false,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.1,
+      "best_score": 0.1,
+      "return": 0.1,
+      "wall_s": 80.54,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.1,
+          "reward": 0.1,
+          "tests": "0/3",
+          "all_tests_pass": false,
+          "formal": "fail",
+          "frontend_errors": [],
+          "sim_frontend": "native",
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": 71,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.0,
+            "functional": 0.0,
+            "ppa": 0.0,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.034,
+            "formal": 0.118,
+            "lint": 0.181,
+            "synth": 0.287,
+            "sim": 1.342
+          },
+          "grade_s": 0.428,
+          "cached": true,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n\nlogic [15:0] count0;\nlogic [15:0] count1;\n\nassign count0 = x[0] + x[1] + x[2] + x[3] + x[4] + x[5] + x[6] + x[7];\nassign count1 = x[8] + x[9] + x[10] + x[11] + x[12] + x[13] + x[14] + x[15];\n\nassign count = (count0 + count1[0]) + count1[1] + count1[2] + count1[3];\n\nendmodule\n",
+          "feedback_shown": "Score: 0.100\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0xffff: count=9, expected 16\n  FAIL test_single_bits: x=0xfffe: count=8, expected 15\n  FAIL test_random: x=0x2265: count=5, expected 6\nLint: 22 Verilator warning(s): UNUSEDSIGNAL, WIDTHEXPAND, WIDTHTRUNC\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0xf20]  reference[count=0x5]  yours[count=0x2]   <-- differs\nSynthesis: 71 generic cells (0 flops, 0 latches), logic depth 23; reference: 64 cells, depth 14",
+          "tool_report": "Score: 0.100\nHidden tests: 0/3 passed\n  FAIL test_extremes: x=0xffff: count=9, expected 16\n  FAIL test_single_bits: x=0xfffe: count=8, expected 15\n  FAIL test_random: x=0x2265: count=5, expected 6\nLint: 22 Verilator warning(s): UNUSEDSIGNAL, WIDTHEXPAND, WIDTHTRUNC\nFormal: not equivalent to the reference.\nCounterexample:\n  inputs[x=0xf20]  reference[count=0x5]  yours[count=0x2]   <-- differs\nSynthesis: 71 generic cells (0 flops, 0 latches), logic depth 23; reference: 64 cells, depth 14",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 282,
+            "output_tokens": 314,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 78.13,
+            "eval_s": 50.59
+          },
+          "complete_code": true
+        }
+      ],
+      "usage": {
+        "calls": 1,
+        "input_tokens": 282,
+        "output_tokens": 314,
+        "refusals": 0,
+        "truncated": 0,
+        "ctx_truncated": 0,
+        "generate_s": 78.13,
+        "eval_s": 50.59
+      }
+    }
+  ]
+}

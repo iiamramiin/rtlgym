@@ -1,0 +1,22 @@
+[
+  {
+    "model": "llama3.1:8b",
+    "task": "popcount16",
+    "same_shared_grade": true
+  },
+  {
+    "model": "llama3.1:8b",
+    "task": "verify_popcount16",
+    "same_shared_grade": true
+  },
+  {
+    "model": "qwen3:14b",
+    "task": "popcount16",
+    "same_shared_grade": true
+  },
+  {
+    "model": "qwen3:14b",
+    "task": "verify_popcount16",
+    "same_shared_grade": true
+  }
+]

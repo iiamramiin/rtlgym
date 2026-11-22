@@ -1,0 +1,495 @@
+{
+  "summary": {
+    "agent": "ollama",
+    "model": "qwen3:14b",
+    "effort": null,
+    "samples_per_task": 1,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "popcount16": true,
+      "verify_popcount16": true
+    },
+    "tasks": [
+      "popcount16",
+      "verify_popcount16"
+    ],
+    "started_utc": "2026-11-22T22:32:03+00:00",
+    "wall_s": 1994.03,
+    "git_commit": "8d4818d6c5b7d2916c66f346375428c44579c666",
+    "python": "3.12.3",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "seed": {
+      "base": 20261122,
+      "per_episode": "base + episode index"
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "options": {
+        "num_ctx": 8192,
+        "num_predict": 8192,
+        "seed": 20261122
+      },
+      "think": false,
+      "think_requested": false,
+      "think_ignored": false,
+      "timeout_s": 1800.0,
+      "build": {
+        "model": "qwen3:14b",
+        "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+        "size_bytes": 9276198565,
+        "family": "qwen3",
+        "parameter_size": "14.8B",
+        "quantization": "Q4_K_M",
+        "format": "gguf",
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ],
+        "ollama_version": "0.40.16"
+      }
+    },
+    "paired": true,
+    "pair_arms": [
+      "full",
+      "none"
+    ],
+    "by_verification": {
+      "formal": {
+        "tasks": [
+          "popcount16",
+          "verify_popcount16"
+        ],
+        "episodes": 2,
+        "errors": 0,
+        "pass@1_count": "1/2",
+        "solved_count": "1/2"
+      }
+    },
+    "by_kind": {
+      "design": {
+        "tasks": [
+          "popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1"
+      },
+      "verify": {
+        "tasks": [
+          "verify_popcount16"
+        ],
+        "episodes": 1,
+        "errors": 0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1",
+        "verification": {
+          "episodes": 1,
+          "graded_episodes": 1,
+          "false_alarm_episodes": 0,
+          "invalid_episodes": 1,
+          "truncated_episodes": 0,
+          "inconclusive_episodes": 0,
+          "caught": 0,
+          "mutants_total": 11,
+          "mutation_rate": 0.0,
+          "mean_score": 0.0,
+          "mean_weighted_caught": 0.0,
+          "mean_assertions": 0,
+          "mean_state_bits": 0,
+          "mean_checker_bytes": 342,
+          "families": {}
+        }
+      }
+    },
+    "episodes": 2,
+    "errors": 0,
+    "pass@1": 0.5,
+    "pass@1_count": "1/2",
+    "pass@1_ci95": [
+      0.012579117093425018,
+      0.9874208829065749
+    ],
+    "pass@1_tests_only": 0.5,
+    "solved_within_turns": 0.5,
+    "solved_count": "1/2",
+    "solved_within_turns_ci95": [
+      0.012579117093425018,
+      0.9874208829065749
+    ],
+    "test_escape_attempts": 0,
+    "inconclusive_attempts": 0,
+    "frontend_failure_attempts": 0,
+    "sim_frontend_fallback_attempts": 0,
+    "resource_failure_attempts": 0,
+    "truncated_attempts": 0,
+    "mean_first_score": 0.474,
+    "mean_best_score": 0.474,
+    "mean_turns": 2.0,
+    "grading_s_p50": 1.532,
+    "grading_s_p95": 3.577,
+    "cache_hit_rate": 0.25,
+    "usage": {
+      "calls": 2,
+      "input_tokens": 5242,
+      "output_tokens": 194,
+      "refusals": 0,
+      "truncated": 0,
+      "ctx_truncated": 0,
+      "generate_s": 252.9,
+      "eval_s": 190.32
+    },
+    "per_task": {
+      "popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 1.0,
+        "solved": 1.0,
+        "pass@1_count": "1/1",
+        "solved_count": "1/1",
+        "mean_turns": 1.0,
+        "formal_enabled": true
+      },
+      "verify_popcount16": {
+        "episodes": 1,
+        "errors": 0,
+        "pass@1": 0.0,
+        "solved": 0.0,
+        "pass@1_count": "0/1",
+        "solved_count": "0/1",
+        "mean_turns": 3.0,
+        "formal_enabled": true,
+        "task_kind": "verify",
+        "verification": {
+          "episodes": 1,
+          "graded_episodes": 1,
+          "false_alarm_episodes": 0,
+          "invalid_episodes": 1,
+          "truncated_episodes": 0,
+          "inconclusive_episodes": 0,
+          "caught": 0,
+          "mutants_total": 11,
+          "mutation_rate": 0.0,
+          "mean_score": 0.0,
+          "mean_weighted_caught": 0.0,
+          "mean_assertions": 0,
+          "mean_state_bits": 0,
+          "mean_checker_bytes": 342,
+          "families": {}
+        }
+      }
+    },
+    "arm_s": 275.6,
+    "shared_first_s": 1196.76
+  },
+  "episodes": [
+    {
+      "task": "popcount16",
+      "task_kind": "design",
+      "error": null,
+      "truncated_attempts": 0,
+      "turns": 1,
+      "pass@1": true,
+      "pass@1_tests_only": true,
+      "solved": true,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.9485,
+      "best_score": 0.9485,
+      "return": 0.9485,
+      "wall_s": 2.69,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.9485,
+          "reward": 0.9485,
+          "tests": "3/3",
+          "all_tests_pass": true,
+          "formal": "pass",
+          "frontend_errors": [],
+          "sim_frontend": "native",
+          "synth_frontend": "native",
+          "formal_frontend": "native",
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": true,
+          "cells": 90,
+          "breakdown": {
+            "compile": 0.1,
+            "lint": 0.05,
+            "functional": 0.7,
+            "ppa": 0.0985,
+            "penalty": 0.0
+          },
+          "timings_s": {
+            "compile": 0.034,
+            "formal": 0.119,
+            "lint": 0.124,
+            "synth": 0.433,
+            "sim": 1.202
+          },
+          "grade_s": 2.668,
+          "cached": false,
+          "code": "module popcount16 (\n    input  logic [15:0] x,\n    output logic [4:0]  count\n);\n    // Count bits in each 4-bit group\n    logic [3:0] count4_0, count4_1, count4_2, count4_3;\n\n    // Count bits in 4-bit chunks\n    assign count4_0 = (x[3:0] == 4'd0) ? 4'd0 :\n                     (x[3:0] == 4'd1) ? 4'd1 :\n                     (x[3:0] == 4'd2) ? 4'd1 :\n                     (x[3:0] == 4'd3) ? 4'd2 :\n                     (x[3:0] == 4'd4) ? 4'd1 :\n                     (x[3:0] == 4'd5) ? 4'd2 :\n                     (x[3:0] == 4'd6) ? 4'd2 :\n                     (x[3:0] == 4'd7) ? 4'd3 :\n                     (x[3:0] == 4'd8) ? 4'd1 :\n                     (x[3:0] == 4'd9) ? 4'd2 :\n                     (x[3:0] == 4'd10) ? 4'd2 :\n                     (x[3:0] == 4'd11) ? 4'd3 :\n                     (x[3:0] == 4'd12) ? 4'd2 :\n                     (x[3:0] == 4'd13) ? 4'd3 :\n                     (x[3:0] == 4'd14) ? 4'd3 :\n                     4'd4;\n\n    assign count4_1 = (x[7:4] == 4'd0) ? 4'd0 :\n                     (x[7:4] == 4'd1) ? 4'd1 :\n                     (x[7:4] == 4'd2) ? 4'd1 :\n                     (x[7:4] == 4'd3) ? 4'd2 :\n                     (x[7:4] == 4'd4) ? 4'd1 :\n                     (x[7:4] == 4'd5) ? 4'd2 :\n                     (x[7:4] == 4'd6) ? 4'd2 :\n                     (x[7:4] == 4'd7) ? 4'd3 :\n                     (x[7:4] == 4'd8) ? 4'd1 :\n                     (x[7:4] == 4'd9) ? 4'd2 :\n                     (x[7:4] == 4'd10) ? 4'd2 :\n                     (x[7:4] == 4'd11) ? 4'd3 :\n                     (x[7:4] == 4'd12) ? 4'd2 :\n                     (x[7:4] == 4'd13) ? 4'd3 :\n                     (x[7:4] == 4'd14) ? 4'd3 :\n                     4'd4;\n\n    assign count4_2 = (x[11:8] == 4'd0) ? 4'd0 :\n                     (x[11:8] == 4'd1) ? 4'd1 :\n                     (x[11:8] == 4'd2) ? 4'd1 :\n                     (x[11:8] == 4'd3) ? 4'd2 :\n                     (x[11:8] == 4'd4) ? 4'd1 :\n                     (x[11:8] == 4'd5) ? 4'd2 :\n                     (x[11:8] == 4'd6) ? 4'd2 :\n                     (x[11:8] == 4'd7) ? 4'd3 :\n                     (x[11:8] == 4'd8) ? 4'd1 :\n                     (x[11:8] == 4'd9) ? 4'd2 :\n                     (x[11:8] == 4'd10) ? 4'd2 :\n                     (x[11:8] == 4'd11) ? 4'd3 :\n                     (x[11:8] == 4'd12) ? 4'd2 :\n                     (x[11:8] == 4'd13) ? 4'd3 :\n                     (x[11:8] == 4'd14) ? 4'd3 :\n                     4'd4;\n\n    assign count4_3 = (x[15:12] == 4'd0) ? 4'd0 :\n                     (x[15:12] == 4'd1) ? 4'd1 :\n                     (x[15:12] == 4'd2) ? 4'd1 :\n                     (x[15:12] == 4'd3) ? 4'd2 :\n                     (x[15:12] == 4'd4) ? 4'd1 :\n                     (x[15:12] == 4'd5) ? 4'd2 :\n                     (x[15:12] == 4'd6) ? 4'd2 :\n                     (x[15:12] == 4'd7) ? 4'd3 :\n                     (x[15:12] == 4'd8) ? 4'd1 :\n                     (x[15:12] == 4'd9) ? 4'd2 :\n                     (x[15:12] == 4'd10) ? 4'd2 :\n                     (x[15:12] == 4'd11) ? 4'd3 :\n                     (x[15:12] == 4'd12) ? 4'd2 :\n                     (x[15:12] == 4'd13) ? 4'd3 :\n                     (x[15:12] == 4'd14) ? 4'd3 :\n                     4'd4;\n\n    // Sum the counts from each 4-bit group\n    logic [4:0] sum1, sum2;\n    assign sum1 = count4_0 + count4_1;\n    assign sum2 = count4_2 + count4_3;\n    assign count = sum1 + sum2;\nendmodule\n",
+          "feedback_shown": "Score: 0.949\nHidden tests: 3/3 passed\nLint: clean\nFormal: equivalent to the reference for every input.\nSynthesis: 90 generic cells (0 flops, 0 latches), logic depth 13; reference: 64 cells, depth 14",
+          "tool_report": "Score: 0.949\nHidden tests: 3/3 passed\nLint: clean\nFormal: equivalent to the reference for every input.\nSynthesis: 90 generic cells (0 flops, 0 latches), logic depth 13; reference: 64 cells, depth 14",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 301,
+            "output_tokens": 1466,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 685.91,
+            "eval_s": 682.72
+          },
+          "complete_code": true
+        }
+      ],
+      "usage": {
+        "calls": 0,
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "refusals": 0,
+        "truncated": 0,
+        "ctx_truncated": 0,
+        "generate_s": 0.0,
+        "eval_s": 0.0
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 301,
+          "output_tokens": 1466,
+          "refusals": 0,
+          "truncated": 0,
+          "ctx_truncated": 0,
+          "generate_s": 685.91,
+          "eval_s": 682.72
+        },
+        "act_s": 727.6,
+        "error": null
+      }
+    },
+    {
+      "task": "verify_popcount16",
+      "task_kind": "verify",
+      "verification": {
+        "status": "invalid",
+        "mutants_total": 11,
+        "caught": 0,
+        "weighted_caught": 0.0,
+        "families": {},
+        "assertions": 0,
+        "state_bits": 0,
+        "checker_bytes": 342,
+        "false_alarm_trace": "",
+        "targets": [],
+        "grading_s": 1.524
+      },
+      "error": null,
+      "truncated_attempts": 0,
+      "turns": 3,
+      "pass@1": false,
+      "pass@1_tests_only": false,
+      "solved": false,
+      "test_escapes": 0,
+      "inconclusive": 0,
+      "first_score": 0.0,
+      "best_score": 0.0,
+      "return": 0.0,
+      "wall_s": 272.91,
+      "trajectory": [
+        {
+          "turn": 1,
+          "score": 0.0,
+          "reward": 0.0,
+          "verification": {
+            "status": "invalid",
+            "mutants_total": 11,
+            "caught": 0,
+            "weighted_caught": 0.0,
+            "families": {},
+            "assertions": 0,
+            "state_bits": 0,
+            "checker_bytes": 449,
+            "false_alarm_trace": "",
+            "targets": [],
+            "grading_s": 1.037
+          },
+          "tests": "0/0",
+          "all_tests_pass": false,
+          "formal": "skipped",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": null,
+          "breakdown": {},
+          "timings_s": {
+            "verify": 1.037
+          },
+          "grade_s": 1.039,
+          "cached": false,
+          "code": "module rtl_checker (\n    input logic [15:0] x,\n    input logic [4:0] count\n);\n    // Compute the expected count of set bits in x\n    logic [4:0] expected_count;\n    always_comb begin\n        expected_count = $countones(x);\n    end\n\n    // Assert that the DUT's count matches the expected count\n    assert (count == expected_count) else begin\n        // This is a false positive, but we use an immediate assert without action block\n    end\nendmodule\n",
+          "feedback_shown": "Checker rejected.\nNative checker validation failed. %Error: /tmp/rtlgym_verify_22hmrsrg/syntax/rtl_checker.sv:12:12: syntax error, unexpected '(', expecting '#' or final or property\n   12 |     assert (count == expected_count) else begin\n      |            ^\n%Error: Cannot continue\n",
+          "tool_report": "Checker rejected.\nNative checker validation failed. %Error: /tmp/rtlgym_verify_22hmrsrg/syntax/rtl_checker.sv:12:12: syntax error, unexpected '(', expecting '#' or final or property\n   12 |     assert (count == expected_count) else begin\n      |            ^\n%Error: Cannot continue\n",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 2282,
+            "output_tokens": 121,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 443.73,
+            "eval_s": 200.18
+          },
+          "complete_code": true
+        },
+        {
+          "turn": 2,
+          "score": 0.0,
+          "reward": 0.0,
+          "verification": {
+            "status": "invalid",
+            "mutants_total": 11,
+            "caught": 0,
+            "weighted_caught": 0.0,
+            "families": {},
+            "assertions": 0,
+            "state_bits": 0,
+            "checker_bytes": 342,
+            "false_alarm_trace": "",
+            "targets": [],
+            "grading_s": 1.524
+          },
+          "tests": "0/0",
+          "all_tests_pass": false,
+          "formal": "skipped",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": null,
+          "breakdown": {},
+          "timings_s": {
+            "verify": 1.524
+          },
+          "grade_s": 1.532,
+          "cached": false,
+          "code": "module rtl_checker (\n    input logic [15:0] x,\n    input logic [4:0] count\n);\n    // Compute the expected count of set bits in x\n    logic [4:0] expected_count;\n    always_comb begin\n        expected_count = $countones(x);\n    end\n\n    // Assert that the DUT's count matches the expected count\n    assert (count == expected_count);\nendmodule\n",
+          "feedback_shown": "Checker rejected.\nNative checker validation failed. %Error: /tmp/rtlgym_verify_vbj57g6v/syntax/rtl_checker.sv:12:12: syntax error, unexpected '(', expecting '#' or final or property\n   12 |     assert (count == expected_count);\n      |            ^\n%Error: Exiting due to 1 error(s)\n",
+          "tool_report": "Checker rejected.\nNative checker validation failed. %Error: /tmp/rtlgym_verify_vbj57g6v/syntax/rtl_checker.sv:12:12: syntax error, unexpected '(', expecting '#' or final or property\n   12 |     assert (count == expected_count);\n      |            ^\n%Error: Exiting due to 1 error(s)\n",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 2515,
+            "output_tokens": 97,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 126.88,
+            "eval_s": 95.12
+          },
+          "complete_code": true
+        },
+        {
+          "turn": 3,
+          "score": 0.0,
+          "reward": 0.0,
+          "verification": {
+            "status": "invalid",
+            "mutants_total": 11,
+            "caught": 0,
+            "weighted_caught": 0.0,
+            "families": {},
+            "assertions": 0,
+            "state_bits": 0,
+            "checker_bytes": 342,
+            "false_alarm_trace": "",
+            "targets": [],
+            "grading_s": 1.524
+          },
+          "tests": "0/0",
+          "all_tests_pass": false,
+          "formal": "skipped",
+          "frontend_errors": [],
+          "sim_frontend": null,
+          "synth_frontend": null,
+          "formal_frontend": null,
+          "resource_failures": {},
+          "test_escape": false,
+          "inconclusive": false,
+          "ppa_unavailable": null,
+          "solved": false,
+          "cells": null,
+          "breakdown": {},
+          "timings_s": {
+            "verify": 1.524
+          },
+          "grade_s": 0.113,
+          "cached": true,
+          "code": "module rtl_checker (\n    input logic [15:0] x,\n    input logic [4:0] count\n);\n    // Compute the expected count of set bits in x\n    logic [4:0] expected_count;\n    always_comb begin\n        expected_count = $countones(x);\n    end\n\n    // Assert that the DUT's count matches the expected count\n    assert (count == expected_count);\nendmodule\n",
+          "feedback_shown": "Checker rejected.\nNative checker validation failed. %Error: /tmp/rtlgym_verify_vbj57g6v/syntax/rtl_checker.sv:12:12: syntax error, unexpected '(', expecting '#' or final or property\n   12 |     assert (count == expected_count);\n      |            ^\n%Error: Exiting due to 1 error(s)\n",
+          "tool_report": "Checker rejected.\nNative checker validation failed. %Error: /tmp/rtlgym_verify_vbj57g6v/syntax/rtl_checker.sv:12:12: syntax error, unexpected '(', expecting '#' or final or property\n   12 |     assert (count == expected_count);\n      |            ^\n%Error: Exiting due to 1 error(s)\n",
+          "usage": {
+            "calls": 1,
+            "input_tokens": 2727,
+            "output_tokens": 97,
+            "refusals": 0,
+            "truncated": 0,
+            "ctx_truncated": 0,
+            "generate_s": 126.02,
+            "eval_s": 95.2
+          },
+          "complete_code": true
+        }
+      ],
+      "usage": {
+        "calls": 2,
+        "input_tokens": 5242,
+        "output_tokens": 194,
+        "refusals": 0,
+        "truncated": 0,
+        "ctx_truncated": 0,
+        "generate_s": 252.9,
+        "eval_s": 190.32
+      },
+      "shared_first": {
+        "usage": {
+          "calls": 1,
+          "input_tokens": 2282,
+          "output_tokens": 121,
+          "refusals": 0,
+          "truncated": 0,
+          "ctx_truncated": 0,
+          "generate_s": 443.73,
+          "eval_s": 200.18
+        },
+        "act_s": 469.16,
+        "error": null
+      }
+    }
+  ]
+}

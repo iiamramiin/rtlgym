@@ -1,0 +1,59 @@
+{
+  "pytest_passed": 594,
+  "pytest_seconds": 222.69,
+  "ruff": "clean",
+  "new_shared_grade_tests": 9,
+  "shared_smoke_grades_identical": true,
+  "per_candidate_grading_environment_and_agents_unchanged": [
+    "rtlgym/env.py",
+    "rtlgym/evaluator.py",
+    "rtlgym/reward.py",
+    "rtlgym/tools.py",
+    "rtlgym/checks.py",
+    "rtlgym/formal.py",
+    "rtlgym/task.py",
+    "rtlgym/verify.py",
+    "rtlgym/verify_syntax.py",
+    "rtlgym/agents/base.py",
+    "rtlgym/agents/claude.py",
+    "rtlgym/agents/ollama.py"
+  ],
+  "reproducibility_metadata_files": [
+    {
+      "file": "probe/llama3.1_8b.json",
+      "complete": true
+    },
+    {
+      "file": "probe/qwen3_14b.json",
+      "complete": true
+    },
+    {
+      "file": "smoke/llama3.1_8b__full.json",
+      "complete": true
+    },
+    {
+      "file": "smoke/llama3.1_8b__none.json",
+      "complete": true
+    },
+    {
+      "file": "smoke/llama3.1_8b__paired.json",
+      "complete": true
+    },
+    {
+      "file": "smoke/qwen3_14b__full.json",
+      "complete": true
+    },
+    {
+      "file": "smoke/qwen3_14b__none.json",
+      "complete": true
+    },
+    {
+      "file": "smoke/qwen3_14b__paired.json",
+      "complete": true
+    }
+  ],
+  "byte_identical_copies": 16,
+  "prohibited_terms": [],
+  "overnight_runs_started": false,
+  "paid_model_api_calls": 0
+}

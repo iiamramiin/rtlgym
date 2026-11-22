@@ -37,7 +37,7 @@ bash scripts/setup_sv2v.sh
 export PATH="$HOME/.local/bin:$PATH"
 pip install -e ".[dev]"
 
-python -m rtlgym list                                   # 29 tasks
+python -m rtlgym list                                   # 32 tasks
 python -m rtlgym score fifo_sync my_fifo.sv             # grade one file
 python -m rtlgym baselines                              # grade every hand-written candidate
 python -m rtlgym run --agent replay                     # multi-turn episodes, no API key needed
@@ -422,6 +422,19 @@ model's digest and quantization, the Ollama version, and the options sent. Use
 `--ollama-host` points at a server on another machine.
 [`scripts/local/`](scripts/local/) sets this up on a Windows laptop (WSL, the EDA tools,
 Ollama) and runs the experiment with one double-click.
+
+### Local runner check, November 22
+
+The [current local guide](scripts/local/README.md) provides probe and two-task
+paired smoke modes, explicit task selection and an 8K-context wrapper default.
+The [measured probes and smoke](results/ollama/2026-11-22/open-models-smoke/summary.md)
+cover Llama 3.1 8B and Qwen3 14B on a 15.43 GiB CPU machine. Matched probes took
+78.13 and 770.40 seconds per reply. Both models accepted 1/2 smoke tasks in each
+arm; the exact per-model McNemar p-value is 1, with very wide pass-rate intervals.
+These are setup checks, not evidence of a feedback effect. The 30B model exceeded
+the RAM guard. No overnight runs were started. The
+[proposed plan](results/ollama/2026-11-22/open-models-smoke/run-plan.md) budgets one
+Llama night and two Qwen blocks, with an offline merge after both blocks finish.
 
 ### Local model smoke test (preliminary)
 

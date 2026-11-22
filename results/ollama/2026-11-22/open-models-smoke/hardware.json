@@ -1,0 +1,49 @@
+{
+  "ram_bytes": 16573128704,
+  "ram_gib": 15.434928894042969,
+  "weight_limit_gib": 11.576196670532227,
+  "logical_processors": 14,
+  "cpu": [
+    {
+      "Name": "Intel(R) Core(TM) Ultra 7 155U",
+      "NumberOfCores": 12,
+      "NumberOfLogicalProcessors": 14
+    }
+  ],
+  "gpu": [
+    {
+      "Name": "Intel(R) Graphics",
+      "AdapterRAM": 2147479552,
+      "DriverVersion": "32.0.101.8132"
+    }
+  ],
+  "ollama": {
+    "version": "0.40.16"
+  },
+  "models": [
+    {
+      "name": "qwen3:30b-a3b",
+      "size_bytes": 18556699314,
+      "size_gib": 17.282272981479764,
+      "digest": "ad815644918f0eaab341c12b67837cc6dd4562342cdaf118f83d5d554cb37226",
+      "quantization": "Q4_K_M",
+      "fits_weight_rule": false
+    },
+    {
+      "name": "qwen3:14b",
+      "size_bytes": 9276198565,
+      "size_gib": 8.639133130200207,
+      "digest": "bdbd181c33f2ed1b31c972991882db3cf4d192569092138a7d29e973cd9debe8",
+      "quantization": "Q4_K_M",
+      "fits_weight_rule": true
+    },
+    {
+      "name": "llama3.1:8b",
+      "size_bytes": 4920753328,
+      "size_gib": 4.582808658480644,
+      "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+      "quantization": "Q4_K_M",
+      "fits_weight_rule": true
+    }
+  ]
+}
