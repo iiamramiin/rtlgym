@@ -1,106 +1,191 @@
-"""Summaries for local-model runs.
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 Ramin Rajaei
 
-  python make_table.py table DIR      Markdown tables for every result file in DIR
-  python make_table.py estimate DIR TASKS ARMS SAMPLES TURNS
-                                      run-time estimate from the probe files in DIR
-
-"Mean best score" is the mean, over episodes, of the best score reached. (In the
-default "improvement" reward mode this equals the episode return; in "score" mode
-the return also depends on how many turns were used, so it is not shown.)
-Result files from the Claude eval workflow can be put in DIR to compare.
-"""
+"""Local-model result tables and conservative paired call-count estimates."""
 
 import json
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[2]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from rtlgym.cli import mcnemar_exact, refresh_report  # noqa: E402
+from rtlgym.stats import clopper_pearson, format_ci  # noqa: E402
+
 
 def load(path: Path):
     try:
-        data = json.loads(path.read_text())
-    except ValueError:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
         return None
-    return data if "summary" in data or "paired" in data else None
+    if "summary" in data:
+        return refresh_report(data) if data.get("episodes") else data
+    return data if "paired" in data else None
 
 
-def count(rate, n):
-    return "n/a" if rate is None else f"{round(rate * n)}/{n}"
+def _exact_count(summary: dict, key: str) -> tuple[int, int] | None:
+    count_key = "pass@1_count" if key == "pass@1" else "solved_count"
+    try:
+        numerator, denominator = map(int, summary[count_key].split("/"))
+    except (KeyError, TypeError, ValueError):
+        return None
+    if denominator != summary["episodes"] or not 0 <= numerator <= denominator:
+        return None
+    return numerator, denominator
+
+
+def _rate(summary: dict, key: str) -> str:
+    counts = _exact_count(summary, key)
+    if counts is None:
+        return "n/a"
+    return f"{counts[0]}/{counts[1]} {format_ci(clopper_pearson(*counts))}"
+
+
+def _settings(summary: dict) -> str:
+    ollama = summary.get("ollama") or {}
+    options = ollama.get("options") or {}
+    settings = []
+    if ollama:
+        think = ollama.get("think_requested", ollama.get("think"))
+        actual = ollama.get("think")
+        label = {None: "default", True: "on", False: "off"}.get(think, str(think))
+        if think is not None and actual is None:
+            label += " (unsupported)"
+        settings.append("think " + label)
+        for key in ("num_ctx", "num_predict", "seed"):
+            if key in options:
+                settings.append(f"{key}={options[key]}")
+        quantization = (ollama.get("build") or {}).get("quantization")
+        if quantization:
+            settings.append(quantization)
+    if summary.get("paired"):
+        settings.append("paired")
+    return ", ".join(settings) or "-"
 
 
 def table(folder: str) -> None:
-    head = ("Model", "Feedback", "Episodes (errors)", "Solved on 1st try",
-            "Solved within N turns", "Mean best score", "Mean 1st-attempt score",
-            "Test escapes", "Time per reply", "N (turns)", "Settings")
+    head = ("Model", "Feedback", "Episodes (errors)", "First attempt (95% CI)",
+            "Within N turns (95% CI)", "Mean best score", "Truncated", "Test escapes",
+            "N (turns)", "Settings")
     print("| " + " | ".join(head) + " |")
     print("|" + "---|" * len(head))
-    paired = []
-    for p in sorted(Path(folder).glob("*.json")):
-        d = load(p)
-        if not d:
+    arms, paired = [], []
+    for path in sorted(Path(folder).glob("*.json")):
+        data = load(path)
+        if not data:
             continue
-        if "paired" in d:
-            paired.append((d["meta"].get("model"), d["paired"]))
+        if "paired" in data:
+            paired.append((data["meta"].get("model") or data["meta"].get("agent"), data["paired"]))
             continue
-        s, n = d["summary"], d["summary"]["episodes"]
-        usage = s.get("usage") or {}
-        calls = usage.get("calls") or 0
-        o = s.get("ollama") or {}
-        settings = []
-        if o:
-            think = o.get("think_requested", o.get("think"))
-            settings.append("think " + {None: "default", True: "on", False: "off"}.get(think,
-                                                                                    str(think)))
-            q = (o.get("build") or {}).get("quantization")
-            if q:
-                settings.append(q)
-        if s.get("paired"):
-            settings.append("paired")
+        summary = data["summary"]
+        arms.append(summary)
+        name = summary.get("model") or summary.get("agent")
+        score = summary.get("mean_best_score")
         print("| " + " | ".join((
-            str(s.get("model") or s.get("agent")), str(s.get("feedback")),
-            f"{n} ({s['errors']})", count(s["pass@1"], n),
-            count(s["solved_within_turns"], n),
-            "n/a" if s["mean_best_score"] is None else f"{s['mean_best_score']:.3f}",
-            "n/a" if s["mean_first_score"] is None else f"{s['mean_first_score']:.3f}",
-            str(s["test_escape_attempts"]),
-            f"{usage['generate_s'] / calls:.0f} s" if calls and "generate_s" in usage else "n/a",
-            str(s["max_turns"]), ", ".join(settings) or "-")) + " |")
-    for model, t in paired:
-        a, b = t["arms"]
-        o = t["outcomes"]
-        print(f"\nPaired outcomes, {model} ({t['episodes']} episodes, same first attempt in "
-              f"both arms): solved in both {o['both']}, only with {a} {o[f'only_{a}']}, "
-              f"only with {b} {o[f'only_{b}']}, in neither {o['neither']}, "
-              f"errored {o.get('errored', 0)}. Informative episodes (first attempt not "
-              f"accepted): {t.get('informative_episodes', 'n/a')}; discordant pairs: "
-              f"{t['discordant_pairs']}; exact McNemar p = {t.get('mcnemar_exact_p', 'n/a')}.")
+            str(name), str(summary.get("feedback")),
+            f"{summary['episodes']} ({summary['errors']})",
+            _rate(summary, "pass@1"), _rate(summary, "solved_within_turns"),
+            "n/a" if score is None else f"{score:.3f}",
+            str(summary.get("truncated_attempts", 0)),
+            str(summary["test_escape_attempts"]), str(summary["max_turns"]),
+            _settings(summary))) + " |")
+    print("\nIntervals are exact 95% Clopper–Pearson binomial bounds, separately for each arm; "
+          "errors remain in the denominator. These pooled-task intervals describe this "
+          "sample and do not establish generalization to new task families.")
+
+    if paired:
+        print("\n| Model | Paired episodes | Both | Only full | Only none | Neither | Errored | "
+              "Informative | Discordant | Exact McNemar p |")
+        print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+        for model, group in paired:
+            a, b = group["arms"]
+            outcomes = group["outcomes"]
+            only_a, only_b = outcomes[f"only_{a}"], outcomes[f"only_{b}"]
+            # Recompute when reading historical files that rounded small p-values.
+            p_value = mcnemar_exact(only_a, only_b)
+            print(f"| {model} | {group['episodes']} | {outcomes['both']} | {only_a} | {only_b} | "
+                  f"{outcomes['neither']} | {outcomes.get('errored', 0)} | "
+                  f"{group.get('informative_episodes', 'n/a')} | {group['discordant_pairs']} | "
+                  f"{p_value:.6g} |")
+        print("\nMcNemar uses the discordant full/none pairs within each model. "
+              "Shared first attempts are not independent observations.")
+
+    tasks = sorted({task for summary in arms for task in summary.get("per_task", {})})
+    if tasks:
+        columns = [f"{summary.get('model') or summary.get('agent')} / {summary['feedback']}"
+                   for summary in arms]
+        print("\n| Task | " + " | ".join(columns) + " |")
+        print("|---|" + "---:|" * len(arms))
+        for task in tasks:
+            cells = []
+            for summary in arms:
+                per_task = summary.get("per_task", {}).get(task)
+                if per_task is None:
+                    cells.append("n/a")
+                    continue
+                cell = f"{per_task['pass@1_count']} → {per_task['solved_count']}"
+                if per_task.get("truncated_attempts"):
+                    cell += f"; {per_task['truncated_attempts']} truncated"
+                cells.append(cell)
+            print(f"| {task} | " + " | ".join(cells) + " |")
+        print("\nPer-task cells: accepted first → accepted within the turn budget.")
+
+    # A paired first call appears in both trajectories, but is counted once here.
+    totals = {}
+    for summary in arms:
+        name = summary.get("model") or summary.get("agent")
+        total = totals.setdefault(name, {"calls": 0, "generate_s": 0.0})
+        for key in total:
+            total[key] += (summary.get("usage") or {}).get(key, 0)
+    for name, group in paired:
+        total = totals.setdefault(name, {"calls": 0, "generate_s": 0.0})
+        for key in total:
+            total[key] += (group.get("shared_first") or {}).get(key, 0)
+    if totals:
+        print("\n| Model | Unique calls | Mean seconds per reply |")
+        print("|---|---:|---:|")
+        for name, total in totals.items():
+            calls = total["calls"]
+            seconds = f"{total['generate_s'] / calls:.2f}" if calls else "n/a"
+            print(f"| {name} | {calls} | {seconds} |")
 
 
-def estimate(folder: str, tasks: int, arms: int, samples: int, turns: int) -> None:
-    print("\nEstimated time for the full run (from the probe; rough):")
-    total = 0.0
-    for p in sorted(Path(folder).glob("*.json")):
-        d = load(p)
-        if not d or "summary" not in d:
+def call_budget(tasks: int, samples: int, turns: int, paired: bool, arms: int = 2) -> int:
+    if min(tasks, samples, turns, arms) < 1:
+        raise ValueError("tasks, samples, turns and arms must be positive")
+    return tasks * samples * (1 + 2 * (turns - 1) if paired else arms * turns)
+
+
+def estimate(folder: str, tasks: int, arms: int, samples: int, turns: int, paired: bool = False) -> None:
+    print("\nEstimated run time from the probe (rough; larger designs can reply more slowly):")
+    calls_max = call_budget(tasks, samples, turns, paired, arms)
+    print(f"{tasks * samples} episodes per model; at most {calls_max} unique calls "
+          f"({'paired' if paired else 'independent arms'}).")
+    for path in sorted(Path(folder).glob("*.json")):
+        data = load(path)
+        if not data or "summary" not in data:
             continue
-        s, eps = d["summary"], d["episodes"]
-        usage = s.get("usage") or {}
+        summary, episodes = data["summary"], data["episodes"]
+        usage = summary.get("usage") or {}
         calls = usage.get("calls") or 0
         if not calls:
-            print(f"  {s.get('model')}: probe failed ({eps[0]['error'] if eps else 'no episodes'})")
+            print(f"  {summary.get('model')}: probe failed "
+                  f"({episodes[0]['error'] if episodes else 'no episodes'})")
             continue
-        per_call = usage["generate_s"] / calls
-        grade = s["wall_s"] / max(1, sum(e["turns"] for e in eps)) - per_call
-        # Assume about 2 of the allowed turns are used per episode on average.
-        n_calls = tasks * arms * samples * min(turns, 2)
-        sec = n_calls * (per_call + max(0.0, grade))
-        total += sec
-        print(f"  {s.get('model'):18s} {per_call:6.0f} s per reply -> about {sec / 3600:.1f} h "
-              f"({n_calls} replies)")
-    print(f"  all models: about {total / 3600:.1f} h")
+        reply_s = usage["generate_s"] / calls
+        grade_s = max(0.0, summary["wall_s"] / calls - reply_s)
+        hours = calls_max * (reply_s + grade_s) / 3600
+        print(f"  {summary.get('model')}: {reply_s:.2f} s per reply; "
+              f"{grade_s:.2f} s overhead per call; {hours:.2f} h at the maximum call count")
+    print("The call count is an upper bound. Probe latency is not an upper bound: "
+          "longer replies, growing contexts, tool timeouts and memory pressure can add time.")
 
 
 if __name__ == "__main__":
     if sys.argv[1] == "table":
         table(sys.argv[2])
     else:
-        estimate(sys.argv[2], *(int(x) for x in sys.argv[3:7]))
+        estimate(sys.argv[2], *(int(value) for value in sys.argv[3:7]),
+                 paired=len(sys.argv) > 7 and sys.argv[7] == "1")

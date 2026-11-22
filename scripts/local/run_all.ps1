@@ -12,7 +12,8 @@
 param([string]$Settings = "")   # set by the admin relaunch below; not for direct use
 
 $SettingNames = "MODELS", "THINK", "MAX_TOKENS", "TIMEOUT", "SAMPLES", "TURNS", "PAIRED",
-                "SEED", "RTLGYM_WSL_DIR"
+                "SEED", "RTLGYM_WSL_DIR", "NUM_CTX", "TASKS", "PROBE_TASKS", "PROBE_TURNS",
+                "SMOKE_TASKS", "RAM_GB", "OUT", "OLLAMA_URL", "RUN_MODE"
 # An elevated process started with -Verb RunAs does not inherit this console's
 # environment, so the settings travel as an argument (base64 JSON) instead.
 if ($Settings) {
@@ -38,6 +39,10 @@ function Stop-Here([string]$msg) {
 }
 
 function ConvertTo-WslPath([string]$p) {
+    if ($p.StartsWith("/")) { return $p }
+    if ($p -notmatch "^[A-Za-z]:[\\/]") {
+        throw "Use an absolute Windows or Linux path."
+    }
     $drive = $p.Substring(0, 1).ToLower()
     return "/mnt/$drive" + $p.Substring(2).Replace("\", "/")
 }
@@ -192,17 +197,21 @@ function Test-Ollama {
 }
 if (-not (Test-Ollama)) {
     $app = Join-Path $env:LOCALAPPDATA "Programs\Ollama\ollama app.exe"
-    if (Test-Path $app) { Start-Process $app }
-    else { Start-Process ollama -ArgumentList "serve" -WindowStyle Minimized }
+    if (Test-Path $app) { Start-Process $app -WindowStyle Hidden }
+    else { Start-Process ollama -ArgumentList "serve" -WindowStyle Hidden }
     for ($i = 0; $i -lt 30 -and -not (Test-Ollama); $i++) { Start-Sleep -Seconds 2 }
     if (-not (Test-Ollama)) { Stop-Here "Ollama is not running. Start the Ollama app, then rerun." }
 }
 $pass = @()
-foreach ($v in "MODELS", "THINK", "MAX_TOKENS", "TIMEOUT", "SAMPLES", "TURNS", "PAIRED", "SEED") {
+foreach ($v in ($SettingNames | Where-Object { $_ -notin @("RTLGYM_WSL_DIR", "OUT", "RUN_MODE") })) {
     $val = [Environment]::GetEnvironmentVariable($v)
     if ($val) { $pass += "$v=$val" }
 }
-Write-Host "Started $(Get-Date -Format 'HH:mm'). Keep this window open; it may take hours."
-wsl.exe -d $Distro -u $User -- env REPO_SRC="$LinuxRepo" @pass bash "$LinuxHere/run_eval.sh" all
+$runMode = $env:RUN_MODE
+if (-not $runMode) { $runMode = "probe" }
+if ($runMode -notin @("probe", "smoke", "all")) { Stop-Here "RUN_MODE must be probe, smoke or all." }
+if ($env:OUT) { $pass += "OUT=$(ConvertTo-WslPath $env:OUT)" }
+Write-Host "Started $(Get-Date -Format 'HH:mm'), mode $runMode. Keep this window open."
+wsl.exe -d $Distro -u $User -- env REPO_SRC="$LinuxRepo" @pass bash "$LinuxHere/run_eval.sh" $runMode
 Write-Host "`nFinished $(Get-Date -Format 'HH:mm'). Results: $Repo\results\local"
 Read-Host "Press Enter to close"

@@ -8,7 +8,16 @@ VENV=${VENV:-$HOME/venv-rtlgym}
 
 echo "== Copying $REPO_SRC to $RTLGYM_DIR (with .git, so results record the commit)"
 mkdir -p "$RTLGYM_DIR"
-rsync -a --delete --exclude results/ "$REPO_SRC"/ "$RTLGYM_DIR"/
+rsync -a --delete --exclude results/ --exclude .venv/ --exclude __pycache__/ \
+    --exclude .pytest_cache/ --exclude .ruff_cache/ "$REPO_SRC"/ "$RTLGYM_DIR"/
+# Tests use tracked run archives. Copy those without deleting existing local results.
+if git -c safe.directory="$REPO_SRC" -C "$REPO_SRC" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    git -c safe.directory="$REPO_SRC" -C "$REPO_SRC" ls-files -z -- results/ |
+        rsync -a --from0 --files-from=- "$REPO_SRC"/ "$RTLGYM_DIR"/
+elif [ -d "$REPO_SRC/results" ]; then
+    mkdir -p "$RTLGYM_DIR/results"
+    rsync -a --exclude local/ "$REPO_SRC/results"/ "$RTLGYM_DIR/results"/
+fi
 git -C "$RTLGYM_DIR" config core.fileMode false 2>/dev/null || true
 
 echo "== Python environment in $VENV"

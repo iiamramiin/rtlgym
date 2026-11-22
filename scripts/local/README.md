@@ -1,52 +1,110 @@
 # Local-model runs on Windows (WSL + Ollama)
 
-The scripts that produced the local-model results in the main README. They run
-rtlgym inside Ubuntu (WSL) and the models in [Ollama](https://ollama.com) on Windows.
+Ollama serves the installed models on Windows; rtlgym and the EDA tools run in
+Ubuntu 24.04 under WSL. One model and one episode run at a time.
 
-| File | Runs as | What it does |
-|---|---|---|
-| `RUN_ME.bat` | you (double-click) | starts `run_all.ps1` with admin rights |
-| `run_all.ps1` | Administrator | installs WSL and Ubuntu 24.04 if needed, sets up networking, runs the two setup scripts, starts Ollama, runs the experiment |
-| `setup_system.sh` | root in Ubuntu | installs Icarus Verilog, Verilator, Yosys, and Python tooling |
-| `setup_user.sh` | a normal user in Ubuntu | copies the repo (with `.git`) into Linux, creates a venv, installs pinned sv2v, runs the test suite |
-| `run_eval.sh` | a normal user in Ubuntu | runs the experiment; `probe` mode estimates run time first |
-| `make_table.py` | | summary tables and run-time estimates |
+| File | Purpose |
+|---|---|
+| RUN_ME.bat, run_all.ps1 | Check setup, start Ollama if needed, then run the selected mode |
+| setup_system.sh | Install Linux tools as root |
+| setup_user.sh | Sync code and tracked archive fixtures, create the environment and run tests as a normal user |
+| run_eval.sh | Probe, smoke test or explicitly selected full run |
+| make_table.py | Local summaries, exact pass-rate intervals, paired tests and timing estimates |
 
-## Use
+## Start with a probe
 
-Install Ollama and pull models first (`ollama pull qwen3:14b`). Then double-click
-`RUN_ME.bat` and approve the admin prompt. Every step is skipped if already done, so
-it is safe to run again; finished result files are kept, so an interrupted run resumes.
-Results go to `results/local/` in the repo (ignored by git).
+The one-click launcher now defaults to **probe**, not a long run. Installed
+systems can call the Linux runner directly without changing setup or networking:
 
-Settings are environment variables, for example in an admin PowerShell:
+    MODELS="llama3.1:8b qwen3:14b qwen3:30b-a3b" THINK=off SEED=20261122 \
+        bash scripts/local/run_eval.sh probe
 
-```powershell
-$env:MODELS = "qwen3:14b"; $env:THINK = "off"; $env:SAMPLES = "5"
-.\scripts\local\RUN_ME.bat
-```
+Probe mode runs popcount16, one sample per fitting model, up to three turns
+with full feedback. PROBE_TASKS and PROBE_TURNS can change that small probe.
+Each model has a separate JSON file in OUT/probe/. Reported seconds per reply
+include Ollama's loading and generation time. A small design is a timing sample,
+not an upper bound for longer designs or later-turn contexts.
 
-`MODELS`, `SAMPLES` (episodes per task, default 1), `TURNS` (default 3), `PAIRED`
-(default 1: one first attempt per episode, branched into the "full" and "none" feedback
-arms), `THINK` (`default`/`on`/`off`), `MAX_TOKENS` (default 8192), `TIMEOUT` (seconds
-per reply, default 3600), `SEED`. Models larger than about 75% of RAM are skipped.
+Models whose stored weights exceed 75% of physical RAM are skipped, including
+models named explicitly in MODELS. RAM_GB can supply physical RAM in GiB
+when it cannot be detected from Windows. The guard excludes obviously oversized
+models; KV cache, runtime workspace, Windows and WSL also need memory.
 
-## Notes
+## Small paired smoke test
 
-- **Where things go.** Ubuntu's disk goes to `$env:RTLGYM_WSL_DIR`, by default
-  `<drive of the repo>:\Program_Files\WSL`. WSL itself is a Windows component and
-  always installs on C: (a few hundred MB).
-- **Restarts.** Installing WSL for the first time needs a Windows restart. The script
-  stops and says so; run it again after the restart.
-- **Networking.** On Windows 11 22H2 or later the script adds `networkingMode=mirrored`
-  to `%USERPROFILE%\.wslconfig` (merged into an existing file, with a timestamped
-  backup; an existing `networkingMode` setting is left alone), so Ubuntu reaches Ollama
-  at `localhost:11434`. On older Windows, Ollama must listen on the Windows host address
-  (`OLLAMA_HOST=0.0.0.0`) and be allowed through the firewall.
-- **Users.** Packages are installed as root; everything else runs as the distro's default
-  user, or, if that is root, as a dedicated unprivileged `rtlgym` user with no password.
-- **Sleep.** The script keeps Windows awake while its window is open
-  (`SetThreadExecutionState`), but closing a laptop's lid can still put it to sleep.
-- **Speed.** Without a GPU, replies take minutes: about 1 minute for an 8B model and
-  4 to 7 minutes for a 14B model with reasoning off on a 15 GB laptop; Qwen3 with
-  reasoning on can take over 30 minutes per reply. Run `bash run_eval.sh probe` first.
+    MODELS="llama3.1:8b qwen3:14b" THINK=off SEED=20261122 \
+        OUT="$PWD/results/local/smoke" bash scripts/local/run_eval.sh smoke
+
+Smoke mode fixes one sample per model on popcount16 and verify_popcount16,
+paired full/none feedback, with the configured TURNS (default three).
+SMOKE_TASKS can replace the two task IDs. The model's first attempt is shared;
+only unsuccessful episodes continue into the two arms. This default checks both
+the design prompt and the verification-specific prompt.
+
+## Explicit overnight runs
+
+Use a new output directory for every set of settings. The mode all runs TASKS,
+which may be a comma-separated list or the groups design, repair, verify, or
+all. The group all currently includes every task kind. Never use it to mean
+the original twelve design tasks.
+
+    TASKS="popcount16,alu8,up_down_counter,edge_detect,seq_detect_1011,fifo_sync,rr_arbiter4,uart_tx,noc_router5,axil_regs,mul_pipe3,crc32_stream"
+    MODELS="llama3.1:8b" THINK=off SEED=20261122 TASKS="$TASKS" SAMPLES=5 TURNS=3 \
+        PAIRED=1 OUT="$PWD/results/local/paper1-llama" \
+        bash scripts/local/run_eval.sh all
+
+That example is a command template, not an overnight sample recommendation.
+Choose samples from measured probe and smoke timings, allowing for longer
+replies, larger feedback contexts and grading. For twelve unique tasks and
+S samples there are 12S paired episodes and at most 60S unique calls with
+three turns. noc_router5 is already one of those twelve tasks.
+
+On Windows the same settings are environment variables before RUN_ME.bat:
+set RUN_MODE to probe, smoke or explicitly all. Settings survive the
+administrator relaunch, including TASKS, NUM_CTX and OUT.
+
+| Setting | Default |
+|---|---|
+| MODELS | Installed models that pass the RAM guard; space- or comma-separated names |
+| TASKS | all, only used for full runs and probe run-time estimates |
+| SAMPLES, TURNS, PAIRED | 1, 3, 1 |
+| THINK | default; use off for Qwen3 comparisons without reasoning |
+| NUM_CTX, MAX_TOKENS | 16384, 8192 |
+| TIMEOUT | 3600 seconds per model reply |
+| SEED | 0; each episode receives base seed plus episode index |
+| OUT | results/local/, ignored by Git |
+| OLLAMA_URL | Detect localhost or the Windows host address |
+
+Complete three-file paired result sets are skipped on restart. Partial sets
+are rerun. Settings are not compared when skipping; use a fresh OUT when
+changing models, tasks, seeds, limits or code. Keep the laptop plugged in with
+the lid open; closing the lid can still suspend it.
+
+## Results and reproducibility
+
+Each arm JSON's summary and the paired JSON's meta record:
+
+- ollama.build: Ollama version, full model digest and quantization.
+- ollama.options: num_ctx, num_predict and the base seed.
+- ollama.think_requested and ollama.think: requested and actual reasoning
+  setting, including unsupported settings on non-reasoning models.
+- seed: base and per-episode offset rule.
+- tools: cocotb, Icarus Verilog, Verilator, Yosys and sv2v versions.
+- Commit, Python version, task list, turn budget and feedback arm.
+
+A fixed seed aids reproduction but does not promise identical output across
+different model builds, hardware or Ollama versions. Results keep per-turn
+output-limit status: an unfinished reply is reported as truncated, while the
+original grade and zero reward remain unchanged.
+
+Summaries show exact 95% Clopper–Pearson intervals for each arm's first-attempt
+and within-budget pass rates. Errors remain in the denominator. They also show
+the exact McNemar test separately for each model's discordant full/none pairs.
+Shared first attempts are counted once for total calls. These small,
+heterogeneous task sets do not establish performance on unseen task families.
+
+Keep unfinished runs under ignored results/local/. Once a run is complete,
+review it and copy its two arm JSON files, paired JSON, summary, probe and
+hardware/configuration notes into results/ollama/YYYY-MM-DD/paper1-MODEL/.
+Preserve the original JSON bytes and hashes. Probes and smoke tests belong in
+their own folders and are not overnight benchmark results.

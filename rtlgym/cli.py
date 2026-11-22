@@ -24,6 +24,7 @@ from .agents.claude import DEFAULT_MODEL
 from .checks import _FENCE_RE, _MODULE_RE, _OPEN_FENCE_RE
 from .env import RTLEnv, format_feedback, is_solved
 from .evaluator import EvalResult, evaluate
+from .stats import clopper_pearson, format_ci
 from .task import DEFAULT_TASKS_ROOT, list_tasks, load_task
 from .tools import tool_versions
 
@@ -477,9 +478,11 @@ def summarize(results: list[dict], meta: dict) -> dict:
         "errors": n - len(ok),
         "pass@1": frac("pass@1"),
         "pass@1_count": count("pass@1"),
+        "pass@1_ci95": clopper_pearson(sum(bool(r["pass@1"]) for r in results), n),
         "pass@1_tests_only": frac("pass@1_tests_only"),
         "solved_within_turns": frac("solved"),
         "solved_count": count("solved"),
+        "solved_within_turns_ci95": clopper_pearson(sum(bool(r["solved"]) for r in results), n),
         "test_escape_attempts": sum(r["test_escapes"] for r in results),
         "inconclusive_attempts": sum(r.get("inconclusive", 0) for r in results),
         "frontend_failure_attempts": sum(bool(t.get("frontend_errors"))
@@ -558,7 +561,7 @@ def _paired_counts(rows: list[dict], a: str, b: str) -> dict:
         "informative_episodes": sum(row["outcome"] != "errored" and not row["first_attempt_solved"]
                                     for row in rows),
         "discordant_pairs": only_a + only_b,
-        "mcnemar_exact_p": round(mcnemar_exact(only_a, only_b), 4),
+        "mcnemar_exact_p": mcnemar_exact(only_a, only_b),
     }
 
 
@@ -819,15 +822,20 @@ def cmd_report(args) -> int:
     runs = [d["summary"] for d in data if "summary" in d]      # skip paired summaries
     print("| Arm | Episodes (errors) | Accepted on 1st attempt | 1st attempt passes tests "
           "| Accepted within N turns | Test escapes | Inconclusive | Truncated attempts | Mean turns "
-          "| Grading p50 / p95 |")
-    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
+          "| Grading p50 / p95 | First-attempt 95% CI | Within-turn 95% CI |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|")
     for s in runs:
         n = s["episodes"]
         print(f"| {_arm(s)} | {n} ({s['errors']}) | "
               f"{_count(s['pass@1'], n)} | {_count(s['pass@1_tests_only'], n)} | "
               f"{_count(s['solved_within_turns'], n)} (N={s['max_turns']}) | "
               f"{s['test_escape_attempts']} | {s.get('inconclusive_attempts', 0)} | "
-              f"{s.get('truncated_attempts', 0)} | {s['mean_turns']} | {_grading(s)} |")
+              f"{s.get('truncated_attempts', 0)} | {s['mean_turns']} | {_grading(s)} | "
+              f"{format_ci(s.get('pass@1_ci95'))} | "
+              f"{format_ci(s.get('solved_within_turns_ci95'))} |")
+    print("\n95% Clopper-Pearson intervals include every episode, including errors. "
+          "Each feedback arm is reported separately. These binomial intervals describe "
+          "the sampled episodes and do not account for task clustering or multiple comparisons.")
     _print_verify_results(runs)
     if any(s.get("by_verification") for s in runs):
         print("\n### Acceptance by verification mode\n")

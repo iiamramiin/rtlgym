@@ -367,3 +367,73 @@ def test_direct_verify_act_and_episode_reset_select_fresh_system_prompt(server):
         VERIFY_SYSTEM_PROMPT, SYSTEM_PROMPT, SYSTEM_PROMPT, VERIFY_SYSTEM_PROMPT,
     ]
     assert all(len(request["messages"]) == 2 for request in srv.requests)
+
+
+@pytest.mark.parametrize("task,kind", [
+    ("popcount16", "design"),
+    ("repair_popcount16", "repair"),
+    ("verify_popcount16", "verify"),
+])
+def test_paired_local_cli_preserves_prompts_truncation_and_reproducibility(
+        server, monkeypatch, tmp_path, task, kind):
+    from rtlgym import cli
+    from rtlgym.evaluator import EvalResult
+
+    def reject(task, code, *args, **kwargs):
+        result = EvalResult(task.id, "example", violations=["incomplete source"])
+        if task.kind == "verify":
+            result.verification = {"status": "invalid", "caught": 0, "mutants_total": 0,
+                                   "weighted_caught": 0.0, "families": {}}
+        return result
+
+    versions = {"cocotb": "2.1.0", "iverilog": "Icarus Verilog 12.0", "verilator": "5.020",
+                "yosys": "0.33", "sv2v": "v0.0.13"}
+    monkeypatch.setattr("rtlgym.env.evaluate", reject)
+    monkeypatch.setattr(cli, "tool_versions", lambda: dict(versions))
+    monkeypatch.setattr(cli, "_git_commit", lambda: "example")
+    srv = server([
+        chat("<think>unfinished", done_reason="length", eval_count=2048),
+        chat("module incomplete("),
+        chat("module incomplete("),
+    ])
+    out = tmp_path / "paired.json"
+    assert cli.main([
+        "run", "--agent", "ollama", "--model", "qwen3:14b", "--ollama-host", srv.url,
+        "--tasks", task, "--samples", "1", "--max-turns", "2", "--paired", "--workers", "1",
+        "--num-ctx", "4096", "--max-tokens", "2048", "--think", "off", "--seed", "41",
+        "--no-cache", "--out", str(out),
+    ]) == 0
+    assert len(srv.requests) == 3  # one shared first attempt, one retry in each arm
+    expected_prompt = VERIFY_SYSTEM_PROMPT if kind == "verify" else SYSTEM_PROMPT
+    for request in srv.requests:
+        assert request["messages"][0] == {"role": "system", "content": expected_prompt}
+        assert request["options"] == {"num_ctx": 4096, "num_predict": 2048, "seed": 41}
+        assert request["think"] is False
+
+    files = sorted(tmp_path.glob("*.json"))
+    assert len(files) == 3
+    for path in files:
+        saved = json.loads(path.read_text())
+        meta = saved.get("summary", saved.get("meta"))
+        settings = meta["ollama"]
+        assert settings["build"]["ollama_version"] == "0.13.0"
+        assert settings["build"]["digest"] == "bdbd181c33f2abc"
+        assert settings["build"]["quantization"] == "Q4_K_M"
+        assert settings["options"] == {"num_ctx": 4096, "num_predict": 2048, "seed": 41}
+        assert settings["think"] is settings["think_requested"] is False
+        assert not settings["think_ignored"]
+        assert meta["seed"] == {"base": 41, "per_episode": "base + episode index"}
+        assert meta["tools"] == versions
+        if "episodes" in saved:
+            episode = saved["episodes"][0]
+            first, retry = episode["trajectory"]
+            assert episode["task_kind"] == kind
+            assert first["report_status"] == "truncated"
+            assert first["usage"]["truncated"] == 1 and first["score"] == first["reward"] == 0
+            assert "report_status" not in retry and retry["usage"]["truncated"] == 0
+            assert episode["usage"]["calls"] == 1 and episode["usage"]["truncated"] == 0
+            assert episode["shared_first"]["usage"]["calls"] == 1
+            assert meta["truncated_attempts"] == 1
+        else:
+            assert saved["paired"]["shared_first"]["calls"] == 1
+            assert saved["paired"]["shared_first"]["truncated"] == 1

@@ -10,3 +10,6 @@ replay.json
 *.vcd
 *.fst
 .venv/
+
+# Scratch local model runs; reviewed archives live under results/ollama/.
+results/local/

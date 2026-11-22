@@ -27,7 +27,7 @@ def _load(folder: Path):
     root = str(Path(__file__).resolve().parents[2])
     if root not in sys.path:
         sys.path.insert(0, root)
-    from rtlgym.cli import refresh_report
+    from rtlgym.cli import mcnemar_exact, refresh_report
 
     arms, pairs = [], []
     for p in sorted(folder.glob("*.json")):
@@ -40,7 +40,14 @@ def _load(folder: Path):
                 d = refresh_report(d)
             arms.append((d["summary"], d.get("episodes", [])))
         elif "paired" in d:
-            pairs.append((d["meta"].get("model") or d["meta"].get("agent"), d["paired"]))
+            pair = d["paired"]
+            a, b = pair.get("arms", ("full", "none"))
+            groups = [pair, *pair.get("by_kind", {}).values(), *pair.get("by_verification", {}).values()]
+            for group in groups:
+                outcomes = group.get("outcomes", {})
+                if f"only_{a}" in outcomes and f"only_{b}" in outcomes:
+                    group["mcnemar_exact_p"] = mcnemar_exact(outcomes[f"only_{a}"], outcomes[f"only_{b}"])
+            pairs.append((d["meta"].get("model") or d["meta"].get("agent"), pair))
     return arms, pairs
 
 
@@ -214,6 +221,21 @@ def report(folder: str) -> str:
         out.append("|---|---|---:|")
         for s in arms:
             out.append(f"| {_name(s)} | {s['feedback']} | {s.get(fallback_key, 'n/a')} |")
+
+    eligible = [arm for arm in arms if "pass@1_ci95" in arm or "solved_within_turns_ci95" in arm]
+    if eligible:
+        from rtlgym.stats import format_ci
+
+        out.append("\n### Pass rate intervals\n")
+        out.append("| Model | Feedback | First attempt | 95% CI | Within turn budget | 95% CI |")
+        out.append("|---|---|---:|---:|---:|---:|")
+        for arm in eligible:
+            out.append(f"| {_name(arm)} | {arm['feedback']} | {arm['pass@1_count']} | "
+                       f"{format_ci(arm.get('pass@1_ci95'))} | {arm['solved_count']} | "
+                       f"{format_ci(arm.get('solved_within_turns_ci95'))} |")
+        out.append("\n95% Clopper-Pearson intervals include errored episodes. Feedback arms are "
+                   "reported separately; intervals do not account for task clustering "
+                   "or multiple comparisons.")
 
     _report_arms_by_kind(out, arm_files)
     _report_verify(out, arms)
