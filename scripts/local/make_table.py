@@ -4,6 +4,7 @@
 """Local-model result tables and conservative paired call-count estimates."""
 
 import json
+import math
 import sys
 from pathlib import Path
 
@@ -63,6 +64,16 @@ def _settings(summary: dict) -> str:
     if summary.get("paired"):
         settings.append("paired")
     return ", ".join(settings) or "-"
+
+
+def _accumulate_usage(totals: dict, name: str, usage: dict) -> None:
+    total = totals.setdefault(name, {"calls": 0, "generate_s": 0.0, "timed_calls": 0})
+    calls = usage.get("calls", 0)
+    total["calls"] += calls
+    seconds = usage.get("generate_s")
+    if calls and isinstance(seconds, (int, float)) and math.isfinite(seconds) and seconds >= 0:
+        total["generate_s"] += seconds
+        total["timed_calls"] += calls
 
 
 def table(folder: str) -> None:
@@ -136,19 +147,16 @@ def table(folder: str) -> None:
     totals = {}
     for summary in arms:
         name = summary.get("model") or summary.get("agent")
-        total = totals.setdefault(name, {"calls": 0, "generate_s": 0.0})
-        for key in total:
-            total[key] += (summary.get("usage") or {}).get(key, 0)
+        _accumulate_usage(totals, name, summary.get("usage") or {})
     for name, group in paired:
-        total = totals.setdefault(name, {"calls": 0, "generate_s": 0.0})
-        for key in total:
-            total[key] += (group.get("shared_first") or {}).get(key, 0)
+        _accumulate_usage(totals, name, group.get("shared_first") or {})
     if totals:
         print("\n| Model | Unique calls | Mean seconds per reply |")
         print("|---|---:|---:|")
         for name, total in totals.items():
             calls = total["calls"]
-            seconds = f"{total['generate_s'] / calls:.2f}" if calls else "n/a"
+            seconds = (f"{total['generate_s'] / calls:.2f}"
+                       if calls and total["timed_calls"] == calls else "n/a")
             print(f"| {name} | {calls} | {seconds} |")
 
 

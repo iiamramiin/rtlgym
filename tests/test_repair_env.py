@@ -64,7 +64,8 @@ def test_paired_mixed_run_shares_starter_and_first_grade(tmp_path, monkeypatch):
     repair_evals = [code for tid, code in evaluated if tid == "repair_popcount16"]
     # Initial stimulus, shared first action, and each arm's second action.
     assert len(repair_evals) == 4
-    assert sum(tid == "popcount16" for tid, _ in evaluated) == 4
+    # The design has one shared first grade and one second grade per arm.
+    assert sum(tid == "popcount16" for tid, _ in evaluated) == 3
     full, none, paired = [json.loads((tmp_path / f"mixed__{name}.json").read_text())
                           for name in ("full", "none", "paired")]
     assert paired["paired"]["by_kind"]["repair"]["episodes"] == 1

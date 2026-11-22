@@ -30,6 +30,11 @@ models named explicitly in MODELS. RAM_GB can supply physical RAM in GiB
 when it cannot be detected from Windows. The guard excludes obviously oversized
 models; KV cache, runtime workspace, Windows and WSL also need memory.
 
+The local runner defaults to an 8K context. A 16K context with Qwen3:14b on the
+measured 15.4 GiB machine left almost no free RAM and slowed generation sharply.
+Probe memory and reply speed before increasing NUM_CTX. The CLI and agent
+context defaults are unchanged.
+
 ## Small paired smoke test
 
     MODELS="llama3.1:8b qwen3:14b" THINK=off SEED=20261122 \
@@ -69,7 +74,7 @@ administrator relaunch, including TASKS, NUM_CTX and OUT.
 | TASKS | all, only used for full runs and probe run-time estimates |
 | SAMPLES, TURNS, PAIRED | 1, 3, 1 |
 | THINK | default; use off for Qwen3 comparisons without reasoning |
-| NUM_CTX, MAX_TOKENS | 16384, 8192 |
+| NUM_CTX, MAX_TOKENS | 8192, 8192 |
 | TIMEOUT | 3600 seconds per model reply |
 | SEED | 0; each episode receives base seed plus episode index |
 | OUT | results/local/, ignored by Git |
@@ -108,3 +113,25 @@ review it and copy its two arm JSON files, paired JSON, summary, probe and
 hardware/configuration notes into results/ollama/YYYY-MM-DD/paper1-MODEL/.
 Preserve the original JSON bytes and hashes. Probes and smoke tests belong in
 their own folders and are not overnight benchmark results.
+
+## Paired grading and multi-night cohorts
+
+The shared first submission is graded once for every task kind and the same
+result is applied to both arms, including unresolved tool results. Its elapsed
+grading time is stored under shared_first.grade_s. A shared grading exception
+marks the pair as errored. Candidate scoring and system prompts are unchanged.
+
+For disjoint task blocks, merge only after the whole cohort finishes:
+
+    python scripts/local/merge_runs.py --model qwen3:14b --out NEWDIR BLOCK_A BLOCK_B
+
+Keep the clean generation commit, models, tool versions and settings fixed.
+Advance the second block's base seed by the first block's episode count. The
+helper validates those conditions and paired first-attempt integrity, preserves
+raw files, and recomputes one model's counts, intervals and McNemar test. It
+rejects overlaps, repeated tasks, mixed settings and existing output directories.
+Wall time sums the two recorded runs and excludes the gap between nights.
+
+The November 22 probe/smoke archive includes measured timings and ready overnight
+commands. It proposes the twelve original designs once (router included), with
+Qwen split across two six-task nights to respect this PC's runtime budget.

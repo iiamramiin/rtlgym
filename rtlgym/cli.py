@@ -308,13 +308,16 @@ def run_paired_episode(env_kwargs: dict, agent_name: str, agent_kwargs: dict, ta
     except Exception as exc:  # noqa: BLE001
         first_action, error = None, f"{type(exc).__name__}: {exc}"[:500]
     shared = {"usage": dict(getattr(agent, "usage", None) or {}),
-              "act_s": round(time.monotonic() - t0, 2), "error": error}
-    repair = "starter_code" in obs
-    if repair and first_action is not None:
+              "act_s": round(time.monotonic() - t0, 2), "grade_s": 0.0, "error": error}
+    if first_action is not None:
+        grade_started = time.monotonic()
         try:
             first_grade = env._grade(first_action)
         except Exception as exc:  # noqa: BLE001 - a shared grading error affects both arms
             error = f"{type(exc).__name__}: {exc}"[:500]
+        shared["grade_s"] = round(first_grade[2] if first_grade is not None
+                                  else time.monotonic() - grade_started, 3)
+        shared["error"] = error
     # Fork before either arm receives its own feedback.
     branches = {arm: agent.fork() for arm in arms}
     out = {}
@@ -592,6 +595,8 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str],
     for r in per_arm[a]:
         first = r.get("shared_first") or {}
         shared["act_s"] = round(shared["act_s"] + first.get("act_s", 0.0), 2)
+        if "grade_s" in first:
+            shared["grade_s"] = round(shared.get("grade_s", 0.0) + first["grade_s"], 3)
         for k, v in (first.get("usage") or {}).items():
             shared[k] = round(shared.get(k, 0) + v, 2)
     by_verification = {mode: _paired_counts(group, a, b)

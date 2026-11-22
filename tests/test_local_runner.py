@@ -201,3 +201,27 @@ def test_windows_launcher_carries_settings_and_converts_only_windows_output_path
     assert 'if ($p.StartsWith("/")) { return $p }' in converter
     assert 'throw "Use an absolute Windows or Linux path."' in converter
     assert 'if (-not $runMode) { $runMode = "probe" }' in source
+
+
+@pytest.mark.parametrize("usages,shared", [
+    ([{"calls": 1}], None),
+    ([{"calls": 1, "generate_s": 2.5}, {"calls": 1}], None),
+    ([{"calls": 1, "generate_s": 2.5}, {"calls": 1, "generate_s": 3.5}], {"calls": 1}),
+])
+def test_local_table_reports_missing_or_partial_reply_times_as_unavailable(tmp_path, capsys, usages, shared):
+    for index, usage in enumerate(usages):
+        summary = {"model": "example", "feedback": ("full", "none")[index],
+                   "episodes": 1, "errors": 0, "pass@1_count": "0/1", "solved_count": "0/1",
+                   "mean_best_score": 0.0, "test_escape_attempts": 0, "max_turns": 2,
+                   "usage": usage}
+        (tmp_path / f"arm{index}.json").write_text(json.dumps({"summary": summary}))
+    if shared is not None:
+        (tmp_path / "paired.json").write_text(json.dumps({
+            "meta": {"model": "example"}, "paired": {
+                "arms": ["full", "none"], "episodes": 1,
+                "outcomes": {"both": 0, "only_full": 0, "only_none": 0, "neither": 1, "errored": 0},
+                "informative_episodes": 1, "discordant_pairs": 0, "shared_first": shared,
+            }}))
+    REPORT["table"](str(tmp_path))
+    calls = sum(usage["calls"] for usage in usages) + (shared or {}).get("calls", 0)
+    assert f"| example | {calls} | n/a |" in capsys.readouterr().out
