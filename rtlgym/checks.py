@@ -123,8 +123,8 @@ def extract_code(text: str, top: str | None = None) -> str:
     in the bare text are used. Helper modules that the design instantiates but that
     are defined elsewhere in the reply are added, using the last version of each
     name; modules the design does not use, such as a testbench, are left out, and so
-    is prose. If no module is found, the reply is returned as is, and grading
-    reports the problem.
+    is prose. If no complete module is found, keep the fenced partial RTL
+    when available so grading can diagnose it. Otherwise keep the reply as is.
     """
     spans, bare = _fenced(text)
     unclosed = bool(spans) and spans[-1][1] == len(text) and not text.rstrip().endswith(
@@ -141,6 +141,12 @@ def extract_code(text: str, top: str | None = None) -> str:
         # missing end) rather than at the prose before it.
         if unclosed and re.search(r"\bmodule\b", text[spans[-1][0]:]):
             return text[spans[-1][0]:].strip() + "\n"
+        if top is not None:
+            closed_spans = spans[:-1] if unclosed else spans
+            for a, b in reversed(closed_spans):
+                block = text[a:b]
+                if re.search(rf"^[ \t]*(?:macro)?module\s+{re.escape(top)}\b", block, re.M):
+                    return block.strip() + "\n"
         return text.strip() + "\n"
     found.sort()
     defs = {name: src for _, name, src, _ in found}          # last version of each name

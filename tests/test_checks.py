@@ -1,6 +1,12 @@
+import hashlib
+import json
+from collections import defaultdict
+from pathlib import Path
+
 import pytest
 
 from rtlgym.checks import extract_code, static_check
+from rtlgym.task import load_task
 
 GOOD = "module foo(input logic a, output logic y); assign y = a; endmodule\n"
 
@@ -170,3 +176,94 @@ def test_extract_cut_off_reply_returns_only_the_unclosed_code():
     # Without a fence, or with a fence that has no module, nothing changes.
     assert extract_code("I cannot do that.", "a") == "I cannot do that.\n"
     assert extract_code("See:\n```bash\nls -l", "a").startswith("See:")
+
+
+def test_extract_closed_fence_returns_partial_top_without_prose():
+    partial = "module a(input x, output y);\n  assign y = x;"
+    reply = f"Here is my design.\n{fence(partial)}\nThe explanation follows."
+    assert extract_code(reply, "a") == partial + "\n"
+
+
+def test_extract_bare_partial_module_is_unchanged():
+    partial = "module a(input x, output y);\n  assign y = x;\n"
+    assert extract_code(partial, "a") == partial
+
+
+def test_extract_closed_partial_fence_uses_the_last_matching_top():
+    partial = "module a(input x, output y);\n  assign y = x;"
+    reply = f"Draft:\n{fence('module other;')}\nFinal:\n~~~sv\n{partial}\n~~~\nDone."
+    assert extract_code(reply, "a") == partial + "\n"
+    assert extract_code(reply, "missing") == reply + "\n"
+
+
+def test_extract_saved_archive_attempts():
+    # These incomplete closed-fence sources are the only new extraction changes.
+    expected = {
+        "mul_pipe3": {"42a2786b7a82", "81c61765113d", "8f649efb8343", "fa4f1c2a25e3"},
+        "noc_router5": {"0e8d6e9bcb0b", "1d150c434b40", "73c17611a1c4", "d6ba0ac625d3"},
+        "uart_tx": {"535fbb74d625", "61ecc2063f0a", "80ebed69e4a6", "a5cd1c9e1fdb", "e21e51fe8a0f"},
+    }
+    # The generic extractor already normalizes these checker replies at the base.
+    # Verification grading uses extract_checker, so preserve the existing behavior.
+    existing_checker_changes = {"1745ccd6d9dc", "02d664dff1a2", "f6183c8e3711"}
+    archives = (
+        "claude/2026-11-14/claude-haiku-5-5__full.json",
+        "claude/2026-11-14/claude-haiku-5-5__none.json",
+        "claude/2026-11-14/claude-sonnet-5-5__full.json",
+        "claude/2026-11-14/claude-sonnet-5-5__none.json",
+        "claude/2026-11-16/repair-pilot/claude-haiku-5-5__full.json",
+        "claude/2026-11-16/repair-pilot/claude-haiku-5-5__none.json",
+        "claude/2026-11-16/repair-pilot/claude-sonnet-5-5__full.json",
+        "claude/2026-11-16/repair-pilot/claude-sonnet-5-5__none.json",
+        "claude/2026-11-16/run-a/claude-haiku-5-5__full.json",
+        "claude/2026-11-16/run-a/claude-haiku-5-5__none.json",
+        "claude/2026-11-16/run-a/claude-sonnet-5-5__full.json",
+        "claude/2026-11-16/run-a/claude-sonnet-5-5__none.json",
+        "claude/2026-11-16/run-b/claude-haiku-5-5__full.json",
+        "claude/2026-11-16/run-b/claude-haiku-5-5__none.json",
+        "claude/2026-11-16/run-b/claude-sonnet-5-5__full.json",
+        "claude/2026-11-16/run-b/claude-sonnet-5-5__none.json",
+        "claude/2026-11-17/verify-pilot/claude-haiku-5-5__full.json",
+        "claude/2026-11-17/verify-pilot/claude-sonnet-5-5__full.json",
+        "claude/2026-11-19/verify-hard-pilot/claude-haiku-5-5__full.json",
+        "claude/2026-11-19/verify-hard-pilot/claude-sonnet-5-5__full.json",
+        "ollama/2026-11-22/open-models-smoke/initial-16k/llama3.1_8b.json",
+        "ollama/2026-11-22/open-models-smoke/probe/llama3.1_8b.json",
+        "ollama/2026-11-22/open-models-smoke/probe/qwen3_14b.json",
+        "ollama/2026-11-22/open-models-smoke/smoke/llama3.1_8b__full.json",
+        "ollama/2026-11-22/open-models-smoke/smoke/llama3.1_8b__none.json",
+        "ollama/2026-11-22/open-models-smoke/smoke/qwen3_14b__full.json",
+        "ollama/2026-11-22/open-models-smoke/smoke/qwen3_14b__none.json",
+        "ollama/2026-11-22/paper1-llama3.1_8b/llama3.1_8b__full.json",
+        "ollama/2026-11-22/paper1-llama3.1_8b/llama3.1_8b__none.json",
+    )
+    results_root = Path(__file__).resolve().parents[1] / "results"
+    changed = defaultdict(set)
+    checker_changes = set()
+    changed_rows = 0
+    for archive in archives:
+        data = json.loads((results_root / archive).read_bytes())
+        for episode in data["episodes"]:
+            task = load_task(episode["task"])
+            for attempt in episode.get("trajectory", []):
+                saved = attempt.get("code")
+                if not isinstance(saved, str):
+                    continue
+                extracted = extract_code(saved, task.top)
+                if extracted == saved:
+                    continue
+                digest = hashlib.sha256(saved.encode()).hexdigest()[:12]
+                if task.kind == "verify":
+                    assert digest in existing_checker_changes
+                    checker_changes.add(digest)
+                    continue
+                assert digest in expected.get(task.id, set()), (archive, task.id, digest)
+                assert static_check(extracted, task.top).ok
+                assert "endmodule" not in extracted
+                assert "```" not in extracted and "~~~" not in extracted
+                assert attempt["score"] == 0 and not attempt["solved"]
+                changed[task.id].add(digest)
+                changed_rows += 1
+    assert changed_rows == 16  # Shared first submissions occur in both paired arms.
+    assert dict(changed) == expected
+    assert checker_changes == existing_checker_changes
