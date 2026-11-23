@@ -432,9 +432,17 @@ cover Llama 3.1 8B and Qwen3 14B on a 15.43 GiB CPU machine. Matched probes took
 78.13 and 770.40 seconds per reply. Both models accepted 1/2 smoke tasks in each
 arm; the exact per-model McNemar p-value is 1, with very wide pass-rate intervals.
 These are setup checks, not evidence of a feedback effect. The 30B model exceeded
-the RAM guard. No overnight runs were started. The
+the RAM guard. Overnight runs had yet to start when these smoke checks were recorded. The
 [proposed plan](results/ollama/2026-11-22/open-models-smoke/run-plan.md) budgets one
 Llama night and two Qwen blocks, with an offline merge after both blocks finish.
+
+### Paired Llama 3.1 8B design run, November 22
+
+The CPU run used the 12 original design tasks, three paired samples per task,
+and up to three attempts per arm. Llama 3.1 8B accepted 4/36 on the shared
+first attempt, 6/36 with full feedback, and 7/36 with plain retries. The single
+discordant pair gives an exact McNemar p-value of 1.
+[Run archive and tool audit](results/ollama/2026-11-22/paper1-llama3.1_8b/README.md)
 
 ### Local model smoke test (preliminary)
 

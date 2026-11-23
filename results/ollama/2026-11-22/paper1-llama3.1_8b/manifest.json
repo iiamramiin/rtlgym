@@ -1,0 +1,27 @@
+[
+  {
+    "file": "llama3.1_8b__full.json",
+    "bytes": 570516,
+    "sha256": "e25bb7e6f11ba7f720f9b1583c5e36a65c79063f91d248c2ec8833606cd42953"
+  },
+  {
+    "file": "llama3.1_8b__none.json",
+    "bytes": 442979,
+    "sha256": "ae8a13033a6e942a7b4c19d4f55c33d30e98226e8c6dde64765790895129b829"
+  },
+  {
+    "file": "llama3.1_8b__paired.json",
+    "bytes": 14621,
+    "sha256": "7381d45bcec6054d0f19e04805c116a4fc7afb8c2b34b5e2da19b4a32bb63406"
+  },
+  {
+    "file": "README.md",
+    "bytes": 3011,
+    "sha256": "c96d1e218e47e7b362d7817826f7b226563d05b6e06851eab7f9a25d7cce1a36"
+  },
+  {
+    "file": "summary.md",
+    "bytes": 1871,
+    "sha256": "f108eb7d61c2925b62fb1293ac4a54471fbfa44aef5c1a9c5e13496abfdbf9e5"
+  }
+]

@@ -16,3 +16,4 @@ results/claude/2026-11-19/verify-hard-pilot/recorded-summary.md -text
 # Retain recorded local-run bytes; binary patches preserve their line endings.
 results/ollama/**/*.json -text -diff
 results/ollama/**/recorded-summary.md -text
+results/ollama/2026-11-22/paper1-llama3.1_8b/*.md text eol=lf

@@ -1,0 +1,574 @@
+{
+  "paired": {
+    "arms": [
+      "full",
+      "none"
+    ],
+    "episodes": 36,
+    "outcomes": {
+      "both": 6,
+      "only_full": 0,
+      "only_none": 1,
+      "neither": 29,
+      "errored": 0
+    },
+    "informative_episodes": 32,
+    "discordant_pairs": 1,
+    "mcnemar_exact_p": 1.0,
+    "by_verification": {
+      "formal": {
+        "episodes": 36,
+        "outcomes": {
+          "both": 6,
+          "only_full": 0,
+          "only_none": 1,
+          "neither": 29,
+          "errored": 0
+        },
+        "informative_episodes": 32,
+        "discordant_pairs": 1,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "by_kind": {
+      "design": {
+        "episodes": 36,
+        "outcomes": {
+          "both": 6,
+          "only_full": 0,
+          "only_none": 1,
+          "neither": 29,
+          "errored": 0
+        },
+        "informative_episodes": 32,
+        "discordant_pairs": 1,
+        "mcnemar_exact_p": 1.0
+      }
+    },
+    "shared_first": {
+      "act_s": 3928.03,
+      "grade_s": 40.184,
+      "calls": 36,
+      "input_tokens": 21351,
+      "output_tokens": 21056,
+      "refusals": 0,
+      "truncated": 0,
+      "ctx_truncated": 0,
+      "generate_s": 3865.94,
+      "eval_s": 3593.94
+    },
+    "rows": [
+      {
+        "task": "axil_regs",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "axil_regs",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "axil_regs",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.1,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "fifo_sync",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.14,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "fifo_sync",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.13,
+        "none_best": 0.13,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "fifo_sync",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.1,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "mul_pipe3",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "mul_pipe3",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.14,
+        "none_best": 0.15,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "mul_pipe3",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.1,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "rr_arbiter4",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.28,
+        "none_best": 0.29,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "rr_arbiter4",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.5,
+        "none_best": 0.19,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "rr_arbiter4",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.28,
+        "none_best": 0.28,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "popcount16",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": true,
+        "full_best": 0.14,
+        "none_best": 0.92,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "only_none"
+      },
+      {
+        "task": "popcount16",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.1,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "popcount16",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "up_down_counter",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9711,
+        "none_best": 0.9711,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "up_down_counter",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.95,
+        "none_best": 0.9611,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "up_down_counter",
+        "task_kind": "design",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.9711,
+        "none_best": 0.9711,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "noc_router5",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "noc_router5",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.1,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "noc_router5",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "uart_tx",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.2267,
+        "none_best": 0.2567,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "uart_tx",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.0,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "uart_tx",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.2467,
+        "none_best": 0.1783,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "crc32_stream",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.13,
+        "none_best": 0.0,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "crc32_stream",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.1,
+        "none_best": 0.1,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "crc32_stream",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.12,
+        "none_best": 0.13,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "alu8",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.43,
+        "none_best": 0.38,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "alu8",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.14,
+        "none_best": 0.21,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "alu8",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.15,
+        "none_best": 0.15,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "seq_detect_1011",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.29,
+        "none_best": 0.29,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "seq_detect_1011",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.29,
+        "none_best": 0.29,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "seq_detect_1011",
+        "task_kind": "design",
+        "first_attempt_solved": false,
+        "full_solved": false,
+        "none_solved": false,
+        "full_best": 0.28,
+        "none_best": 0.28,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "neither"
+      },
+      {
+        "task": "edge_detect",
+        "task_kind": "design",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "edge_detect",
+        "task_kind": "design",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      },
+      {
+        "task": "edge_detect",
+        "task_kind": "design",
+        "first_attempt_solved": true,
+        "full_solved": true,
+        "none_solved": true,
+        "full_best": 0.97,
+        "none_best": 0.97,
+        "full_error": null,
+        "none_error": null,
+        "outcome": "both"
+      }
+    ]
+  },
+  "meta": {
+    "agent": "ollama",
+    "model": "llama3.1:8b",
+    "effort": null,
+    "samples_per_task": 3,
+    "max_turns": 3,
+    "feedback": "full",
+    "reward_mode": "improvement",
+    "formal": true,
+    "formal_by_task": {
+      "axil_regs": true,
+      "fifo_sync": true,
+      "mul_pipe3": true,
+      "rr_arbiter4": true,
+      "popcount16": true,
+      "up_down_counter": true,
+      "noc_router5": true,
+      "uart_tx": true,
+      "crc32_stream": true,
+      "alu8": true,
+      "seq_detect_1011": true,
+      "edge_detect": true
+    },
+    "tasks": [
+      "axil_regs",
+      "fifo_sync",
+      "mul_pipe3",
+      "rr_arbiter4",
+      "popcount16",
+      "up_down_counter",
+      "noc_router5",
+      "uart_tx",
+      "crc32_stream",
+      "alu8",
+      "seq_detect_1011",
+      "edge_detect"
+    ],
+    "started_utc": "2026-11-23T00:12:25+00:00",
+    "wall_s": 23623.81,
+    "git_commit": "a234a860614237e39ee08e31b454a446631f8f12",
+    "python": "3.12.3",
+    "tools": {
+      "iverilog": "Icarus Verilog version 12.0 (stable) ()",
+      "yosys": "Yosys 0.33 (git sha1 2584903a060)",
+      "verilator": "Verilator 5.020 2024-01-01 rev (Debian 5.020-1)",
+      "sv2v": "sv2v v0.0.13",
+      "cocotb": "2.1.0"
+    },
+    "seed": {
+      "base": 20261122,
+      "per_episode": "base + episode index"
+    },
+    "ollama": {
+      "host": "http://localhost:11434",
+      "options": {
+        "num_ctx": 8192,
+        "num_predict": 8192,
+        "seed": 20261122
+      },
+      "think": false,
+      "think_requested": false,
+      "think_ignored": false,
+      "timeout_s": 1800.0,
+      "build": {
+        "model": "llama3.1:8b",
+        "digest": "46e0c10c039e019119339687c3c1757cc81b9da49709a3b3924863ba87ca666e",
+        "size_bytes": 4920753328,
+        "family": "llama",
+        "parameter_size": "8.0B",
+        "quantization": "Q4_K_M",
+        "format": "gguf",
+        "capabilities": [
+          "completion",
+          "tools"
+        ],
+        "ollama_version": "0.40.16"
+      }
+    }
+  }
+}
