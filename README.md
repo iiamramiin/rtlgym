@@ -409,10 +409,14 @@ python -m rtlgym report results/qwen3-14b__*.json
 
 Reasoning that models such as Qwen3 emit (`<think>...</think>` or a separate field) is
 removed from the reply and from the conversation history, as the Claude agent returns
-only text blocks. The agent sets a 16K-token context window (`--num-ctx`; Ollama's
-default would silently truncate multi-turn episodes, and a prompt that fills it is
-counted and warned about), caps each reply at 8192 tokens (`--max-tokens`) so a looping
-model stops, and waits up to 30 minutes per reply (`--ollama-timeout`). A reply that
+only text blocks. The agent sets a 16K-token context window (`--num-ctx`), caps each
+reply at 8192 tokens (`--max-tokens`), and waits up to 30 minutes per reply
+(`--ollama-timeout`). A call is counted in `ctx_truncated` and emits a warning when
+its prompt and reply together reach within 256 tokens of the context limit. The
+warning indicates possible history trimming. The run summary reports the largest
+observed total as `max_context_tokens`, including the shared first call for paired
+runs. Reports also recover this maximum from single-call token counts in older
+saved local runs. A reply that
 times out is not retried, since a retry would regenerate the whole answer; connection
 errors and server errors are. `--think on|off` switches reasoning for models that have
 it (for other models it is not sent, and the result file says so), and `--seed` sets

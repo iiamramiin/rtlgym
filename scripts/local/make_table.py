@@ -79,7 +79,7 @@ def _accumulate_usage(totals: dict, name: str, usage: dict) -> None:
 def table(folder: str) -> None:
     head = ("Model", "Feedback", "Episodes (errors)", "First attempt (95% CI)",
             "Within N turns (95% CI)", "Mean best score", "Truncated", "Test escapes",
-            "N (turns)", "Settings")
+            "N (turns)", "Max prompt + reply tokens", "Settings")
     print("| " + " | ".join(head) + " |")
     print("|" + "---|" * len(head))
     arms, paired = [], []
@@ -101,7 +101,7 @@ def table(folder: str) -> None:
             "n/a" if score is None else f"{score:.3f}",
             str(summary.get("truncated_attempts", 0)),
             str(summary["test_escape_attempts"]), str(summary["max_turns"]),
-            _settings(summary))) + " |")
+            str(summary.get("max_context_tokens", "n/a")), _settings(summary))) + " |")
     print("\nIntervals are exact 95% Clopper–Pearson binomial bounds, separately for each arm; "
           "errors remain in the denominator. These pooled-task intervals describe this "
           "sample and do not establish generalization to new task families.")

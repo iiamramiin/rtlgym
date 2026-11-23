@@ -41,7 +41,7 @@ DEFAULT_HOST = "http://localhost:11434"
 DEFAULT_TIMEOUT_S = 1800.0
 DEFAULT_NUM_CTX = 16384
 DEFAULT_MAX_TOKENS = 8192
-CTX_MARGIN = 256          # prompt tokens this close to num_ctx count as possibly truncated
+CTX_MARGIN = 256          # prompt plus reply this close to num_ctx may be truncated
 NO_ANSWER = "(no answer)"
 
 
@@ -141,7 +141,7 @@ class OllamaAgent(Agent):
         self.messages: list[dict] = []
         self.system_prompt = SYSTEM_PROMPT
         self.usage = {"calls": 0, "input_tokens": 0, "output_tokens": 0,
-                      "refusals": 0, "truncated": 0, "ctx_truncated": 0,
+                      "refusals": 0, "truncated": 0, "ctx_truncated": 0, "max_context_tokens": 0,
                       "generate_s": 0.0, "eval_s": 0.0}
 
     # ----------------------------------------------------------- the episode
@@ -239,13 +239,17 @@ class OllamaAgent(Agent):
         u["generate_s"] = round(u["generate_s"] + (total_ns / 1e9 if total_ns else wall), 2)
         u["eval_s"] = round(u["eval_s"] + (eval_ns / 1e9 if eval_ns else 0.0), 2)
         prompt_tokens = int(data.get("prompt_eval_count") or 0)
+        reply_tokens = int(data.get("eval_count") or 0)
+        context_tokens = prompt_tokens + reply_tokens
         u["input_tokens"] += prompt_tokens
-        u["output_tokens"] += int(data.get("eval_count") or 0)
+        u["output_tokens"] += reply_tokens
+        u["max_context_tokens"] = max(u["max_context_tokens"], context_tokens)
         if data.get("done_reason") == "length":
             u["truncated"] += 1
-        if prompt_tokens >= self.num_ctx - CTX_MARGIN:
+        context_limit = self.options["num_ctx"]
+        if context_tokens >= context_limit - CTX_MARGIN:
             u["ctx_truncated"] += 1
-            print(f"warning: prompt used {prompt_tokens} of {self.num_ctx} context tokens; "
-                  "earlier turns may have been cut. Raise --num-ctx.", file=sys.stderr)
+            print(f"warning: prompt and reply used {context_tokens} of {context_limit} context tokens; "
+                  "conversation history may have been trimmed. Raise --num-ctx.", file=sys.stderr)
         msg = data.get("message") or {}
         return {"content": msg.get("content", ""), "thinking": msg.get("thinking", "")}

@@ -1,5 +1,5 @@
 """Result accounting: every episode counts, including ones that errored."""
-from rtlgym.cli import paired_table, summarize
+from rtlgym.cli import _usage_delta, paired_table, summarize
 
 
 def ep(task, solved=False, first=False, best=0.0, error=None, turns=1, usage=None):
@@ -32,6 +32,38 @@ def test_usage_includes_errored_episodes():
     results = [ep("a", usage={"calls": 2, "generate_s": 1.5}),
                ep("a", error="boom", usage={"calls": 1, "generate_s": 0.25})]
     assert summarize(results, {})["usage"] == {"calls": 3, "generate_s": 1.75}
+
+
+def test_context_peak_is_a_maximum_and_includes_shared_calls():
+    shared = {"usage": {"calls": 1, "max_context_tokens": 7900}}
+    full = [dict(ep("a", usage={"calls": 1, "max_context_tokens": 6500}), shared_first=shared),
+            ep("b", usage={"calls": 1, "max_context_tokens": 6000})]
+    none = [dict(ep("a", usage={"calls": 1, "max_context_tokens": 8100}), shared_first=shared),
+            ep("b", usage={"calls": 1, "max_context_tokens": 5000})]
+    summary = summarize(full, {})
+    assert summary["usage"] == {"calls": 2, "max_context_tokens": 6500}
+    assert summary["max_context_tokens"] == 7900
+    pair = paired_table({"full": full, "none": none}, ("full", "none"))
+    assert pair["max_context_tokens"] == 8100
+    assert pair["shared_first"]["max_context_tokens"] == 7900
+    assert pair["shared_first"]["calls"] == 1
+
+
+def test_context_peak_from_saved_single_call_usage():
+    row = ep("a", usage={"calls": 2, "ctx_truncated": 0, "input_tokens": 10000, "output_tokens": 5000})
+    row["trajectory"][0]["usage"] = {
+        "calls": 1, "ctx_truncated": 0, "input_tokens": 5000, "output_tokens": 2772,
+    }
+    row["shared_first"] = {"usage": {
+        "calls": 1, "ctx_truncated": 0, "input_tokens": 4000, "output_tokens": 2000,
+    }}
+    assert summarize([row], {})["max_context_tokens"] == 7772
+
+
+def test_context_peak_is_not_subtracted_from_turn_usage():
+    before = {"calls": 1, "input_tokens": 5000, "output_tokens": 1000, "max_context_tokens": 6000}
+    after = {"calls": 2, "input_tokens": 10000, "output_tokens": 3936, "max_context_tokens": 7936}
+    assert _usage_delta(before, after) == {"calls": 1, "input_tokens": 5000, "output_tokens": 2936}
 
 
 def test_all_errors_still_summarize():

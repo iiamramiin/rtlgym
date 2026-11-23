@@ -181,7 +181,29 @@ def _turn_record(r, reward: float, info: dict) -> dict:
 
 
 def _usage_delta(before: dict, after: dict) -> dict:
-    return {key: round(value - before.get(key, 0), 2) for key, value in after.items()}
+    # A run maximum is not an additive counter. Each turn already has both token deltas.
+    return {key: round(value - before.get(key, 0), 2) for key, value in after.items()
+            if key != "max_context_tokens"}
+
+
+def _merge_usage(total: dict, usage: dict) -> None:
+    for key, value in usage.items():
+        previous = total.get(key, 0)
+        total[key] = max(previous, value) if key == "max_context_tokens" else round(previous + value, 2)
+
+
+def _context_peak(results) -> int:
+    peak = 0
+    for row in results:
+        usages = [row.get("usage") or {}, (row.get("shared_first") or {}).get("usage") or {}]
+        usages.extend(turn.get("usage") or {} for turn in row.get("trajectory", []))
+        for usage in usages:
+            peak = max(peak, usage.get("max_context_tokens", 0))
+            # Older local runs kept single-call token deltas without a peak field.
+            # Never add episode-wide totals: they may cover several calls.
+            if "ctx_truncated" in usage and usage.get("calls") == 1:
+                peak = max(peak, usage.get("input_tokens", 0) + usage.get("output_tokens", 0))
+    return peak
 
 
 def _complete_code(action: str, code: str) -> bool:
@@ -436,8 +458,8 @@ def summarize(results: list[dict], meta: dict) -> dict:
     steps = [t for r in results for t in r["trajectory"]]
     usage: dict[str, float] = {}
     for r in results:
-        for k, v in (r.get("usage") or {}).items():
-            usage[k] = round(usage.get(k, 0) + v, 2)
+        _merge_usage(usage, r.get("usage") or {})
+    context_peak = _context_peak(results)
     formal_by_task = meta.get("formal_by_task") or {}
     per_task = {}
     for tid in sorted({r["task"] for r in results}):
@@ -501,6 +523,7 @@ def summarize(results: list[dict], meta: dict) -> dict:
                           if len(grade) >= 2 else (grade[0] if grade else None)),
         "cache_hit_rate": round(sum(t["cached"] for t in steps) / len(steps), 3) if steps else None,
         "usage": usage,
+        **({"max_context_tokens": context_peak} if context_peak else {}),
         "per_task": per_task,
     }
 
@@ -597,13 +620,14 @@ def paired_table(per_arm: dict[str, list[dict]], arms: tuple[str, str],
         shared["act_s"] = round(shared["act_s"] + first.get("act_s", 0.0), 2)
         if "grade_s" in first:
             shared["grade_s"] = round(shared.get("grade_s", 0.0) + first["grade_s"], 3)
-        for k, v in (first.get("usage") or {}).items():
-            shared[k] = round(shared.get(k, 0) + v, 2)
+        _merge_usage(shared, first.get("usage") or {})
+    context_peak = _context_peak(row for arm in arms for row in per_arm[arm])
     by_verification = {mode: _paired_counts(group, a, b)
                        for mode, group in _by_verification(rows, formal_by_task or {}).items()}
     by_kind = {kind: _paired_counts(group, a, b) for kind, group in _by_kind(rows).items()}
     return {"arms": list(arms), **_paired_counts(rows, a, b), "by_verification": by_verification,
-            "by_kind": by_kind, "shared_first": shared, "rows": rows}
+            "by_kind": by_kind, "shared_first": shared,
+            **({"max_context_tokens": context_peak} if context_peak else {}), "rows": rows}
 
 
 def cmd_run(args) -> int:

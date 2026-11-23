@@ -198,11 +198,29 @@ def test_truncation_and_empty_answers(server):
 
 
 def test_context_overflow_is_detected(server, capsys):
-    srv = server([chat(GOOD, prompt_eval_count=8100)])
+    srv = server([chat(GOOD, prompt_eval_count=8100),
+                  chat(GOOD, prompt_eval_count=5000, eval_count=2936),
+                  chat(GOOD, prompt_eval_count=5000, eval_count=2935)])
     agent = OllamaAgent(model="m", host=srv.url, num_ctx=8192)
+    for expected in (1, 2, 2):
+        agent.act(OBS)
+        assert agent.usage["ctx_truncated"] == expected
+    assert agent.usage["max_context_tokens"] == 8120
+    warnings = capsys.readouterr().err
+    assert "8120 of 8192 context tokens" in warnings
+    assert "7936 of 8192 context tokens" in warnings
+    assert "7935 of 8192 context tokens" not in warnings
+
+
+def test_context_check_uses_effective_options_and_forks_reset_the_peak(server):
+    srv = server([chat(GOOD, prompt_eval_count=1000, eval_count=2840)])
+    agent = OllamaAgent(model="m", host=srv.url, num_ctx=8192, options={"num_ctx": 4096})
     agent.act(OBS)
     assert agent.usage["ctx_truncated"] == 1
-    assert "context tokens" in capsys.readouterr().err
+    assert agent.usage["max_context_tokens"] == 3840
+    branch = agent.fork()
+    assert branch.usage["max_context_tokens"] == 0
+    assert agent.usage["max_context_tokens"] == 3840
 
 
 def test_timeouts_are_not_retried(server):
