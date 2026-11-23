@@ -70,7 +70,8 @@ def _script(task: Task, ref: Path, cand: Path, depth: int, timeout_s: float) -> 
         lines.append(f"hierarchy -check -top {top}")
         if chparam:
             lines.append(chparam)
-        lines += ["proc", "flatten", "memory", "opt_clean", f"rename {top} {name}",
+        # Lowered loop jumps can leave dead latches after proc. Simplify them before SAT.
+        lines += ["proc", "opt -fine", "flatten", "memory", "opt_clean", f"rename {top} {name}",
                   f"design -stash {name}_design"]
         return lines
 

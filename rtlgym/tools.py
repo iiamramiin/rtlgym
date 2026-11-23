@@ -247,9 +247,17 @@ def _conversion_ok(result: ToolRun, output: Path) -> bool:
     return result.ok and output.is_file() and output.stat().st_size > 0
 
 
+_YOSYS_RETRY_ERRORS = (
+    r"syntax error\b",
+    r"Can't resolve task name `\\break'\.$",
+    r"Can't resolve task name `\\continue'\.$",
+)
+_YOSYS_RETRY_PATTERN = "|".join(_YOSYS_RETRY_ERRORS)
+
+
 def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
                    invoke: Callable[..., ToolRun]) -> tuple[ToolRun, str, bool]:
-    """Keep native Yosys for accepted sources. Retry only inputs it cannot parse."""
+    """Retry source-level syntax errors and known unsupported constructs."""
     paths = list(sources)
     converted = set()
     elapsed = 0.0
@@ -260,18 +268,18 @@ def yosys_frontend(sources: tuple[Path, ...], workdir: Path,
         result = invoke(*paths)
         result.parsed = marker.is_file()
         elapsed += result.elapsed_s
-        syntax = next((p for p in paths if re.search(
-            rf"^{re.escape(str(p))}:\d+: ERROR: syntax error\b",
+        rejected = next((p for p in paths if re.search(
+            rf"^{re.escape(str(p))}:\d+: ERROR: (?:{_YOSYS_RETRY_PATTERN})",
             result.log, re.M)), None)
-        if result.ok or result.timed_out or syntax is None or syntax in converted:
+        if result.ok or result.timed_out or rejected is None or rejected in converted:
             result.elapsed_s = elapsed
             result.log = "\n".join([*diagnostics, result.log])
-            return result, "sv2v" if converted else "native", syntax is not None
+            return result, "sv2v" if converted else "native", rejected is not None
 
-        index = paths.index(syntax)
+        index = paths.index(rejected)
         lowered = workdir / f"frontend_{index}.v"
         # Match read_verilog's preprocessor defaults.
-        conversion = _convert_sv2v(syntax, lowered, workdir, "-DSYNTHESIS", "-DYOSYS")
+        conversion = _convert_sv2v(rejected, lowered, workdir, "-DSYNTHESIS", "-DYOSYS")
         elapsed += conversion.elapsed_s
         diagnostics.append("Native Yosys parser: " + tail(result.log, 1000))
         if not _conversion_ok(conversion, lowered):

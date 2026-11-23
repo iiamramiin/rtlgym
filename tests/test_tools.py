@@ -220,3 +220,29 @@ def test_resource_after_successful_fallback(monkeypatch, tmp_path):
     result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, invoke)
     assert frontend == "sv2v" and not parse_failed
     assert tools.yosys_resource_limit(result) == "memory allocation failure"
+
+
+@pytest.mark.parametrize("task_name, retries", [
+    ("break", True), ("continue", True), ("missing", False),
+    ("breakfast", False), ("continue_extra", False),
+])
+def test_yosys_retries_only_known_unresolved_tasks(monkeypatch, tmp_path, task_name, retries):
+    src = tmp_path / "candidate.sv"
+    lowered = tmp_path / "frontend_0.v"
+
+    def invoke(path):
+        if path == src:
+            message = f"{src}:5: ERROR: Can't resolve task name `\\{task_name}'."
+            return tools.ToolRun(False, 1, message, 0.01)
+        assert retries and path == lowered
+        (tmp_path / tools.YOSYS_PARSE_MARKER).touch()
+        return tools.ToolRun(True, 0, "", 0.01)
+
+    def convert(path, output, workdir, *defines):
+        assert retries and path == src and output == lowered
+        output.write_text("module top; endmodule")
+        return tools.ToolRun(True, 0, "", 0.01)
+
+    monkeypatch.setattr(tools, "_convert_sv2v", convert)
+    result, frontend, parse_failed = tools.yosys_frontend((src,), tmp_path, invoke)
+    assert (result.ok, frontend, parse_failed) == (retries, "sv2v" if retries else "native", False)

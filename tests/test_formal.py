@@ -3,7 +3,7 @@ import dataclasses
 
 import pytest
 
-from rtlgym import load_task
+from rtlgym import evaluate, load_task
 from rtlgym.formal import check_equivalence, format_counterexample, parse_trace
 
 pytestmark = pytest.mark.needs_tools
@@ -93,3 +93,47 @@ def test_formal_timeout_can_be_set_per_task(monkeypatch, tmp_path):
     except RuntimeError:
         pass
     assert seen["timeout_s"] == 240 + 15      # tool limit plus the subprocess margin
+
+
+@pytest.mark.parametrize(("loop_control", "initial_count", "formal_status"), [
+    pytest.param("if ((x >> i) == 16'b0) break;", "'0", "pass", id="break"),
+    pytest.param("if (!x[i]) continue;", "'0", "pass", id="continue"),
+    pytest.param("if ((x >> i) == 16'b0) break;", "5'd1", "fail", id="incorrect-break"),
+])
+def test_grade_design_assigning_after_loop_control(loop_control, initial_count, formal_status):
+    code = f"""
+module popcount16(input logic [15:0] x, output logic [4:0] count);
+    logic [4:0] c;
+    always_comb begin
+        c = {initial_count};
+        for (integer i = 0; i < 16; i = i + 1) begin
+            {loop_control}
+            c = c + {{4'b0, x[i]}};
+        end
+        count = c;
+    end
+endmodule
+"""
+    result = evaluate(load_task("popcount16"), code, use_cache=False)
+    assert result.synth_ok
+    assert result.synth_frontend == "sv2v"
+    assert result.formal_frontend == "sv2v"
+    assert result.formal_status == formal_status
+    assert result.accepted == (formal_status == "pass")
+
+
+def test_grade_design_rejects_real_latch():
+    code = """
+module popcount16(input logic [15:0] x, output logic [4:0] count);
+    always_comb begin
+        if (x[0]) count = 5'd1;
+    end
+endmodule
+"""
+    result = evaluate(load_task("popcount16"), code, use_cache=False)
+    assert result.compile_ok
+    assert not result.synth_ok
+    assert "Latch inferred" in result.synth_log
+    assert result.formal_status == "error"
+    assert "latch" in result.formal_message.lower()
+    assert not result.accepted
